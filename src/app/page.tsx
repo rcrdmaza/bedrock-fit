@@ -1,16 +1,28 @@
-import Link from 'next/link';
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import Link from 'next/link';
+import { dummyResults, formatTime } from '@/lib/dummy-results';
+
+export default function ResultsPage() {
+  const [query, setQuery] = useState('');
+
+  const filtered = query.length > 1
+    ? dummyResults.filter(r =>
+        r.athleteName.toLowerCase().includes(query.toLowerCase())
+      )
+    : [];
+
   return (
     <main className="min-h-screen bg-white">
 
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
-        <span className="text-xl font-semibold tracking-tight text-gray-900">
+        <Link href="/" className="text-xl font-semibold tracking-tight text-gray-900">
           Bedrock.fit
-        </span>
+        </Link>
         <div className="flex items-center gap-6">
-          <Link href="/results" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+          <Link href="/results" className="text-sm text-gray-900 font-medium">
             Results
           </Link>
           <Link href="/leagues" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
@@ -22,115 +34,85 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="max-w-4xl mx-auto px-8 pt-24 pb-16 text-center">
-        <div className="inline-block bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1 rounded-full mb-6">
-          Race results, reimagined
-        </div>
-        <h1 className="text-5xl font-semibold text-gray-900 leading-tight mb-6">
-          Your race history,<br />turned into a story
-        </h1>
-        <p className="text-lg text-gray-500 max-w-xl mx-auto mb-10">
-          Bedrock.fit transforms finish times into rich charts, performance trends, and competitive games. Find your results, claim your profile, and see how you stack up.
-        </p>
+      <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
+        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Find your results</h1>
+        <p className="text-gray-500 text-sm mb-8">Search by name to find and claim your race history.</p>
 
-        {/* Search bar */}
-        <div className="flex items-center gap-3 max-w-lg mx-auto">
+        {/* Search */}
+        <div className="flex items-center gap-3 mb-10">
           <input
             type="text"
-            placeholder="Search your name to find results..."
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Enter athlete name..."
             className="flex-1 px-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
           />
-          <button className="bg-blue-600 text-white px-5 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-            Search
-          </button>
         </div>
+
+        {/* Results */}
+        {query.length > 1 && filtered.length === 0 && (
+          <div className="text-center py-16 text-gray-400 text-sm">
+            No results found for "{query}"
+          </div>
+        )}
+
+        {filtered.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-xs text-gray-400 mb-4">{filtered.length} result{filtered.length !== 1 ? 's' : ''} found</p>
+            {filtered.map(result => (
+              <div
+                key={result.id}
+                className="border border-gray-100 rounded-2xl p-5 hover:border-gray-300 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <div className="font-medium text-gray-900 text-sm">{result.eventName}</div>
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      {new Date(result.eventDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} · {result.raceCategory}
+                    </div>
+                  </div>
+                  <span className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-full font-medium">
+                    Unclaimed
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-4 gap-4 mb-4">
+                  <div>
+                    <div className="text-xs text-gray-400 mb-0.5">Finish time</div>
+                    <div className="text-sm font-medium text-gray-900">{formatTime(result.finishTime)}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-400 mb-0.5">Overall rank</div>
+                    <div className="text-sm font-medium text-gray-900">{result.overallRank} / {result.totalFinishers}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-400 mb-0.5">Percentile</div>
+                    <div className="text-sm font-medium text-gray-900">Top {(100 - result.percentile).toFixed(1)}%</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-400 mb-0.5">Athlete</div>
+                    <div className="text-sm font-medium text-gray-900">{result.athleteName}</div>
+                  </div>
+                </div>
+
+                <button className="text-xs bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                  Claim this result
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {query.length === 0 && (
+          <div className="text-center py-16">
+            <div className="text-gray-300 text-4xl mb-4">⏱</div>
+            <p className="text-gray-400 text-sm">Start typing to search results</p>
+            <p className="text-gray-300 text-xs mt-1">Try "Carlos" or "Maria" to see demo results</p>
+          </div>
+        )}
+
       </section>
-
-      {/* Stats bar */}
-      <section className="border-y border-gray-100 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-8 py-10 grid grid-cols-3 gap-8 text-center">
-          <div>
-            <div className="text-3xl font-semibold text-gray-900">10M+</div>
-            <div className="text-sm text-gray-500 mt-1">Race results indexed</div>
-          </div>
-          <div>
-            <div className="text-3xl font-semibold text-gray-900">50K+</div>
-            <div className="text-sm text-gray-500 mt-1">Events tracked</div>
-          </div>
-          <div>
-            <div className="text-3xl font-semibold text-gray-900">12+</div>
-            <div className="text-sm text-gray-500 mt-1">Endurance disciplines</div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="max-w-4xl mx-auto px-8 py-24">
-        <h2 className="text-2xl font-semibold text-gray-900 text-center mb-16">
-          More than a results database
-        </h2>
-        <div className="grid grid-cols-3 gap-8">
-
-          <div className="bg-gray-50 rounded-2xl p-6">
-            <div className="w-10 h-10 bg-blue-100 rounded-xl mb-4 flex items-center justify-center">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M3 14l4-4 3 3 4-5 3 3" stroke="#2563eb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <h3 className="font-medium text-gray-900 mb-2">Performance charts</h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Pace trends, PR progressions, field position histograms. Every result becomes a data point in your career story.
-            </p>
-          </div>
-
-          <div className="bg-gray-50 rounded-2xl p-6">
-            <div className="w-10 h-10 bg-purple-100 rounded-xl mb-4 flex items-center justify-center">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="7" stroke="#7c3aed" strokeWidth="1.5"/>
-                <path d="M10 6v4l3 2" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <h3 className="font-medium text-gray-900 mb-2">Competitive leagues</h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Monthly leagues built on age-graded scores. Compete fairly against athletes of any age across any race.
-            </p>
-          </div>
-
-          <div className="bg-gray-50 rounded-2xl p-6">
-            <div className="w-10 h-10 bg-green-100 rounded-xl mb-4 flex items-center justify-center">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 3l2 5h5l-4 3 1.5 5L10 13l-4.5 3L7 11 3 8h5z" stroke="#16a34a" strokeWidth="1.5" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <h3 className="font-medium text-gray-900 mb-2">Achievements & XP</h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Earn badges for milestones, streaks, and course mastery. Level up your profile between race seasons.
-            </p>
-          </div>
-
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="bg-gray-900 mx-8 mb-16 rounded-3xl px-8 py-16 text-center max-w-4xl mx-auto">
-        <h2 className="text-2xl font-semibold text-white mb-4">
-          Find your results and claim your profile
-        </h2>
-        <p className="text-gray-400 text-sm mb-8 max-w-md mx-auto">
-          Search millions of race results across running, triathlon, cycling and more. Your career history is waiting.
-        </p>
-        <button className="bg-white text-gray-900 px-6 py-3 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors">
-          Search results
-        </button>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-100 px-8 py-8 flex items-center justify-between max-w-4xl mx-auto">
-        <span className="text-sm font-medium text-gray-900">Bedrock.fit</span>
-        <span className="text-xs text-gray-400">Built for endurance athletes</span>
-      </footer>
-
     </main>
   );
 }
