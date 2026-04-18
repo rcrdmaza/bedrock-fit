@@ -28,6 +28,36 @@ function statusClasses(status: string) {
   return 'bg-amber-50 text-amber-700';
 }
 
+// Known standard race distances. Trail (and anything else unknown) falls
+// back to parsing "NNK" out of the event name.
+const CATEGORY_KM: Record<string, number> = {
+  '5K': 5,
+  '10K': 10,
+  'Half Marathon': 21.0975,
+  Marathon: 42.195,
+};
+
+function distanceKm(
+  raceCategory: string | null,
+  eventName: string,
+): number | null {
+  if (raceCategory && CATEGORY_KM[raceCategory] != null) {
+    return CATEGORY_KM[raceCategory];
+  }
+  const match = eventName.match(/(\d+(?:\.\d+)?)\s*K\b/i);
+  return match ? Number(match[1]) : null;
+}
+
+function avgSpeedKmh(
+  finishTime: number | null,
+  raceCategory: string | null,
+  eventName: string,
+): string {
+  const d = distanceKm(raceCategory, eventName);
+  if (finishTime == null || finishTime === 0 || d == null) return '—';
+  return `${(d / (finishTime / 3600)).toFixed(1)} km/h avg`;
+}
+
 export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
   const [query, setQuery] = useState('');
 
@@ -70,7 +100,7 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <div className="font-medium text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
-                    {result.eventName}
+                    {result.athleteName}
                     <span
                       aria-hidden="true"
                       className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -79,12 +109,11 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
                     </span>
                   </div>
                   <div className="text-xs text-gray-400 mt-0.5">
-                    {new Date(result.eventDate).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                    {result.raceCategory ? ` · ${result.raceCategory}` : ''}
+                    {avgSpeedKmh(
+                      result.finishTime,
+                      result.raceCategory,
+                      result.eventName,
+                    )}
                   </div>
                 </div>
                 <span
@@ -120,9 +149,9 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-400 mb-0.5">Athlete</div>
+                  <div className="text-xs text-gray-400 mb-0.5">Event</div>
                   <div className="text-sm font-medium text-gray-900">
-                    {result.athleteName}
+                    {result.eventName}
                   </div>
                 </div>
               </div>
