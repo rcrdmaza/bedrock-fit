@@ -2,20 +2,9 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import type { ResultRow } from '@/lib/results';
 
-export type ResultRow = {
-  id: string;
-  athleteId: string;
-  athleteName: string;
-  eventName: string;
-  eventDate: string; // ISO string
-  raceCategory: string | null;
-  finishTime: number | null;
-  overallRank: number | null;
-  totalFinishers: number | null;
-  percentile: number | null;
-  status: string;
-};
+export type { ResultRow };
 
 function formatTime(seconds: number | null): string {
   if (seconds == null) return '—';
