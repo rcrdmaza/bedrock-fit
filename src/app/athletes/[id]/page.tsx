@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { athletes, results } from '@/db/schema';
+import { distanceKm, formatPace } from '@/lib/race';
 
 // Athletes and their results change over time; rendered per request.
 export const dynamic = 'force-dynamic';
@@ -64,6 +65,33 @@ export default async function AthleteProfilePage({
     return best == null || p > best ? p : best;
   }, null);
 
+  // Pace + PR buckets. For each result we resolve a distance in km (from
+  // category, or parsed from the event name). Average pace is weighted by
+  // distance so a marathon doesn't count the same as a 5K.
+  const timedRaces = athleteResults
+    .map((r) => ({
+      finishTime: r.finishTime,
+      km: distanceKm(r.raceCategory, r.eventName),
+    }))
+    .filter(
+      (x): x is { finishTime: number; km: number } =>
+        x.finishTime != null && x.km != null,
+    );
+
+  const totalSeconds = timedRaces.reduce((sum, x) => sum + x.finishTime, 0);
+  const totalKm = timedRaces.reduce((sum, x) => sum + x.km, 0);
+  const avgPaceSecPerKm = totalKm > 0 ? totalSeconds / totalKm : null;
+
+  function fastestAt(targetKm: number): number | null {
+    const times = timedRaces
+      .filter((x) => Math.round(x.km) === targetKm)
+      .map((x) => x.finishTime);
+    return times.length > 0 ? Math.min(...times) : null;
+  }
+  const fastest10k = fastestAt(10);
+  const fastest21k = fastestAt(21);
+  const fastest42k = fastestAt(42);
+
   return (
     <main className="min-h-screen bg-white">
       <nav className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
@@ -93,8 +121,8 @@ export default async function AthleteProfilePage({
           </p>
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-3 gap-4 mb-10 pb-10 border-b border-gray-100">
+        {/* Stats row — 6 cells, wraps to two rows on narrow viewports. */}
+        <div className="grid grid-cols-3 gap-x-4 gap-y-6 mb-10 pb-10 border-b border-gray-100">
           <div>
             <div className="text-xs text-gray-400 mb-1">Races</div>
             <div className="text-2xl font-semibold text-gray-900">
@@ -110,9 +138,27 @@ export default async function AthleteProfilePage({
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 mb-1">XP</div>
+            <div className="text-xs text-gray-400 mb-1">Avg km time</div>
             <div className="text-2xl font-semibold text-gray-900">
-              {athlete.xp ?? 0}
+              {formatPace(avgPaceSecPerKm)}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-400 mb-1">Fastest 10 km</div>
+            <div className="text-2xl font-semibold text-gray-900">
+              {formatTime(fastest10k)}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-400 mb-1">Fastest 21 km</div>
+            <div className="text-2xl font-semibold text-gray-900">
+              {formatTime(fastest21k)}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-400 mb-1">Fastest 42 km</div>
+            <div className="text-2xl font-semibold text-gray-900">
+              {formatTime(fastest42k)}
             </div>
           </div>
         </div>

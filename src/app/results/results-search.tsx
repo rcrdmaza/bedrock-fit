@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { distanceKm } from '@/lib/race';
 import type { ResultRow } from '@/lib/results';
 
 export type { ResultRow };
@@ -26,26 +27,6 @@ function statusClasses(status: string) {
   if (status === 'claimed') return 'bg-emerald-50 text-emerald-700';
   if (status === 'pending') return 'bg-sky-50 text-sky-700';
   return 'bg-amber-50 text-amber-700';
-}
-
-// Known standard race distances. Trail (and anything else unknown) falls
-// back to parsing "NNK" out of the event name.
-const CATEGORY_KM: Record<string, number> = {
-  '5K': 5,
-  '10K': 10,
-  'Half Marathon': 21.0975,
-  Marathon: 42.195,
-};
-
-function distanceKm(
-  raceCategory: string | null,
-  eventName: string,
-): number | null {
-  if (raceCategory && CATEGORY_KM[raceCategory] != null) {
-    return CATEGORY_KM[raceCategory];
-  }
-  const match = eventName.match(/(\d+(?:\.\d+)?)\s*K\b/i);
-  return match ? Number(match[1]) : null;
 }
 
 function avgSpeedKmh(
