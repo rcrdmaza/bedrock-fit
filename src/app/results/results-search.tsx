@@ -73,14 +73,21 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
             {filtered.length} result{filtered.length !== 1 ? 's' : ''} found
           </p>
           {filtered.map((result) => (
-            <div
+            <Link
               key={result.id}
-              className="border border-gray-100 rounded-2xl p-5 hover:border-gray-300 transition-colors"
+              href={`/athletes/${result.athleteId}`}
+              className="group block border border-gray-100 rounded-2xl p-5 hover:border-gray-300 hover:shadow-sm transition-all"
             >
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <div className="font-medium text-gray-900 text-sm">
+                  <div className="font-medium text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
                     {result.eventName}
+                    <span
+                      aria-hidden="true"
+                      className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      →
+                    </span>
                   </div>
                   <div className="text-xs text-gray-400 mt-0.5">
                     {new Date(result.eventDate).toLocaleDateString('en-US', {
@@ -125,15 +132,19 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
                 </div>
                 <div>
                   <div className="text-xs text-gray-400 mb-0.5">Athlete</div>
-                  <Link
-                    href={`/athletes/${result.athleteId}`}
-                    className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline transition-colors"
-                  >
+                  <div className="text-sm font-medium text-gray-900">
                     {result.athleteName}
-                  </Link>
+                  </div>
                 </div>
               </div>
               <button
+                type="button"
+                onClick={(e) => {
+                  // claim flow not wired yet; keep the button from navigating
+                  // to the athlete profile while we figure out the real action.
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
                 className="text-xs bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
                 disabled={result.status !== 'unclaimed'}
               >
@@ -141,7 +152,7 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
                   ? 'Claim this result'
                   : statusLabel(result.status)}
               </button>
-            </div>
+            </Link>
           ))}
         </div>
       )}
