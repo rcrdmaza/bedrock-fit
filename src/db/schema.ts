@@ -22,5 +22,10 @@ export const results = pgTable('results', {
   totalFinishers: integer('total_finishers'),
   percentile: numeric('percentile', { precision: 5, scale: 2 }),
   status: text('status').default('unclaimed'),
+  // Populated when a user submits a claim. Admin reviews out of band
+  // and promotes pending → claimed (or back to unclaimed if rejected).
+  claimEmail: text('claim_email'),
+  claimNote: text('claim_note'),
+  claimSubmittedAt: timestamp('claim_submitted_at'),
   createdAt: timestamp('created_at').defaultNow(),
 });

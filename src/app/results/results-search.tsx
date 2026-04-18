@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useActionState, useMemo, useState } from 'react';
 import { distanceKm } from '@/lib/race';
 import type { ResultRow } from '@/lib/results';
+import { claimResult, type ClaimState } from '@/app/actions/claim';
 
 export type { ResultRow };
 
@@ -39,8 +40,93 @@ function avgSpeedKmh(
   return `${(d / (finishTime / 3600)).toFixed(1)} km/h avg`;
 }
 
+// The initial state that useActionState starts from.
+const INITIAL_CLAIM: ClaimState = { status: 'idle' };
+
+function ClaimForm({
+  resultId,
+  onCancel,
+}: {
+  resultId: string;
+  onCancel: () => void;
+}) {
+  const [state, formAction, pending] = useActionState(
+    claimResult,
+    INITIAL_CLAIM,
+  );
+
+  if (state.status === 'success') {
+    return (
+      <div className="mt-4 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-4 py-3">
+        Claim submitted. We&apos;ll email you once it&apos;s reviewed.
+      </div>
+    );
+  }
+
+  return (
+    <form action={formAction} className="mt-4 space-y-3">
+      <input type="hidden" name="resultId" value={resultId} />
+      <div>
+        <label
+          htmlFor={`email-${resultId}`}
+          className="block text-xs text-gray-500 mb-1"
+        >
+          Your email
+        </label>
+        <input
+          id={`email-${resultId}`}
+          name="email"
+          type="email"
+          required
+          placeholder="you@example.com"
+          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label
+          htmlFor={`note-${resultId}`}
+          className="block text-xs text-gray-500 mb-1"
+        >
+          Verification note{' '}
+          <span className="text-gray-400">
+            (bib #, strava link, anything that proves it was you)
+          </span>
+        </label>
+        <textarea
+          id={`note-${resultId}`}
+          name="note"
+          maxLength={500}
+          rows={2}
+          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      {state.status === 'error' && (
+        <p className="text-xs text-red-600">{state.error}</p>
+      )}
+      <div className="flex items-center gap-2">
+        <button
+          type="submit"
+          disabled={pending}
+          className="text-xs bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+        >
+          {pending ? 'Submitting…' : 'Submit claim'}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={pending}
+          className="text-xs text-gray-500 hover:text-gray-900 px-3 py-2 transition-colors disabled:opacity-50"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
   const [query, setQuery] = useState('');
+  const [claimingId, setClaimingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     if (query.length <= 1) return [];
@@ -72,87 +158,103 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
           <p className="text-xs text-gray-400 mb-4">
             {filtered.length} result{filtered.length !== 1 ? 's' : ''} found
           </p>
-          {filtered.map((result) => (
-            <Link
-              key={result.id}
-              href={`/athletes/${result.athleteId}`}
-              className="group block border border-gray-100 rounded-2xl p-5 hover:border-gray-300 hover:shadow-sm transition-all"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <div className="font-medium text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
-                    {result.athleteName}
+          {filtered.map((result) => {
+            const claiming = claimingId === result.id;
+            const canClaim = result.status === 'unclaimed';
+            return (
+              <div
+                key={result.id}
+                className="group border border-gray-100 rounded-2xl p-5 hover:border-gray-300 hover:shadow-sm transition-all"
+              >
+                {/* Clickable area → athlete profile. The claim form lives
+                    outside this link so its inputs don't trigger nav. */}
+                <Link
+                  href={`/athletes/${result.athleteId}`}
+                  className="block"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="font-medium text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
+                        {result.athleteName}
+                        <span
+                          aria-hidden="true"
+                          className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          →
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-400 mt-0.5">
+                        {avgSpeedKmh(
+                          result.finishTime,
+                          result.raceCategory,
+                          result.eventName,
+                        )}
+                      </div>
+                    </div>
                     <span
-                      aria-hidden="true"
-                      className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className={`text-xs px-2 py-1 rounded-full font-medium ${statusClasses(result.status)}`}
                     >
-                      →
+                      {statusLabel(result.status)}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-400 mt-0.5">
-                    {avgSpeedKmh(
-                      result.finishTime,
-                      result.raceCategory,
-                      result.eventName,
-                    )}
+                  <div className="grid grid-cols-4 gap-4 mb-4">
+                    <div>
+                      <div className="text-xs text-gray-400 mb-0.5">
+                        Finish time
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {formatTime(result.finishTime)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-400 mb-0.5">
+                        Overall rank
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {result.overallRank ?? '—'}
+                        {result.totalFinishers
+                          ? ` / ${result.totalFinishers}`
+                          : ''}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-400 mb-0.5">
+                        Percentile
+                      </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {result.percentile != null
+                          ? `Top ${(100 - result.percentile).toFixed(1)}%`
+                          : '—'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-400 mb-0.5">Event</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {result.eventName}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <span
-                  className={`text-xs px-2 py-1 rounded-full font-medium ${statusClasses(result.status)}`}
-                >
-                  {statusLabel(result.status)}
-                </span>
+                </Link>
+
+                {/* Claim action — outside the Link so clicks here don't nav. */}
+                {claiming ? (
+                  <ClaimForm
+                    resultId={result.id}
+                    onCancel={() => setClaimingId(null)}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => canClaim && setClaimingId(result.id)}
+                    className="text-xs bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                    disabled={!canClaim}
+                  >
+                    {canClaim ? 'Claim this result' : statusLabel(result.status)}
+                  </button>
+                )}
               </div>
-              <div className="grid grid-cols-4 gap-4 mb-4">
-                <div>
-                  <div className="text-xs text-gray-400 mb-0.5">
-                    Finish time
-                  </div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {formatTime(result.finishTime)}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-400 mb-0.5">
-                    Overall rank
-                  </div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {result.overallRank ?? '—'}
-                    {result.totalFinishers ? ` / ${result.totalFinishers}` : ''}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-400 mb-0.5">Percentile</div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {result.percentile != null
-                      ? `Top ${(100 - result.percentile).toFixed(1)}%`
-                      : '—'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-400 mb-0.5">Event</div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {result.eventName}
-                  </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  // claim flow not wired yet; keep the button from navigating
-                  // to the athlete profile while we figure out the real action.
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                className="text-xs bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
-                disabled={result.status !== 'unclaimed'}
-              >
-                {result.status === 'unclaimed'
-                  ? 'Claim this result'
-                  : statusLabel(result.status)}
-              </button>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       )}
 
