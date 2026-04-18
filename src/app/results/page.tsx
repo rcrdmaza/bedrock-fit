@@ -12,6 +12,7 @@ async function getResults(): Promise<ResultRow[]> {
   const rows = await db
     .select({
       id: results.id,
+      athleteId: athletes.id,
       athleteName: athletes.name,
       eventName: results.eventName,
       eventDate: results.eventDate,
@@ -28,6 +29,7 @@ async function getResults(): Promise<ResultRow[]> {
 
   return rows.map((r) => ({
     id: r.id,
+    athleteId: r.athleteId,
     athleteName: r.athleteName,
     eventName: r.eventName,
     eventDate: (r.eventDate ?? new Date()).toISOString(),

@@ -1,9 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 export type ResultRow = {
   id: string;
+  athleteId: string;
   athleteName: string;
   eventName: string;
   eventDate: string; // ISO string
@@ -123,9 +125,12 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
                 </div>
                 <div>
                   <div className="text-xs text-gray-400 mb-0.5">Athlete</div>
-                  <div className="text-sm font-medium text-gray-900">
+                  <Link
+                    href={`/athletes/${result.athleteId}`}
+                    className="text-sm font-medium text-gray-900 hover:text-blue-600 hover:underline transition-colors"
+                  >
                     {result.athleteName}
-                  </div>
+                  </Link>
                 </div>
               </div>
               <button
