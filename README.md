@@ -35,17 +35,24 @@ npx drizzle-kit push
 
 ## Environment variables
 
-Every variable is required. See `.env.example` for the template.
+The first three are required. Sentry variables are optional — the app
+runs fine without them, and the Sentry SDK no-ops when no DSN is set.
+See `.env.example` for the template.
 
-| Name             | Purpose                                                                                                 | Format                            |
-| ---------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| `DATABASE_URL`   | Postgres connection string. On Railway, bind to `${{Postgres.DATABASE_URL}}` so rotations propagate.    | `postgres://user:pw@host:5432/db` |
-| `ADMIN_PASSWORD` | Sole credential for `/admin/login`. No account, no rate limit — pick something long and random.        | Any string, minimum 8 chars       |
-| `SESSION_SECRET` | HMAC-SHA256 key used to sign the admin session cookie. Rotating it invalidates every active session.   | Hex/base64, minimum 32 chars      |
+| Name                     | Required | Purpose                                                                                              | Format                            |
+| ------------------------ | -------- | ---------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `DATABASE_URL`           | yes      | Postgres connection string. On Railway, bind to `${{Postgres.DATABASE_URL}}` so rotations propagate. | `postgres://user:pw@host:5432/db` |
+| `ADMIN_PASSWORD`         | yes      | Sole credential for `/admin/login`. No account, no rate limit — pick something long and random.     | Any string, minimum 8 chars       |
+| `SESSION_SECRET`         | yes      | HMAC-SHA256 key used to sign the admin session cookie. Rotating it invalidates every active session. | Hex/base64, minimum 32 chars      |
+| `SENTRY_DSN`             | no       | Server-side error + trace ingest. Absence is a no-op.                                                | `https://...@...ingest.sentry.io/...` |
+| `NEXT_PUBLIC_SENTRY_DSN` | no       | Same DSN, exposed to the client bundle. Mirror `SENTRY_DSN`.                                         | same as above                     |
+| `SENTRY_ORG`             | no       | Needed only for build-time source-map upload.                                                        | Sentry org slug                   |
+| `SENTRY_PROJECT`         | no       | Needed only for build-time source-map upload.                                                        | Sentry project slug               |
+| `SENTRY_AUTH_TOKEN`      | no       | CI secret for source-map upload. Never commit.                                                       | Sentry internal-integration token |
 
-All three are validated on first access by `src/lib/env.ts`. A missing or
-too-short value throws a descriptive error the moment the first request
-hits the relevant code path.
+The three required variables are validated on first access by
+`src/lib/env.ts`. A missing or too-short value throws a descriptive error
+the moment the first request hits the relevant code path.
 
 Generate a fresh `SESSION_SECRET`:
 
@@ -73,7 +80,59 @@ connection string via `${{Postgres.DATABASE_URL}}`; reference it in the
 web service's `DATABASE_URL` variable so credential rotations propagate
 without a redeploy.
 
-Healthcheck target: `/` (returns 200 once the DB connection succeeds).
+Healthcheck target: `/api/health` (returns 200 + `{status:"ok"}` once the
+DB `select 1` succeeds under 500ms, else 503).
+
+## Monitoring
+
+### Health endpoint
+
+`GET /api/health` runs a timed `select 1` against Postgres and returns:
+
+```
+200  { status: "ok",   db: { up: true,  latencyMs }, uptimeMs }
+503  { status: "down", db: { up: false, error },     uptimeMs }
+```
+
+It's force-dynamic, never cached, and exits within 500ms on DB hangs
+(see `DB_TIMEOUT_MS` in `src/app/api/health/route.ts`). Use it as both
+the Railway healthcheck target and the external uptime-monitor probe —
+one endpoint means one thing to debug when alerts fire.
+
+### External uptime monitor
+
+Point a free uptime monitor at the public `/api/health` URL. Recommended
+picks:
+
+- **UptimeRobot** — 5-minute HTTP checks on the free tier. Create a new
+  "HTTP(s)" monitor, URL `https://<your-domain>/api/health`, interval
+  5 min, keyword match on `"status":"ok"` to catch 200-with-bad-body
+  cases.
+- **BetterStack (Better Uptime)** — 3-minute checks on the free tier
+  plus status-page hosting. Same setup: HTTP monitor, expect 200,
+  optionally assert the `status` field.
+
+Either way, send alerts to an email or phone you actually check. The
+healthcheck reports DB latency in its body, so you can spot slowdowns
+before they become hard failures.
+
+### Sentry error tracking
+
+Errors from server renders, route handlers, and server actions flow to
+Sentry via `instrumentation.ts` → `Sentry.captureRequestError`. Client
+hydration errors flow through `instrumentation-client.ts`.
+
+To wire a project:
+
+1. Create a Next.js project in Sentry. Copy its DSN.
+2. Set `SENTRY_DSN` and `NEXT_PUBLIC_SENTRY_DSN` (same value) in the
+   Railway web service's Variables. Save — Railway redeploys in ~30s.
+3. Trigger a test error to verify ingest. The easiest way is a
+   throwaway route that throws; remove after.
+
+Without a DSN the SDK initializes to a no-op, so local dev and any
+deploy without Sentry configured just work. Source-map upload at build
+time is opt-in via `SENTRY_ORG` + `SENTRY_PROJECT` + `SENTRY_AUTH_TOKEN`.
 
 ## Secret rotation runbook
 
