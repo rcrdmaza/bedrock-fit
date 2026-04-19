@@ -1,7 +1,7 @@
-import * as dotenv from 'dotenv';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { getDatabaseUrl } from '@/lib/env';
 import * as schema from './schema';
 
 // The DB client is created lazily on first use. This is important for two
@@ -22,22 +22,31 @@ const globalForDb = globalThis as unknown as {
   drizzleDb?: Db;
 };
 
+// Connection pool config — tuned for a single Railway instance. If we scale
+// horizontally later, multiply `max` by the instance count and check it
+// against the Postgres plan's `max_connections` ceiling (default 100 on
+// Railway's hobby tier).
+const POOL_OPTIONS = {
+  // PgBouncer in transaction mode (Railway's default) can't use prepared
+  // statements, so leave them off.
+  prepare: false,
+  // Cap concurrent connections at 10. Beyond this, queries queue in the
+  // driver until a connection frees up — better than hammering Postgres.
+  max: 10,
+  // Close an idle connection after 20s so we're not holding a slot while
+  // nothing's happening. Fresh connections on cold paths are cheap.
+  idle_timeout: 20,
+  // Recycle a connection after 30 min regardless, to dodge any long-lived
+  // state issues (stale prepared-statement caches, SSL renegotiation, etc.).
+  max_lifetime: 60 * 30,
+  // Fail fast if the DB is unreachable — 30s is the postgres default and
+  // way too long for a web request.
+  connect_timeout: 10,
+} as const;
+
 function createDb(): Db {
-  // Next.js loads .env.local automatically at runtime. For standalone scripts
-  // (e.g. `tsx src/db/seed.ts`), fall back to loading it explicitly.
-  if (!process.env.DATABASE_URL) {
-    dotenv.config({ path: '.env.local' });
-  }
-
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error(
-      'DATABASE_URL is not set. In dev, check .env.local. In production, set it on the Railway service.',
-    );
-  }
-
   const client =
-    globalForDb.pgClient ?? postgres(connectionString, { prepare: false });
+    globalForDb.pgClient ?? postgres(getDatabaseUrl(), POOL_OPTIONS);
 
   if (process.env.NODE_ENV !== 'production') {
     globalForDb.pgClient = client;

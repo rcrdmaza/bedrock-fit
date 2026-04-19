@@ -8,22 +8,13 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { getAdminPassword, getSessionSecret } from '@/lib/env';
 
 const COOKIE_NAME = 'admin_session';
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
-function getSecret(): string {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 16) {
-    throw new Error(
-      'SESSION_SECRET env var is missing or too short (need >= 16 chars).',
-    );
-  }
-  return secret;
-}
-
 function sign(payload: string): string {
-  return createHmac('sha256', getSecret()).update(payload).digest('hex');
+  return createHmac('sha256', getSessionSecret()).update(payload).digest('hex');
 }
 
 function safeEqual(a: string, b: string): boolean {
@@ -37,8 +28,7 @@ function safeEqual(a: string, b: string): boolean {
 // Constant-time password check. Pads the shorter string so an attacker can't
 // learn the password length from response timing.
 export function passwordMatches(input: string): boolean {
-  const expected = process.env.ADMIN_PASSWORD;
-  if (!expected) return false;
+  const expected = getAdminPassword();
   const a = Buffer.from(input.padEnd(expected.length));
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
