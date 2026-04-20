@@ -384,6 +384,10 @@ export async function commitImport(
           totalFinishers: categoryTotal,
           percentile: computePercentile(row.overallRank, categoryTotal),
           status: 'unclaimed' as const,
+          // New optional per-row fields from the CSV. Null when the
+          // import CSV didn't include the columns at all.
+          bib: row.bib,
+          eventCountry: row.eventCountry,
         };
       });
 

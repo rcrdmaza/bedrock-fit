@@ -3,19 +3,17 @@ import { db } from '@/db';
 import { athletes, results } from '@/db/schema';
 import { CANONICAL_CATEGORIES } from '@/lib/import';
 
-export type ResultRow = {
-  id: string;
-  athleteId: string;
-  athleteName: string;
-  eventName: string;
-  eventDate: string; // ISO string
-  raceCategory: string | null;
-  finishTime: number | null;
-  overallRank: number | null;
-  totalFinishers: number | null;
-  percentile: number | null;
-  status: string;
-};
+// Re-export the client-safe symbols so server code has one import point.
+// The client component imports from @/lib/results-filter directly to
+// avoid transitively pulling in the postgres driver via `db`.
+export {
+  filterResults,
+  RESULT_SEARCH_FIELDS,
+  type ResultRow,
+  type ResultSearchField,
+  type ResultsFilter,
+} from '@/lib/results-filter';
+import type { ResultRow } from '@/lib/results-filter';
 
 // Shared between /results and the home page. Postgres `numeric` columns
 // come back as strings, so we coerce; dates are serialized to ISO so the
@@ -34,6 +32,8 @@ export async function getResults(): Promise<ResultRow[]> {
       totalFinishers: results.totalFinishers,
       percentile: results.percentile,
       status: results.status,
+      bib: results.bib,
+      eventCountry: results.eventCountry,
     })
     .from(results)
     .innerJoin(athletes, eq(results.athleteId, athletes.id))
@@ -51,6 +51,8 @@ export async function getResults(): Promise<ResultRow[]> {
     totalFinishers: r.totalFinishers,
     percentile: r.percentile != null ? Number(r.percentile) : null,
     status: r.status ?? 'unclaimed',
+    bib: r.bib,
+    eventCountry: r.eventCountry,
   }));
 }
 

@@ -88,6 +88,14 @@ export default function ImportForm() {
           <code className="px-1 py-0.5 rounded bg-gray-100 text-gray-700">
             name, finish_time, overall_rank, gender, location, race_category
           </code>
+          {', optionally followed by '}
+          <code className="px-1 py-0.5 rounded bg-gray-100 text-gray-700">
+            bib
+          </code>{' '}
+          and{' '}
+          <code className="px-1 py-0.5 rounded bg-gray-100 text-gray-700">
+            event_country
+          </code>
           . Finish time as <code>H:MM:SS</code> or <code>MM:SS</code>.
           <code>race_category</code> may be blank or one of{' '}
           <code>5K</code>, <code>10K</code>, <code>Half Marathon</code>,{' '}
@@ -240,6 +248,8 @@ function PreviewStep({
                 <th className="py-1 pr-4 font-medium">Gender</th>
                 <th className="py-1 pr-4 font-medium">Location</th>
                 <th className="py-1 pr-4 font-medium">Category</th>
+                <th className="py-1 pr-4 font-medium">Bib</th>
+                <th className="py-1 pr-4 font-medium">Country</th>
               </tr>
             </thead>
             <tbody className="text-gray-700">
@@ -255,6 +265,8 @@ function PreviewStep({
                   <td className="py-1 pr-4">{row.gender ?? '—'}</td>
                   <td className="py-1 pr-4">{row.location ?? '—'}</td>
                   <td className="py-1 pr-4">{row.raceCategory ?? '—'}</td>
+                  <td className="py-1 pr-4 tabular-nums">{row.bib ?? '—'}</td>
+                  <td className="py-1 pr-4">{row.eventCountry ?? '—'}</td>
                 </tr>
               ))}
             </tbody>

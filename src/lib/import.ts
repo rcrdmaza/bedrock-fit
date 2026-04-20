@@ -9,13 +9,26 @@
 // Pure and client-safe — no db imports here. Callers run this, then hand
 // the parsed rows to a server action that does the actual inserts.
 
-export const IMPORT_COLUMNS = [
+// Columns that must appear in the header, in this order. Keeping them
+// positional (rather than name-mapped) preserves the "spreadsheet export"
+// ergonomics — admins can Save As CSV and upload as-is without renaming.
+export const REQUIRED_IMPORT_COLUMNS = [
   'name',
   'finish_time',
   'overall_rank',
   'gender',
   'location',
   'race_category',
+] as const;
+
+// Tail-optional columns. If present they must appear in this order, but
+// CSVs that predate the columns (6-column shape) still parse fine.
+// Future additions go here too — each one keeps old files valid.
+export const OPTIONAL_IMPORT_COLUMNS = ['bib', 'event_country'] as const;
+
+export const IMPORT_COLUMNS = [
+  ...REQUIRED_IMPORT_COLUMNS,
+  ...OPTIONAL_IMPORT_COLUMNS,
 ] as const;
 
 export type ImportColumn = (typeof IMPORT_COLUMNS)[number];
@@ -45,6 +58,13 @@ export interface ParsedRow {
   // CANONICAL_CATEGORIES. We canonicalize on parse so downstream
   // grouping doesn't have to worry about case variants.
   raceCategory: string | null;
+  // Bib as typed by the timing export — free-form string, capped to 32
+  // chars to prevent absurd payloads. Blank → null.
+  bib: string | null;
+  // Event country — free-form ("Peru", "PE", "United States"). Capped
+  // at 100 chars. Blank → null. The admin is expected to keep this
+  // consistent within one import; we don't canonicalize.
+  eventCountry: string | null;
 }
 
 export interface RowError {
@@ -181,18 +201,57 @@ export function canonicalizeCategory(raw: string): string | null {
   return null;
 }
 
-function matchesHeader(header: string[]): string | null {
-  if (header.length < IMPORT_COLUMNS.length) {
-    return `Header has ${header.length} columns but expected ${IMPORT_COLUMNS.length} (${IMPORT_COLUMNS.join(', ')}).`;
+// Header validator. Returns either an error message, or a map from the
+// optional-column name to the index in the row where it lives (or -1 if
+// the CSV omitted it). The row parser consults that map so callers can
+// still upload 6-column CSVs produced before the optional columns
+// existed.
+interface HeaderShape {
+  optionalIndex: Record<(typeof OPTIONAL_IMPORT_COLUMNS)[number], number>;
+}
+
+function matchesHeader(header: string[]): HeaderShape | string {
+  const required = REQUIRED_IMPORT_COLUMNS;
+  if (header.length < required.length) {
+    return `Header has ${header.length} columns but expected at least ${required.length} (${required.join(', ')}).`;
   }
-  for (let i = 0; i < IMPORT_COLUMNS.length; i++) {
+  for (let i = 0; i < required.length; i++) {
     const got = header[i]?.trim().toLowerCase();
-    const want = IMPORT_COLUMNS[i];
+    const want = required[i];
     if (got !== want) {
       return `Header column ${i + 1} must be "${want}" but got "${header[i] ?? ''}".`;
     }
   }
-  return null;
+
+  // Anything past the required prefix must come from the optional list
+  // and appear in canonical order. Unknown trailing columns are rejected
+  // so a typo ("event_cntry") doesn't silently drop data.
+  const optionalIndex: Record<
+    (typeof OPTIONAL_IMPORT_COLUMNS)[number],
+    number
+  > = {
+    bib: -1,
+    event_country: -1,
+  };
+  const remainder = header
+    .slice(required.length)
+    .map((h) => h.trim().toLowerCase());
+  let nextAllowed = 0;
+  for (let i = 0; i < remainder.length; i++) {
+    const name = remainder[i];
+    const match = OPTIONAL_IMPORT_COLUMNS.indexOf(
+      name as (typeof OPTIONAL_IMPORT_COLUMNS)[number],
+    );
+    if (match === -1) {
+      return `Header column ${required.length + i + 1} "${header[required.length + i] ?? ''}" is not one of: ${OPTIONAL_IMPORT_COLUMNS.join(', ')}.`;
+    }
+    if (match < nextAllowed) {
+      return `Optional columns must appear in order: ${OPTIONAL_IMPORT_COLUMNS.join(', ')}.`;
+    }
+    optionalIndex[OPTIONAL_IMPORT_COLUMNS[match]] = required.length + i;
+    nextAllowed = match + 1;
+  }
+  return { optionalIndex };
 }
 
 // Parse + validate an uploaded CSV. Blank rows in the middle of the file
@@ -208,12 +267,13 @@ export function parseImportCsv(text: string): ParseOutcome {
     return { rows: parsed, errors };
   }
 
-  const headerError = matchesHeader(rows[0]);
-  if (headerError) {
-    errors.push({ lineNumber: 1, message: headerError });
+  const headerResult = matchesHeader(rows[0]);
+  if (typeof headerResult === 'string') {
+    errors.push({ lineNumber: 1, message: headerResult });
     // Without a valid header we can't trust any row — bail early.
     return { rows: parsed, errors };
   }
+  const { optionalIndex } = headerResult;
 
   for (let r = 1; r < rows.length; r++) {
     const line = r + 1;
@@ -242,6 +302,12 @@ export function parseImportCsv(text: string): ParseOutcome {
       row[4] ?? '',
       row[5] ?? '',
     ];
+    const bibRaw =
+      optionalIndex.bib >= 0 ? row[optionalIndex.bib] ?? '' : '';
+    const countryRaw =
+      optionalIndex.event_country >= 0
+        ? row[optionalIndex.event_country] ?? ''
+        : '';
 
     const trimmedName = name.trim();
     if (!trimmedName) {
@@ -295,6 +361,37 @@ export function parseImportCsv(text: string): ParseOutcome {
       raceCategory = normalized;
     }
 
+    // Bib: free-form, capped at 32 chars. We don't validate the format
+    // because timing systems disagree ("042" vs "42", "E021", "W-17").
+    const bibTrim = bibRaw.trim();
+    let bib: string | null = null;
+    if (bibTrim) {
+      if (bibTrim.length > 32) {
+        errors.push({
+          lineNumber: line,
+          message: 'bib must be 32 characters or fewer.',
+          offendingValue: bibRaw,
+        });
+        continue;
+      }
+      bib = bibTrim;
+    }
+
+    // Event country: free-form, capped at 100 chars.
+    const countryTrim = countryRaw.trim();
+    let eventCountry: string | null = null;
+    if (countryTrim) {
+      if (countryTrim.length > 100) {
+        errors.push({
+          lineNumber: line,
+          message: 'event_country must be 100 characters or fewer.',
+          offendingValue: countryRaw,
+        });
+        continue;
+      }
+      eventCountry = countryTrim;
+    }
+
     parsed.push({
       lineNumber: line,
       name: trimmedName,
@@ -303,6 +400,8 @@ export function parseImportCsv(text: string): ParseOutcome {
       gender,
       location,
       raceCategory,
+      bib,
+      eventCountry,
     });
   }
 

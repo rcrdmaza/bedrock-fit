@@ -25,7 +25,8 @@ export default async function ResultsPage() {
           Find your results
         </h1>
         <p className="text-gray-500 text-sm mb-8">
-          Search by name to find and claim your race history.
+          Search by name, bib, event, or country — or narrow the full list by
+          date range. Newest results first.
         </p>
 
         <ResultsSearch rows={rows} />

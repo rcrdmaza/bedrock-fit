@@ -22,6 +22,15 @@ export const results = pgTable('results', {
   totalFinishers: integer('total_finishers'),
   percentile: numeric('percentile', { precision: 5, scale: 2 }),
   status: text('status').default('unclaimed'),
+  // Bib number from the chip timing export. Nullable — older imports
+  // and hand-entered rows don't have it. Free-form text because bibs
+  // can include letters or leading zeros ("E021", "042").
+  bib: text('bib'),
+  // Country where the event took place. Free-form string (e.g. "Peru",
+  // "PE", "United States"). Stored per-result because we don't model
+  // events as their own rows — every row in the same import shares the
+  // same country, which the importer populates uniformly.
+  eventCountry: text('event_country'),
   // Populated when a user submits a claim. Admin reviews out of band
   // and promotes pending → claimed (or back to unclaimed if rejected).
   claimEmail: text('claim_email'),

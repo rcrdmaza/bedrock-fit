@@ -1,13 +1,13 @@
-name,finish_time,overall_rank,gender,location,race_category
-Carlos Mendez,3:42:15,88,M,Lima PE,Marathon
-Maria Torres,4:05:22,412,F,Lima PE,Marathon
-Sofia Rivera,4:18:50,615,F,Arequipa PE,Marathon
-Camila Flores,3:58:40,301,F,Lima PE,Marathon
-Nicolas Herrera,1:32:05,12,M,Trujillo PE,Half Marathon
-Andres Castillo,1:51:12,78,M,Cusco PE,Half Marathon
-Paula Diaz,2:02:18,121,F,Lima PE,Half Marathon
-Mateo Reyes,42:30,9,M,Arequipa PE,10K
-Lucia Vargas,48:12,32,F,Lima PE,10K
-Diego Ramos,55:48,71,M,Lima PE,10K
-Valentina Cruz,21:18,4,F,Lima PE,5K
-Javier Sosa,24:45,15,M,Lima PE,5K
+name,finish_time,overall_rank,gender,location,race_category,bib,event_country
+Carlos Mendez,3:42:15,88,M,Lima PE,Marathon,1042,Peru
+Maria Torres,4:05:22,412,F,Lima PE,Marathon,1198,Peru
+Sofia Rivera,4:18:50,615,F,Arequipa PE,Marathon,1247,Peru
+Camila Flores,3:58:40,301,F,Lima PE,Marathon,1089,Peru
+Nicolas Herrera,1:32:05,12,M,Trujillo PE,Half Marathon,2017,Peru
+Andres Castillo,1:51:12,78,M,Cusco PE,Half Marathon,2104,Peru
+Paula Diaz,2:02:18,121,F,Lima PE,Half Marathon,2156,Peru
+Mateo Reyes,42:30,9,M,Arequipa PE,10K,3008,Peru
+Lucia Vargas,48:12,32,F,Lima PE,10K,3044,Peru
+Diego Ramos,55:48,71,M,Lima PE,10K,3081,Peru
+Valentina Cruz,21:18,4,F,Lima PE,5K,4003,Peru
+Javier Sosa,24:45,15,M,Lima PE,5K,4019,Peru
