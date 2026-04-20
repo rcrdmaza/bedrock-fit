@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import {
-  getLeaderboard,
+  categorySlug,
+  getLeaderboardPage,
   isLeaderboardCategory,
   LEADERBOARD_CATEGORIES,
   type LeaderboardCategory,
@@ -11,9 +12,9 @@ import {
 // top 25. No static caching here.
 export const dynamic = 'force-dynamic';
 
-// How many rows each leaderboard shows. Matches what the scoping
-// conversation settled on; anything larger should move to a paginated
-// /leaderboards/[category] page.
+// How many rows the home-page leaderboard shows. The full field lives
+// on /leaderboards/[category] — we keep this short on the home page so
+// the fold stays focused on the fastest times plus the category chips.
 const PAGE_SIZE = 25;
 
 // Default chip when the URL has no ?category= param. 10K is a broad
@@ -50,7 +51,11 @@ export default async function HomePage({
 }) {
   const params = await searchParams;
   const category = readCategoryParam(params.category);
-  const rows = await getLeaderboard(category, PAGE_SIZE);
+  // Page 1 on the home page — the dedicated /leaderboards/[category]
+  // route handles deeper pagination. We reuse the same query so the
+  // total count comes back for the "See all N finishers" link without
+  // a second round-trip.
+  const { rows, total } = await getLeaderboardPage(category, 1, PAGE_SIZE);
 
   return (
     <main className="min-h-screen bg-white">
@@ -92,7 +97,23 @@ export default async function HomePage({
             No {category} results on file yet.
           </div>
         ) : (
-          <LeaderboardTable category={category} rows={rows} />
+          <>
+            <LeaderboardTable category={category} rows={rows} />
+            {/* Only show the "See all" affordance when there are more
+                rows than fit on the home page — otherwise the link
+                lands on an identical view. */}
+            {total > rows.length && (
+              <div className="mt-4 flex justify-end">
+                <Link
+                  href={`/leaderboards/${categorySlug(category)}`}
+                  className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  See all {total.toLocaleString()} {category} finisher
+                  {total === 1 ? '' : 's'} →
+                </Link>
+              </div>
+            )}
+          </>
         )}
       </section>
     </main>

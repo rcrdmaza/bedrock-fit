@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNotNull } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { athletes, results } from '@/db/schema';
 import { CANONICAL_CATEGORIES } from '@/lib/import';
@@ -69,6 +69,40 @@ export function isLeaderboardCategory(
   return (LEADERBOARD_CATEGORIES as readonly string[]).includes(value);
 }
 
+// URL-safe slugs for the /leaderboards/[category] routes. We keep them
+// lowercase, kebab-case, and stable: changing a slug would break any
+// bookmarks or shared links. "Half Marathon" → "half-marathon",
+// "10K" → "10k", etc. The mapping is explicit (not a spaces→dashes
+// regex) so accidental renames of CANONICAL_CATEGORIES don't silently
+// shift slugs.
+const CATEGORY_SLUG_MAP: Record<LeaderboardCategory, string> = {
+  '5K': '5k',
+  '10K': '10k',
+  'Half Marathon': 'half-marathon',
+  Marathon: 'marathon',
+};
+
+// Reverse lookup built once so the page handler can cheaply narrow a
+// route param to the canonical LeaderboardCategory — or return null
+// for an unknown slug so the page can 404.
+const CATEGORY_FROM_SLUG: Record<string, LeaderboardCategory> =
+  Object.fromEntries(
+    (Object.entries(CATEGORY_SLUG_MAP) as Array<
+      [LeaderboardCategory, string]
+    >).map(([category, slug]) => [slug, category]),
+  );
+
+export function categorySlug(category: LeaderboardCategory): string {
+  return CATEGORY_SLUG_MAP[category];
+}
+
+export function parseCategorySlug(
+  slug: string | null | undefined,
+): LeaderboardCategory | null {
+  if (!slug) return null;
+  return CATEGORY_FROM_SLUG[slug.toLowerCase()] ?? null;
+}
+
 // One row of a leaderboard. Trimmed down vs. ResultRow — no claim status,
 // no per-row percentile UI — because the leaderboard is purely ranking
 // display. We keep percentile for the "Top X%" hint but drop note/email
@@ -84,54 +118,110 @@ export type LeaderboardRow = {
   percentile: number | null;
 };
 
-// Fetch the top N finishers for a given category, ordered by finish time
-// ascending (fastest first). Rows without a finish time are filtered out
-// — they can't be ranked. The limit is bounded so a bad query-string
-// can't ask for 10k rows; callers that want everyone should paginate.
-const MAX_LEADERBOARD_LIMIT = 100;
+// Rows without a finish time are filtered out — they can't be ranked.
+// Hard cap on page size so a crafted URL can't ask for a million rows.
+const MAX_PAGE_SIZE = 200;
 
-export async function getLeaderboard(
-  category: LeaderboardCategory,
-  limit = 25,
-): Promise<LeaderboardRow[]> {
-  const capped = Math.min(Math.max(1, Math.floor(limit)), MAX_LEADERBOARD_LIMIT);
+// Row shape straight out of the shared SELECT. Keeping the select list
+// DRY means any future column addition lands in one place.
+type LeaderboardDbRow = {
+  id: string;
+  athleteId: string;
+  athleteName: string;
+  eventName: string;
+  eventDate: Date | null;
+  raceCategory: string | null;
+  finishTime: number | null;
+  percentile: string | null;
+};
 
-  const rows = await db
-    .select({
-      id: results.id,
-      athleteId: athletes.id,
-      athleteName: athletes.name,
-      eventName: results.eventName,
-      eventDate: results.eventDate,
-      raceCategory: results.raceCategory,
-      finishTime: results.finishTime,
-      percentile: results.percentile,
-    })
-    .from(results)
-    .innerJoin(athletes, eq(results.athleteId, athletes.id))
-    .where(
-      and(
-        eq(results.raceCategory, category),
-        // isNotNull(finishTime) keeps rows that were imported without a
-        // time out of the ranked set — they'd sort to the top otherwise,
-        // since ORDER BY ASC puts NULL first in Postgres by default.
-        isNotNull(results.finishTime),
-      ),
-    )
-    // Tie-break by event date desc so recent identical times come first;
-    // purely cosmetic, avoids flicker when two athletes share 3:29:05.
-    .orderBy(asc(results.finishTime), desc(results.eventDate))
-    .limit(capped);
-
-  return rows.map((r) => ({
+function mapLeaderboardRow(
+  r: LeaderboardDbRow,
+  fallbackCategory: LeaderboardCategory,
+): LeaderboardRow {
+  return {
     id: r.id,
     athleteId: r.athleteId,
     athleteName: r.athleteName,
     eventName: r.eventName,
     eventDate: (r.eventDate ?? new Date()).toISOString(),
     // Both the WHERE and the type imply these are non-null; narrow for callers.
-    raceCategory: r.raceCategory ?? category,
+    raceCategory: r.raceCategory ?? fallbackCategory,
     finishTime: r.finishTime ?? 0,
     percentile: r.percentile != null ? Number(r.percentile) : null,
-  }));
+  };
+}
+
+// Paginated leaderboard query — the single surface callers use. The
+// home page asks for page 1 with size 25; /leaderboards/[category]
+// asks for size 50. Returns the total count so we can render "Page N
+// of M" and "See all X finishers" labels without a second round-trip.
+export interface LeaderboardPage {
+  rows: LeaderboardRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export async function getLeaderboardPage(
+  category: LeaderboardCategory,
+  page = 1,
+  pageSize = 50,
+): Promise<LeaderboardPage> {
+  const safePageSize = Math.min(
+    Math.max(1, Math.floor(pageSize)),
+    MAX_PAGE_SIZE,
+  );
+  // Page 0 or negative → clamp to 1. We'll re-clamp against totalPages
+  // after the count query lands so /page=99 on an empty category
+  // renders as page 1 rather than a confusing "Page 99 of 0".
+  const requestedPage = Math.max(1, Math.floor(page));
+
+  // Run count and page fetch in parallel — they're two independent
+  // queries against the same table and one round-trip beats two.
+  const whereClause = and(
+    eq(results.raceCategory, category),
+    isNotNull(results.finishTime),
+  );
+
+  const [countRows, dataRows] = await Promise.all([
+    db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(results)
+      .where(whereClause),
+    db
+      .select({
+        id: results.id,
+        athleteId: athletes.id,
+        athleteName: athletes.name,
+        eventName: results.eventName,
+        eventDate: results.eventDate,
+        raceCategory: results.raceCategory,
+        finishTime: results.finishTime,
+        percentile: results.percentile,
+      })
+      .from(results)
+      .innerJoin(athletes, eq(results.athleteId, athletes.id))
+      .where(whereClause)
+      .orderBy(asc(results.finishTime), desc(results.eventDate))
+      .limit(safePageSize)
+      .offset((requestedPage - 1) * safePageSize),
+  ]);
+
+  const total = countRows[0]?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / safePageSize));
+  // If the URL asked for page 50 and there are only 3 pages, we still
+  // return the data for the requested offset (which will be empty).
+  // The view layer can use totalPages to render the right prev/next
+  // state and avoid dead-end links.
+  const resolvedPage = Math.min(requestedPage, totalPages);
+
+  return {
+    rows: dataRows.map((r) => mapLeaderboardRow(r, category)),
+    total,
+    page: resolvedPage,
+    pageSize: safePageSize,
+    totalPages,
+  };
 }
