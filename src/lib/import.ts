@@ -15,9 +15,22 @@ export const IMPORT_COLUMNS = [
   'overall_rank',
   'gender',
   'location',
+  'race_category',
 ] as const;
 
 export type ImportColumn = (typeof IMPORT_COLUMNS)[number];
+
+// Canonical race categories we render and rank against. Anything else in
+// the CSV's race_category column is rejected so a typo doesn't create a
+// new de-facto bucket. The blank value is allowed and stored as null
+// (race_category is a nullable text column, not an enum).
+export const CANONICAL_CATEGORIES = [
+  '5K',
+  '10K',
+  'Half Marathon',
+  'Marathon',
+] as const;
+const CANONICAL_SET: ReadonlySet<string> = new Set(CANONICAL_CATEGORIES);
 
 // A row that passed shape validation. finish_time has already been
 // normalized to seconds; blanks in optional fields become null.
@@ -28,6 +41,10 @@ export interface ParsedRow {
   overallRank: number | null;
   gender: string | null;
   location: string | null;
+  // null when the CSV cell was blank; otherwise one of
+  // CANONICAL_CATEGORIES. We canonicalize on parse so downstream
+  // grouping doesn't have to worry about case variants.
+  raceCategory: string | null;
 }
 
 export interface RowError {
@@ -141,6 +158,29 @@ export function normalizeName(name: string): string {
   return name.normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
+// Map a free-form category cell ("10k", "10 K", "half marathon", "MARATHON")
+// to its canonical form from CANONICAL_CATEGORIES. Returns null if the
+// string doesn't match any canonical value so the caller can raise a
+// row-level validation error. We don't want silent fuzzy matches here —
+// "5km" that isn't "5K" exactly, for example, should be rejected and
+// corrected in the source CSV rather than guessed at.
+export function canonicalizeCategory(raw: string): string | null {
+  const compact = raw.trim().replace(/\s+/g, ' ').toLowerCase();
+  if (!compact) return null;
+  for (const canonical of CANONICAL_CATEGORIES) {
+    if (canonical.toLowerCase() === compact) return canonical;
+  }
+  // Tolerate "10 k" → "10K" and "10km" → "10K" for the distance-only
+  // buckets. Half Marathon / Marathon are written out, so they only
+  // match the exact string above.
+  const distanceMatch = compact.match(/^(\d+)\s*(k|km)?$/);
+  if (distanceMatch) {
+    const withK = `${distanceMatch[1]}K`;
+    if (CANONICAL_SET.has(withK)) return withK;
+  }
+  return null;
+}
+
 function matchesHeader(header: string[]): string | null {
   if (header.length < IMPORT_COLUMNS.length) {
     return `Header has ${header.length} columns but expected ${IMPORT_COLUMNS.length} (${IMPORT_COLUMNS.join(', ')}).`;
@@ -187,12 +227,20 @@ export function parseImportCsv(text: string): ParseOutcome {
       continue;
     }
 
-    const [name, finishTimeRaw, rankRaw, genderRaw, locationRaw] = [
+    const [
+      name,
+      finishTimeRaw,
+      rankRaw,
+      genderRaw,
+      locationRaw,
+      categoryRaw,
+    ] = [
       row[0] ?? '',
       row[1] ?? '',
       row[2] ?? '',
       row[3] ?? '',
       row[4] ?? '',
+      row[5] ?? '',
     ];
 
     const trimmedName = name.trim();
@@ -229,6 +277,24 @@ export function parseImportCsv(text: string): ParseOutcome {
     const gender = genderRaw.trim() || null;
     const location = locationRaw.trim() || null;
 
+    // Canonicalize the category. Blank is allowed (null). Known categories
+    // are matched case-insensitively so "10k", "10K", and "10 K" all
+    // normalize to "10K" — then validated against the canonical set.
+    let raceCategory: string | null = null;
+    const categoryTrim = categoryRaw.trim();
+    if (categoryTrim) {
+      const normalized = canonicalizeCategory(categoryTrim);
+      if (!normalized) {
+        errors.push({
+          lineNumber: line,
+          message: `race_category must be blank or one of: ${CANONICAL_CATEGORIES.join(', ')}.`,
+          offendingValue: categoryRaw,
+        });
+        continue;
+      }
+      raceCategory = normalized;
+    }
+
     parsed.push({
       lineNumber: line,
       name: trimmedName,
@@ -236,6 +302,7 @@ export function parseImportCsv(text: string): ParseOutcome {
       overallRank,
       gender,
       location,
+      raceCategory,
     });
   }
 

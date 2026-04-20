@@ -56,42 +56,19 @@ export default function ImportForm() {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="eventDate"
-            className="block text-xs text-gray-500 mb-1"
-          >
-            Event date
-          </label>
-          <input
-            id="eventDate"
-            name="eventDate"
-            type="date"
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="raceCategory"
-            className="block text-xs text-gray-500 mb-1"
-          >
-            Race category
-          </label>
-          <select
-            id="raceCategory"
-            name="raceCategory"
-            defaultValue=""
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          >
-            <option value="">— select —</option>
-            <option value="5K">5K</option>
-            <option value="10K">10K</option>
-            <option value="Half Marathon">Half Marathon</option>
-            <option value="Marathon">Marathon</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
+      <div>
+        <label
+          htmlFor="eventDate"
+          className="block text-xs text-gray-500 mb-1"
+        >
+          Event date
+        </label>
+        <input
+          id="eventDate"
+          name="eventDate"
+          type="date"
+          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
       <div>
@@ -109,9 +86,13 @@ export default function ImportForm() {
         <p className="mt-2 text-xs text-gray-400">
           Columns, in order:{' '}
           <code className="px-1 py-0.5 rounded bg-gray-100 text-gray-700">
-            name, finish_time, overall_rank, gender, location
+            name, finish_time, overall_rank, gender, location, race_category
           </code>
           . Finish time as <code>H:MM:SS</code> or <code>MM:SS</code>.
+          <code>race_category</code> may be blank or one of{' '}
+          <code>5K</code>, <code>10K</code>, <code>Half Marathon</code>,{' '}
+          <code>Marathon</code> — mix distances in the same file to import
+          every field of a multi-distance event at once.
         </p>
       </div>
 
@@ -182,7 +163,6 @@ function PreviewStep({
                   day: 'numeric',
                 })
               : 'No date'}
-            {preview.raceCategory ? ` · ${preview.raceCategory}` : ''}
           </div>
         </div>
 
@@ -191,6 +171,30 @@ function PreviewStep({
           <Stat label="New athletes" value={preview.newAthletes.length} />
           <Stat label="Matched existing" value={preview.matches.length} />
         </div>
+
+        {preview.categories.length > 0 && (
+          <div className="pt-2">
+            <div className="text-xs text-gray-400 mb-2">
+              Finishers by category
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {preview.categories.map((cat) => (
+                <span
+                  key={cat.label}
+                  className="text-xs rounded-full bg-gray-50 border border-gray-100 px-3 py-1 text-gray-700"
+                >
+                  <span className="font-medium">{cat.label}</span>
+                  <span className="text-gray-400"> · </span>
+                  <span className="tabular-nums">{cat.count}</span>
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              Ranks and percentiles are computed inside each category, so the
+              10K and Marathon fields don&apos;t mix.
+            </p>
+          </div>
+        )}
       </div>
 
       {preview.matches.length > 0 && (
@@ -235,6 +239,7 @@ function PreviewStep({
                 <th className="py-1 pr-4 font-medium">Rank</th>
                 <th className="py-1 pr-4 font-medium">Gender</th>
                 <th className="py-1 pr-4 font-medium">Location</th>
+                <th className="py-1 pr-4 font-medium">Category</th>
               </tr>
             </thead>
             <tbody className="text-gray-700">
@@ -249,6 +254,7 @@ function PreviewStep({
                   </td>
                   <td className="py-1 pr-4">{row.gender ?? '—'}</td>
                   <td className="py-1 pr-4">{row.location ?? '—'}</td>
+                  <td className="py-1 pr-4">{row.raceCategory ?? '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -259,7 +265,6 @@ function PreviewStep({
       <form action={commitAction} className="space-y-3">
         <input type="hidden" name="eventName" value={preview.eventName} />
         <input type="hidden" name="eventDate" value={toDateInput(preview.eventDateISO)} />
-        <input type="hidden" name="raceCategory" value={preview.raceCategory || 'Other'} />
         {/* CSV text round-trips through the form so commit re-parses the
             same bytes. It's large — textarea handles multi-KB payloads
             without the browser dropping characters. */}

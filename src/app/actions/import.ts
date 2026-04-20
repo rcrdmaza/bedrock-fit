@@ -19,21 +19,13 @@ import {
 // probably a mistake or needs a streaming flow we haven't built yet.
 const MAX_CSV_BYTES = 5 * 1024 * 1024;
 
-const ALLOWED_CATEGORIES = new Set([
-  '5K',
-  '10K',
-  'Half Marathon',
-  'Marathon',
-  'Other',
-]);
-
-// Shared metadata vector — the preview form collects these, the commit
-// form round-trips them in hidden inputs. Validated in both actions so
-// neither trusts the other to have done its job.
+// Event-level metadata. raceCategory is intentionally NOT on the event —
+// a single event can contain several distances (5K + 10K + Half + Marathon),
+// so the category lives on each CSV row and the results table already
+// stores it per-row.
 interface EventMeta {
   eventName: string;
   eventDate: Date | null;
-  raceCategory: string | null;
 }
 
 interface MatchPair {
@@ -49,6 +41,13 @@ interface NewAthlete {
   rowCount: number;
 }
 
+interface CategoryBreakdown {
+  // Canonical category name, or "Uncategorized" when the CSV row left the
+  // cell blank. Purely a display label — we still persist null for blanks.
+  label: string;
+  count: number;
+}
+
 export type PreviewState =
   | { status: 'idle' }
   | {
@@ -58,16 +57,17 @@ export type PreviewState =
     }
   | {
       status: 'preview';
-      // Round-tripped to the commit form via hidden inputs.
+      // Round-tripped to the commit form via hidden inputs so the admin
+      // doesn't have to re-pick the CSV to confirm.
       csvText: string;
       eventName: string;
       eventDateISO: string;
-      raceCategory: string;
       // Diagnostic payload the UI renders.
       rows: ParsedRow[];
       matches: MatchPair[];
       newAthletes: NewAthlete[];
       totalFinishers: number;
+      categories: CategoryBreakdown[];
     };
 
 export type CommitState =
@@ -84,28 +84,24 @@ function readEventMeta(formData: FormData): {
   meta: EventMeta;
   rawEventName: string;
   rawEventDate: string;
-  rawCategory: string;
   error: string | null;
 } {
   const rawEventName = String(formData.get('eventName') ?? '').trim();
   const rawEventDate = String(formData.get('eventDate') ?? '').trim();
-  const rawCategory = String(formData.get('raceCategory') ?? '').trim();
 
   if (!rawEventName) {
     return {
-      meta: { eventName: '', eventDate: null, raceCategory: null },
+      meta: { eventName: '', eventDate: null },
       rawEventName,
       rawEventDate,
-      rawCategory,
       error: 'Event name is required.',
     };
   }
   if (rawEventName.length > 200) {
     return {
-      meta: { eventName: '', eventDate: null, raceCategory: null },
+      meta: { eventName: '', eventDate: null },
       rawEventName,
       rawEventDate,
-      rawCategory,
       error: 'Event name is too long (max 200 chars).',
     };
   }
@@ -117,39 +113,38 @@ function readEventMeta(formData: FormData): {
     const d = new Date(rawEventDate);
     if (Number.isNaN(d.getTime())) {
       return {
-        meta: { eventName: '', eventDate: null, raceCategory: null },
+        meta: { eventName: '', eventDate: null },
         rawEventName,
         rawEventDate,
-        rawCategory,
         error: 'Event date must be a valid YYYY-MM-DD value.',
       };
     }
     eventDate = d;
   }
 
-  let raceCategory: string | null = null;
-  if (rawCategory) {
-    if (!ALLOWED_CATEGORIES.has(rawCategory)) {
-      return {
-        meta: { eventName: '', eventDate: null, raceCategory: null },
-        rawEventName,
-        rawEventDate,
-        rawCategory,
-        error: `Race category must be one of: ${[...ALLOWED_CATEGORIES].join(', ')}.`,
-      };
-    }
-    // Persist null rather than the "Other" placeholder — the column is
-    // nullable and "Other" carries no useful info downstream.
-    raceCategory = rawCategory === 'Other' ? null : rawCategory;
-  }
-
   return {
-    meta: { eventName: rawEventName, eventDate, raceCategory },
+    meta: { eventName: rawEventName, eventDate },
     rawEventName,
     rawEventDate,
-    rawCategory,
     error: null,
   };
+}
+
+// Group parsed rows by their own raceCategory so we can compute the
+// `totalFinishers` pool each row is ranked within. The Lima Marathon
+// might list 1,840 marathon finishers and 620 10K finishers on the same
+// day — ranks and percentiles only make sense inside their own field.
+// `null` is a valid bucket: CSVs with a blank category still rank against
+// each other under the `Uncategorized` label.
+function groupByCategory(rows: ParsedRow[]): Map<string | null, ParsedRow[]> {
+  const map = new Map<string | null, ParsedRow[]>();
+  for (const row of rows) {
+    const key = row.raceCategory;
+    const bucket = map.get(key);
+    if (bucket) bucket.push(row);
+    else map.set(key, [row]);
+  }
+  return map;
 }
 
 // Look up existing athletes whose normalized names match anything in `needles`.
@@ -163,8 +158,6 @@ async function findExistingAthletes(
   const map = new Map<string, { id: string; name: string }>();
   if (needles.size === 0) return map;
 
-  // Coarse SQL filter: lowercased names that land in the candidate set.
-  // We pass a Postgres text[] via ANY for index-friendly matching.
   const loweredNeedles = [...needles].map((n) =>
     n.toLowerCase().replace(/\s+/g, ' ').trim(),
   );
@@ -226,10 +219,8 @@ export async function previewImport(
     };
   }
 
-  // Bucket rows by normalized name, tracking how many times each appears
-  // in the CSV — useful both for the dedup display and for warning on
-  // accidental duplicates within the same file (shared runners is fine;
-  // double-entered rows are not, but we surface the count either way).
+  // Dedup pass — unchanged by the per-category change, since an athlete
+  // who runs two distances at the same event is still one athlete.
   const byKey = new Map<string, { displayName: string; lines: number[] }>();
   for (const row of rows) {
     const key = normalizeName(row.name);
@@ -245,9 +236,6 @@ export async function previewImport(
   for (const [key, info] of byKey) {
     const hit = existing.get(key);
     if (hit) {
-      // Only record the first occurrence per athlete — the UI doesn't
-      // need to list the same match pair multiple times, it'll just say
-      // how many rows will attach.
       matches.push({
         lineNumber: info.lines[0],
         csvName: info.displayName,
@@ -263,16 +251,30 @@ export async function previewImport(
     }
   }
 
+  const grouped = groupByCategory(rows);
+  const categories: CategoryBreakdown[] = [...grouped.entries()]
+    .map(([label, items]) => ({
+      label: label ?? 'Uncategorized',
+      count: items.length,
+    }))
+    // Canonical order first, then any "Uncategorized" last so the preview
+    // puts the meaningful buckets up top.
+    .sort((a, b) => {
+      if (a.label === 'Uncategorized') return 1;
+      if (b.label === 'Uncategorized') return -1;
+      return b.count - a.count;
+    });
+
   return {
     status: 'preview',
     csvText,
     eventName: meta.eventName,
     eventDateISO: meta.eventDate ? meta.eventDate.toISOString() : '',
-    raceCategory: meta.raceCategory ?? '',
     rows,
     matches,
     newAthletes,
     totalFinishers: rows.length,
+    categories,
   };
 }
 
@@ -306,11 +308,16 @@ export async function commitImport(
     return { status: 'error', error: 'CSV has no finisher rows to import.' };
   }
 
-  const totalFinishers = rows.length;
+  // Pre-compute per-category totals once. Each row's totalFinishers +
+  // percentile reference the size of its own bucket, not the whole CSV.
+  const grouped = groupByCategory(rows);
+  const totalByCategory = new Map<string | null, number>();
+  for (const [label, items] of grouped) {
+    totalByCategory.set(label, items.length);
+  }
 
-  // Same dedup lookup as preview. We redo it instead of trusting hidden
-  // state: between preview and commit someone could have claimed the
-  // same name via another route, and we'd rather match than double-create.
+  // Dedup lookup (redone on commit — another claim could have landed
+  // between preview and confirm, and we'd rather match than double-create).
   const keys = new Set(rows.map((r) => normalizeName(r.name)));
   const existing = await findExistingAthletes(keys);
 
@@ -354,12 +361,8 @@ export async function commitImport(
           )
           .returning({ id: athletes.id, name: athletes.name });
 
-        // Order of returning rows matches values order on postgres-js,
-        // but we use name-match to be resilient to future reordering.
-        for (let i = 0; i < inserted.length; i++) {
-          const row = inserted[i];
-          const key = normalizeName(row.name);
-          idByKey.set(key, row.id);
+        for (const row of inserted) {
+          idByKey.set(normalizeName(row.name), row.id);
         }
         athletesCreated = inserted.length;
       }
@@ -368,19 +371,18 @@ export async function commitImport(
         const key = normalizeName(row.name);
         const athleteId = idByKey.get(key);
         if (!athleteId) {
-          // Shouldn't happen — existing + newly inserted covers every
-          // unique key. Throw to abort the transaction if it somehow does.
           throw new Error(`Missing athlete id for "${row.name}"`);
         }
+        const categoryTotal = totalByCategory.get(row.raceCategory) ?? 0;
         return {
           athleteId,
           eventName: meta.eventName,
           eventDate: meta.eventDate,
-          raceCategory: meta.raceCategory,
+          raceCategory: row.raceCategory,
           finishTime: row.finishTimeSeconds,
           overallRank: row.overallRank,
-          totalFinishers,
-          percentile: computePercentile(row.overallRank, totalFinishers),
+          totalFinishers: categoryTotal,
+          percentile: computePercentile(row.overallRank, categoryTotal),
           status: 'unclaimed' as const,
         };
       });
