@@ -4,6 +4,9 @@ import { desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { athletes, results } from '@/db/schema';
 import { distanceKm, formatPace } from '@/lib/race';
+import RaceHistory, {
+  type RaceHistoryRow,
+} from './race-history';
 
 // Athletes and their results change over time; rendered per request.
 export const dynamic = 'force-dynamic';
@@ -56,9 +59,6 @@ export default async function AthleteProfilePage({
   // Simple summary stats computed in-memory — cheap enough to avoid a
   // second query.
   const totalRaces = athleteResults.length;
-  const claimedCount = athleteResults.filter(
-    (r) => r.status === 'claimed',
-  ).length;
   const bestPercentile = athleteResults.reduce<number | null>((best, r) => {
     const p = r.percentile != null ? Number(r.percentile) : null;
     if (p == null) return best;
@@ -163,90 +163,24 @@ export default async function AthleteProfilePage({
           </div>
         </div>
 
-        {/* Results list */}
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="text-sm font-medium text-gray-900">Race history</h2>
-          <span className="text-xs text-gray-400">
-            {claimedCount} of {totalRaces} claimed
-          </span>
-        </div>
-
-        {athleteResults.length === 0 ? (
-          <div className="text-center py-16 text-gray-400 text-sm border border-dashed border-gray-200 rounded-2xl">
-            No results on file for this athlete yet.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {athleteResults.map((r) => (
-              <div
-                key={r.id}
-                className="border border-gray-100 rounded-2xl p-5 hover:border-gray-300 transition-colors"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="font-medium text-gray-900 text-sm">
-                      {r.eventName}
-                    </div>
-                    <div className="text-xs text-gray-400 mt-0.5">
-                      {r.eventDate
-                        ? new Date(r.eventDate).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })
-                        : 'Date unknown'}
-                      {r.raceCategory ? ` · ${r.raceCategory}` : ''}
-                    </div>
-                  </div>
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      r.status === 'claimed'
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : r.status === 'pending'
-                          ? 'bg-sky-50 text-sky-700'
-                          : 'bg-amber-50 text-amber-700'
-                    }`}
-                  >
-                    {r.status === 'claimed'
-                      ? 'Claimed'
-                      : r.status === 'pending'
-                        ? 'Pending'
-                        : 'Unclaimed'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <div className="text-xs text-gray-400 mb-0.5">
-                      Finish time
-                    </div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {formatTime(r.finishTime)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-400 mb-0.5">
-                      Overall rank
-                    </div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {r.overallRank ?? '—'}
-                      {r.totalFinishers ? ` / ${r.totalFinishers}` : ''}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-400 mb-0.5">
-                      Percentile
-                    </div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {r.percentile != null
-                        ? `Top ${(100 - Number(r.percentile)).toFixed(1)}%`
-                        : '—'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Race history + bulk-claim UI is a client component because the
+            checkbox state + submit banner need local reactivity. The server
+            still does all the data work; we just pass rows through. */}
+        <RaceHistory
+          rows={athleteResults.map(
+            (r): RaceHistoryRow => ({
+              id: r.id,
+              eventName: r.eventName,
+              eventDate: r.eventDate,
+              raceCategory: r.raceCategory,
+              finishTime: r.finishTime,
+              overallRank: r.overallRank,
+              totalFinishers: r.totalFinishers,
+              percentile: r.percentile,
+              status: r.status,
+            }),
+          )}
+        />
       </section>
     </main>
   );
