@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getEventDetail } from '@/lib/events';
 import EventParticipants from './event-participants';
 
@@ -27,9 +27,13 @@ export default async function EventDetailPage({
   const date = first(sp.date);
   const category = first(sp.category);
 
-  // Any missing piece of the identity triple → 404. The /results
-  // events view is the canonical entry point; anyone landing here
-  // with partial params hand-typed the URL.
+  // Bare /events (no params) — the events listing lives on /results
+  // behind the toggle, so send the user there rather than 404ing. This
+  // also makes /events safe to bookmark as "the events page".
+  if (!name && !date && !category) redirect('/results');
+
+  // Partial params means a hand-edited URL — those we 404 on, because
+  // there's no sensible listing to fall back to for a half-specified event.
   if (!name || !date || !category) notFound();
 
   const detail = await getEventDetail(name, date, category);
