@@ -1,13 +1,19 @@
 import Link from 'next/link';
 import { getResults } from '@/lib/results';
-import ResultsSearch from './results-search';
+import { getEventSummaries } from '@/lib/events';
+import ResultsBrowser from './results-browser';
 
 // Always fetch fresh data on each request — results will change as new rows
 // get ingested and claimed.
 export const dynamic = 'force-dynamic';
 
 export default async function ResultsPage() {
-  const rows = await getResults();
+  // Both fetches in parallel — they hit the same table but don't
+  // share a query plan, so a single round-trip is no cheaper.
+  const [rows, events] = await Promise.all([
+    getResults(),
+    getEventSummaries(),
+  ]);
 
   return (
     <main className="min-h-screen bg-white">
@@ -25,11 +31,11 @@ export default async function ResultsPage() {
           Find your results
         </h1>
         <p className="text-gray-500 text-sm mb-8">
-          Search by name, bib, event, or country — or narrow the full list by
-          date range. Newest results first.
+          Switch between individual results and the events they belong to.
+          Filter by name, bib, event, country, or date range — newest first.
         </p>
 
-        <ResultsSearch rows={rows} />
+        <ResultsBrowser rows={rows} events={events} />
       </section>
     </main>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { distanceKm } from '@/lib/race';
 import {
   filterResults,
@@ -9,7 +9,7 @@ import {
   type ResultRow,
   type ResultSearchField,
 } from '@/lib/results-filter';
-import { claimResult, type ClaimState } from '@/app/actions/claim';
+import { ClaimForm, statusClasses, statusLabel } from './claim-form';
 
 export type { ResultRow };
 
@@ -21,18 +21,6 @@ function formatTime(seconds: number | null): string {
   if (h > 0)
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   return `${m}:${String(s).padStart(2, '0')}`;
-}
-
-function statusLabel(status: string) {
-  if (status === 'claimed') return 'Claimed';
-  if (status === 'pending') return 'Pending';
-  return 'Unclaimed';
-}
-
-function statusClasses(status: string) {
-  if (status === 'claimed') return 'bg-emerald-50 text-emerald-700';
-  if (status === 'pending') return 'bg-sky-50 text-sky-700';
-  return 'bg-amber-50 text-amber-700';
 }
 
 function avgSpeedKmh(
@@ -61,90 +49,6 @@ const SEARCH_FIELD_META: Record<
 // Max results shown in the list at once. Beyond this we tell the user
 // to narrow the query rather than painting 5k rows into the DOM.
 const MAX_VISIBLE = 200;
-
-// The initial state that useActionState starts from.
-const INITIAL_CLAIM: ClaimState = { status: 'idle' };
-
-function ClaimForm({
-  resultId,
-  onCancel,
-}: {
-  resultId: string;
-  onCancel: () => void;
-}) {
-  const [state, formAction, pending] = useActionState(
-    claimResult,
-    INITIAL_CLAIM,
-  );
-
-  if (state.status === 'success') {
-    return (
-      <div className="mt-4 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-4 py-3">
-        Claim submitted. We&apos;ll email you once it&apos;s reviewed.
-      </div>
-    );
-  }
-
-  return (
-    <form action={formAction} className="mt-4 space-y-3">
-      <input type="hidden" name="resultId" value={resultId} />
-      <div>
-        <label
-          htmlFor={`email-${resultId}`}
-          className="block text-xs text-gray-500 mb-1"
-        >
-          Your email
-        </label>
-        <input
-          id={`email-${resultId}`}
-          name="email"
-          type="email"
-          required
-          placeholder="you@example.com"
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div>
-        <label
-          htmlFor={`note-${resultId}`}
-          className="block text-xs text-gray-500 mb-1"
-        >
-          Verification note{' '}
-          <span className="text-gray-400">
-            (bib #, strava link, anything that proves it was you)
-          </span>
-        </label>
-        <textarea
-          id={`note-${resultId}`}
-          name="note"
-          maxLength={500}
-          rows={2}
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      {state.status === 'error' && (
-        <p className="text-xs text-red-600">{state.error}</p>
-      )}
-      <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={pending}
-          className="text-xs bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
-        >
-          {pending ? 'Submitting…' : 'Submit claim'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={pending}
-          className="text-xs text-gray-500 hover:text-gray-900 px-3 py-2 transition-colors disabled:opacity-50"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
-  );
-}
 
 export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
   // Dropdown picks the primary text field; the input's placeholder and
