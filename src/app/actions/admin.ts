@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
 import { results } from '@/db/schema';
 import {
@@ -11,6 +11,11 @@ import {
   requireAdmin,
   setAdminCookie,
 } from '@/lib/auth';
+
+// Hard upper bound for a single approve/reject batch. Mirrors the cap
+// on the athlete-side bulk-claim flow — an admin should only ever be
+// resolving rows from one submission at a time.
+const MAX_BATCH = 50;
 
 export type LoginState =
   | { status: 'idle' }
@@ -39,19 +44,23 @@ export async function adminLogout(): Promise<void> {
   redirect('/admin/login');
 }
 
-// Approve / reject mutate the same row, so share a helper. Both guard on
-// `status = 'pending'` at the WHERE so a stale form submission (e.g. admin
-// opens two tabs) can't double-apply or revive a rejected claim.
-async function updatePendingStatus(
-  resultId: string,
+// Approve / reject mutate the same rows, so share a helper. Both guard
+// on `status = 'pending'` at the WHERE so a stale form submission
+// (e.g. admin opens two tabs, or the claim was already withdrawn)
+// can't double-apply or revive a rejected claim.
+async function updatePendingBatch(
+  resultIds: string[],
   updates: Record<string, unknown>,
-): Promise<boolean> {
+): Promise<number> {
+  if (resultIds.length === 0) return 0;
   const updated = await db
     .update(results)
     .set(updates)
-    .where(and(eq(results.id, resultId), eq(results.status, 'pending')))
+    .where(
+      and(inArray(results.id, resultIds), eq(results.status, 'pending')),
+    )
     .returning({ id: results.id });
-  return updated.length > 0;
+  return updated.length;
 }
 
 function bustClaimCaches() {
@@ -63,23 +72,32 @@ function bustClaimCaches() {
   revalidatePath('/athletes/[id]', 'page');
 }
 
-export async function approveClaim(formData: FormData): Promise<void> {
-  await requireAdmin();
-  const resultId = String(formData.get('resultId') ?? '').trim();
-  if (!resultId) return;
+// Pull result ids out of a form, de-dup, drop blanks, enforce the cap.
+// A single-row approve just posts one `resultIds` input — no divergent
+// code paths between "one claim" and "a batch of eight."
+function readResultIds(formData: FormData): string[] {
+  const raw = formData.getAll('resultIds').map((v) => String(v).trim());
+  const ids = [...new Set(raw.filter(Boolean))];
+  return ids.slice(0, MAX_BATCH);
+}
 
-  await updatePendingStatus(resultId, { status: 'claimed' });
+export async function approveClaims(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const ids = readResultIds(formData);
+  if (ids.length === 0) return;
+
+  await updatePendingBatch(ids, { status: 'claimed' });
   bustClaimCaches();
 }
 
-export async function rejectClaim(formData: FormData): Promise<void> {
+export async function rejectClaims(formData: FormData): Promise<void> {
   await requireAdmin();
-  const resultId = String(formData.get('resultId') ?? '').trim();
-  if (!resultId) return;
+  const ids = readResultIds(formData);
+  if (ids.length === 0) return;
 
   // Revert to unclaimed and wipe the claim metadata so the next claimer
   // starts from a clean slate — we're not keeping a rejection audit log.
-  await updatePendingStatus(resultId, {
+  await updatePendingBatch(ids, {
     status: 'unclaimed',
     claimEmail: null,
     claimNote: null,
