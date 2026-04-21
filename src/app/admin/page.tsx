@@ -139,6 +139,12 @@ export default async function AdminPage({
         </Link>
         <div className="flex items-center gap-5">
           <Link
+            href="/admin/events"
+            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            Events
+          </Link>
+          <Link
             href="/admin/import"
             className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
           >

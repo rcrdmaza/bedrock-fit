@@ -10,7 +10,12 @@
 
 import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { athletes, results } from '@/db/schema';
+import {
+  athletes,
+  eventMetadata,
+  eventPhotos,
+  results,
+} from '@/db/schema';
 
 export { eventKey, filterEvents, type EventSummary, type EventsFilter } from '@/lib/events-filter';
 import { eventKey, type EventSummary } from '@/lib/events-filter';
@@ -74,13 +79,40 @@ export type EventParticipant = {
   bib: string | null;
 };
 
+// Admin-curated fields about the event. All optional — an event with
+// no metadata row returns `metadata: null` on the detail and the UI
+// hides every empty section.
+export type EventMetadata = {
+  // Metadata row id — used by the admin photo actions so the UI can
+  // reference a specific gallery entry without re-resolving the
+  // triple on every mutation.
+  id: string;
+  city: string | null;
+  district: string | null;
+  country: string | null;
+  summary: string | null;
+  routeUrl: string | null;
+  routeImageUrl: string | null;
+};
+
+export type EventPhoto = {
+  id: string;
+  url: string;
+  caption: string | null;
+  sortOrder: number;
+};
+
 export interface EventDetail {
   eventName: string;
   eventDate: string;
   raceCategory: string;
+  // Preferred: metadata.country when set, otherwise the MAX(event_country)
+  // from the results rows. Null means we genuinely have no country info.
   eventCountry: string | null;
   participants: EventParticipant[];
   total: number;
+  metadata: EventMetadata | null;
+  photos: EventPhoto[];
 }
 
 // Hard cap so a poorly-grouped event (or a future ultra-marathon with
@@ -105,10 +137,11 @@ export async function getEventDetail(
     isNotNull(results.finishTime),
   );
 
-  // Country lookup + ranked rows in parallel. The country query is
-  // cheap (single aggregate row) and lets us render the page header
-  // without waiting for the full list.
-  const [meta, rows] = await Promise.all([
+  // Four parallel queries — they hit different tables (or different
+  // shapes of the same table), so one round-trip each is faster than
+  // chaining them. The admin metadata + photos lookup is routed off
+  // the event identity triple, matching how the upsert keys rows.
+  const [meta, rows, metaRows, photoRows] = await Promise.all([
     db
       .select({
         eventCountry: sql<string | null>`max(${results.eventCountry})`,
@@ -133,16 +166,66 @@ export async function getEventDetail(
       .where(whereClause)
       .orderBy(asc(results.finishTime))
       .limit(MAX_PARTICIPANTS),
+    db
+      .select({
+        id: eventMetadata.id,
+        city: eventMetadata.city,
+        district: eventMetadata.district,
+        country: eventMetadata.country,
+        summary: eventMetadata.summary,
+        routeUrl: eventMetadata.routeUrl,
+        routeImageUrl: eventMetadata.routeImageUrl,
+      })
+      .from(eventMetadata)
+      .where(
+        and(
+          eq(eventMetadata.eventName, eventName),
+          eq(eventMetadata.eventDate, eventDate),
+          eq(eventMetadata.raceCategory, raceCategory),
+        ),
+      )
+      .limit(1),
+    // Photos LEFT JOIN via an inner query on metadata id — avoids a
+    // separate fetch of "metadata id" first. We filter to the same
+    // triple so a bad (name, date, category) returns no photos.
+    db
+      .select({
+        id: eventPhotos.id,
+        url: eventPhotos.url,
+        caption: eventPhotos.caption,
+        sortOrder: eventPhotos.sortOrder,
+      })
+      .from(eventPhotos)
+      .innerJoin(
+        eventMetadata,
+        eq(eventPhotos.eventMetadataId, eventMetadata.id),
+      )
+      .where(
+        and(
+          eq(eventMetadata.eventName, eventName),
+          eq(eventMetadata.eventDate, eventDate),
+          eq(eventMetadata.raceCategory, raceCategory),
+        ),
+      )
+      .orderBy(asc(eventPhotos.sortOrder), asc(eventPhotos.createdAt)),
   ]);
 
   const total = meta[0]?.total ?? 0;
   if (total === 0) return null;
 
+  const metadata = metaRows[0] ?? null;
+  // Prefer admin-curated country when present; fall back to whatever the
+  // results table carries. MetaDB null or empty string → fall through.
+  const eventCountry =
+    (metadata?.country && metadata.country.trim()) ||
+    meta[0]?.eventCountry ||
+    null;
+
   return {
     eventName,
     eventDate: eventDate.toISOString(),
     raceCategory,
-    eventCountry: meta[0]?.eventCountry ?? null,
+    eventCountry,
     total,
     participants: rows.map((r) => ({
       id: r.id,
@@ -157,5 +240,56 @@ export async function getEventDetail(
       status: r.status ?? 'unclaimed',
       bib: r.bib,
     })),
+    metadata,
+    photos: photoRows,
   };
+}
+
+// Fetch just the metadata + photos for a single event, keyed by the
+// identity triple. Returns null if no metadata row exists yet — the
+// admin edit page uses this to prefill the form, rendering a blank
+// form when null.
+export async function getEventMetadata(
+  eventName: string,
+  eventDateIso: string,
+  raceCategory: string,
+): Promise<{ metadata: EventMetadata; photos: EventPhoto[] } | null> {
+  const eventDate = new Date(eventDateIso);
+  if (Number.isNaN(eventDate.getTime())) return null;
+
+  const where = and(
+    eq(eventMetadata.eventName, eventName),
+    eq(eventMetadata.eventDate, eventDate),
+    eq(eventMetadata.raceCategory, raceCategory),
+  );
+
+  const metaRows = await db
+    .select({
+      id: eventMetadata.id,
+      city: eventMetadata.city,
+      district: eventMetadata.district,
+      country: eventMetadata.country,
+      summary: eventMetadata.summary,
+      routeUrl: eventMetadata.routeUrl,
+      routeImageUrl: eventMetadata.routeImageUrl,
+    })
+    .from(eventMetadata)
+    .where(where)
+    .limit(1);
+
+  const metadata = metaRows[0] ?? null;
+  if (!metadata) return null;
+
+  const photos = await db
+    .select({
+      id: eventPhotos.id,
+      url: eventPhotos.url,
+      caption: eventPhotos.caption,
+      sortOrder: eventPhotos.sortOrder,
+    })
+    .from(eventPhotos)
+    .where(eq(eventPhotos.eventMetadataId, metadata.id))
+    .orderBy(asc(eventPhotos.sortOrder), asc(eventPhotos.createdAt));
+
+  return { metadata, photos };
 }
