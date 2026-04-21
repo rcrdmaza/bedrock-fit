@@ -2,7 +2,17 @@ import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    serverActions: {
+      // CSV imports go through a server action as FormData. Next's 1 MB
+      // default rejects our real-race CSVs (Boston 2015 is ~2 MB of 26k
+      // rows) before previewImport() sees them. The action itself caps
+      // the raw CSV at 5 MB (MAX_CSV_BYTES in src/app/actions/import.ts);
+      // 6 MB here leaves headroom for FormData encoding overhead without
+      // outgrowing that cap.
+      bodySizeLimit: '6mb',
+    },
+  },
 };
 
 // Sentry webpack/turbopack plugin wrapper. It inserts source-map upload and
