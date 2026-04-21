@@ -19,6 +19,27 @@ import {
 // probably a mistake or needs a streaming flow we haven't built yet.
 const MAX_CSV_BYTES = 5 * 1024 * 1024;
 
+// Postgres caps a single prepared statement at 65,535 bind parameters
+// (one 16-bit counter). Large imports (Boston 2015 is ~26k rows) blow
+// past that on both the athletes insert (3 params/row → >65k @ ~22k rows)
+// and the results insert (11 params/row → >65k @ ~6k rows), so we batch.
+// The chunk sizes below keep each statement's param count under 50k for
+// safety margin, and are picked per-table based on column count.
+const ATHLETE_INSERT_CHUNK = 10_000; //   3 params/row → ~30k params/chunk
+const RESULT_INSERT_CHUNK = 4_000; //    11 params/row → ~44k params/chunk
+// Lookup queries use one param per value (inArray), so the cap is looser
+// but we still chunk to keep the generated SQL string from ballooning.
+const NAME_LOOKUP_CHUNK = 10_000;
+
+function chunk<T>(arr: readonly T[], size: number): T[][] {
+  if (arr.length <= size) return [arr as T[]];
+  const chunks: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+}
+
 // Event-level metadata. raceCategory is intentionally NOT on the event —
 // a single event can contain several distances (5K + 10K + Half + Marathon),
 // so the category lives on each CSV row and the results table already
@@ -164,16 +185,20 @@ async function findExistingAthletes(
 
   // inArray generates `expr IN (?, ?, ...)` which binds each value as a
   // separate positional parameter — compatible with postgres-js without
-  // needing a pg-side ARRAY cast.
-  const candidates = await db
-    .select({ id: athletes.id, name: athletes.name })
-    .from(athletes)
-    .where(inArray(sql`lower(trim(${athletes.name}))`, loweredNeedles));
+  // needing a pg-side ARRAY cast. We chunk to keep param counts and the
+  // generated SQL length sane on large imports; chunks run sequentially
+  // to avoid starving the DB pool.
+  for (const batch of chunk(loweredNeedles, NAME_LOOKUP_CHUNK)) {
+    const candidates = await db
+      .select({ id: athletes.id, name: athletes.name })
+      .from(athletes)
+      .where(inArray(sql`lower(trim(${athletes.name}))`, batch));
 
-  for (const row of candidates) {
-    const key = normalizeName(row.name);
-    if (needles.has(key) && !map.has(key)) {
-      map.set(key, { id: row.id, name: row.name });
+    for (const row of candidates) {
+      const key = normalizeName(row.name);
+      if (needles.has(key) && !map.has(key)) {
+        map.set(key, { id: row.id, name: row.name });
+      }
     }
   }
   return map;
@@ -350,21 +375,28 @@ export async function commitImport(
       for (const [k, v] of existing) idByKey.set(k, v.id);
 
       if (newAthletes.length > 0) {
-        const inserted = await tx
-          .insert(athletes)
-          .values(
-            newAthletes.map((a) => ({
-              name: a.name,
-              gender: a.gender,
-              location: a.location,
-            })),
-          )
-          .returning({ id: athletes.id, name: athletes.name });
+        // Chunked insert to respect Postgres's 65,535 bind-parameter cap;
+        // a 26k-finisher race would otherwise need ~80k params in one
+        // statement and fail on commit. Each chunk's `returning` feeds
+        // the id map so subsequent batches (or the results insert) can
+        // resolve athletes by normalized name.
+        for (const batch of chunk(newAthletes, ATHLETE_INSERT_CHUNK)) {
+          const inserted = await tx
+            .insert(athletes)
+            .values(
+              batch.map((a) => ({
+                name: a.name,
+                gender: a.gender,
+                location: a.location,
+              })),
+            )
+            .returning({ id: athletes.id, name: athletes.name });
 
-        for (const row of inserted) {
-          idByKey.set(normalizeName(row.name), row.id);
+          for (const row of inserted) {
+            idByKey.set(normalizeName(row.name), row.id);
+          }
+          athletesCreated += inserted.length;
         }
-        athletesCreated = inserted.length;
       }
 
       const resultValues = rows.map((row) => {
@@ -391,11 +423,15 @@ export async function commitImport(
         };
       });
 
-      const insertedResults = await tx
-        .insert(results)
-        .values(resultValues)
-        .returning({ id: results.id });
-      rowsInserted = insertedResults.length;
+      // Same param-cap reasoning as the athletes insert, but with a
+      // tighter chunk because results carry ~11 columns per row.
+      for (const batch of chunk(resultValues, RESULT_INSERT_CHUNK)) {
+        const insertedResults = await tx
+          .insert(results)
+          .values(batch)
+          .returning({ id: results.id });
+        rowsInserted += insertedResults.length;
+      }
     });
   } catch (e) {
     return {
