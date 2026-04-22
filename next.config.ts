@@ -2,6 +2,13 @@ import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
+  // Version-skew protection. Railway sets RAILWAY_GIT_COMMIT_SHA per
+  // deploy; passing it here makes Next stamp assets with ?dpl=<sha> and
+  // check it on navigation. When a browser tab outlives a deploy, the
+  // mismatch triggers a full-page reload instead of a "Failed to find
+  // Server Action" on the next form submit. Falls back to undefined in
+  // local dev so Next generates its own per-build id.
+  deploymentId: process.env.RAILWAY_GIT_COMMIT_SHA,
   experimental: {
     serverActions: {
       // CSV imports go through a server action as FormData. Next's 1 MB
