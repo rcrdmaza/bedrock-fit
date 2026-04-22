@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/auth';
+import SiteHeader from '@/app/site-header';
 import { adminLogout } from '@/app/actions/admin';
 import ImportForm from './import-form';
 
@@ -11,29 +12,33 @@ export default async function AdminImportPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+      <SiteHeader />
+
+      <nav
+        aria-label="Admin"
+        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-gray-100 bg-gray-50"
+      >
         <Link
-          href="/"
-          className="text-xl font-semibold tracking-tight text-gray-900"
+          href="/admin"
+          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
         >
-          Bedrock.fit
+          Claims
         </Link>
-        <div className="flex items-center gap-5">
-          <Link
-            href="/admin"
+        <Link
+          href="/admin/events"
+          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          Events
+        </Link>
+        <span className="text-sm text-gray-900 font-medium">Import results</span>
+        <form action={adminLogout}>
+          <button
+            type="submit"
             className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
           >
-            Pending claims
-          </Link>
-          <form action={adminLogout}>
-            <button
-              type="submit"
-              className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-            >
-              Sign out
-            </button>
-          </form>
-        </div>
+            Sign out
+          </button>
+        </form>
       </nav>
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">

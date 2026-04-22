@@ -1,9 +1,9 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { athletes, results } from '@/db/schema';
 import { distanceKm, formatPace } from '@/lib/race';
+import SiteHeader from '@/app/site-header';
 import RaceHistory, {
   type RaceHistoryRow,
 } from './race-history';
@@ -94,20 +94,7 @@ export default async function AthleteProfilePage({
 
   return (
     <main className="min-h-screen bg-white">
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
-        <Link
-          href="/"
-          className="text-xl font-semibold tracking-tight text-gray-900"
-        >
-          Bedrock.fit
-        </Link>
-        <Link
-          href="/results"
-          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-        >
-          All results
-        </Link>
-      </nav>
+      <SiteHeader />
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
         {/* Profile header */}

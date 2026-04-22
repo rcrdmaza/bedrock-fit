@@ -3,6 +3,7 @@ import { desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { athletes, results } from '@/db/schema';
 import { requireAdmin } from '@/lib/auth';
+import SiteHeader from '@/app/site-header';
 import {
   adminLogout,
   approveClaims,
@@ -102,35 +103,38 @@ export default async function AdminPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+      <SiteHeader />
+
+      {/* Admin-only secondary toolbar. Right-aligned under the site
+          header so the admin can jump between the three admin views
+          (Claims / Events / Import) without scrolling back to a menu.
+          The current page's link is rendered in darker text to mark
+          "you are here". */}
+      <nav
+        aria-label="Admin"
+        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-gray-100 bg-gray-50"
+      >
+        <span className="text-sm text-gray-900 font-medium">Claims</span>
         <Link
-          href="/"
-          className="text-xl font-semibold tracking-tight text-gray-900"
+          href="/admin/events"
+          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
         >
-          Bedrock.fit
+          Events
         </Link>
-        <div className="flex items-center gap-5">
-          <Link
-            href="/admin/events"
+        <Link
+          href="/admin/import"
+          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          Import results
+        </Link>
+        <form action={adminLogout}>
+          <button
+            type="submit"
             className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
           >
-            Events
-          </Link>
-          <Link
-            href="/admin/import"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            Import results
-          </Link>
-          <form action={adminLogout}>
-            <button
-              type="submit"
-              className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-            >
-              Sign out
-            </button>
-          </form>
-        </div>
+            Sign out
+          </button>
+        </form>
       </nav>
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">

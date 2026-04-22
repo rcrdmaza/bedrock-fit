@@ -3,6 +3,8 @@ import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { eventMetadata, eventPhotos } from '@/db/schema';
 import { requireAdmin } from '@/lib/auth';
+import SiteHeader from '@/app/site-header';
+import { adminLogout } from '@/app/actions/admin';
 import { getEventSummaries } from '@/lib/events';
 
 // Admin list of every event with "is metadata filled?" and "how many
@@ -92,27 +94,33 @@ export default async function AdminEventsPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+      <SiteHeader />
+
+      <nav
+        aria-label="Admin"
+        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-gray-100 bg-gray-50"
+      >
         <Link
-          href="/"
-          className="text-xl font-semibold tracking-tight text-gray-900"
+          href="/admin"
+          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
         >
-          Bedrock.fit
+          Claims
         </Link>
-        <div className="flex items-center gap-5">
-          <Link
-            href="/admin"
+        <span className="text-sm text-gray-900 font-medium">Events</span>
+        <Link
+          href="/admin/import"
+          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          Import results
+        </Link>
+        <form action={adminLogout}>
+          <button
+            type="submit"
             className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
           >
-            Claims
-          </Link>
-          <Link
-            href="/admin/import"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            Import
-          </Link>
-        </div>
+            Sign out
+          </button>
+        </form>
       </nav>
 
       <section className="max-w-4xl mx-auto px-8 pt-16 pb-24">

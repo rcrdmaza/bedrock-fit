@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import SiteHeader from '@/app/site-header';
 
 // Rendered automatically by Next.js while the /results server component
 // fetches from Postgres. Matches the real page chrome so the hand-off is
@@ -6,14 +6,7 @@ import Link from 'next/link';
 export default function Loading() {
   return (
     <main className="min-h-screen bg-white">
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
-        <Link
-          href="/"
-          className="text-xl font-semibold tracking-tight text-gray-900"
-        >
-          Bedrock.fit
-        </Link>
-      </nav>
+      <SiteHeader />
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
         <h1 className="text-3xl font-semibold text-gray-900 mb-2">

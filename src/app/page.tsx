@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import SiteHeader from '@/app/site-header';
 import {
   categorySlug,
   getLeaderboardPage,
@@ -59,28 +60,7 @@ export default async function HomePage({
 
   return (
     <main className="min-h-screen bg-white">
-      <nav className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
-        <Link
-          href="/"
-          className="text-xl font-semibold tracking-tight text-gray-900"
-        >
-          Bedrock.fit
-        </Link>
-        <div className="flex items-center gap-6">
-          <Link
-            href="/results"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            Search results
-          </Link>
-          <Link
-            href="/signin"
-            className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Sign in
-          </Link>
-        </div>
-      </nav>
+      <SiteHeader />
 
       <section className="max-w-4xl mx-auto px-8 pt-16 pb-24">
         <h1 className="text-3xl font-semibold text-gray-900 mb-2">
