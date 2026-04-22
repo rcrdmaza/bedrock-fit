@@ -17,11 +17,16 @@ type View = 'results' | 'events';
 export default function ResultsBrowser({
   rows,
   events,
+  defaultView = 'results',
 }: {
   rows: ResultRow[];
   events: EventSummary[];
+  // The admin import flow lands here with `?view=events` so the
+  // just-imported event is the first thing visible. Everything else
+  // (home nav, direct link) still defaults to the Results tab.
+  defaultView?: View;
 }) {
-  const [view, setView] = useState<View>('results');
+  const [view, setView] = useState<View>(defaultView);
 
   return (
     <>

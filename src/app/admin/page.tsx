@@ -95,37 +95,9 @@ function groupPending(rows: PendingRow[]): ClaimGroup[] {
   return [...groups.values()];
 }
 
-type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
-
-// Flash banner for a successful import. The commit action redirects here
-// with `?imported=&created=&event=` so we can show a one-off confirmation
-// without a separate notifications system. Query params are stripped on
-// the next navigation — good enough for a single-admin app.
-function readImportFlash(
-  params: Awaited<SearchParams>,
-): { imported: number; created: number; event: string } | null {
-  const importedRaw = typeof params.imported === 'string' ? params.imported : null;
-  if (!importedRaw) return null;
-  const imported = Number(importedRaw);
-  const created = Number(
-    typeof params.created === 'string' ? params.created : '0',
-  );
-  const event = typeof params.event === 'string' ? params.event : '';
-  if (!Number.isFinite(imported) || imported <= 0) return null;
-  return { imported, created, event };
-}
-
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function AdminPage() {
   await requireAdmin();
-  const [pending, params] = await Promise.all([
-    getPendingClaims(),
-    searchParams,
-  ]);
-  const flash = readImportFlash(params);
+  const pending = await getPendingClaims();
   const groups = groupPending(pending);
 
   return (
@@ -162,17 +134,6 @@ export default async function AdminPage({
       </nav>
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
-        {flash && (
-          <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
-            Imported {flash.imported} result
-            {flash.imported === 1 ? '' : 's'}
-            {flash.event ? ` for ${flash.event}` : ''}
-            {flash.created > 0
-              ? ` — created ${flash.created} new athlete${flash.created === 1 ? '' : 's'}.`
-              : '.'}
-          </div>
-        )}
-
         <div className="mb-10">
           <h1 className="text-3xl font-semibold text-gray-900 mb-1">
             Pending claims

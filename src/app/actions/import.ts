@@ -446,9 +446,13 @@ export async function commitImport(
   revalidatePath('/admin');
   revalidatePath('/athletes/[id]', 'page');
 
-  // Send the admin back to the dashboard with a success flag, which the
-  // /admin page renders as a top banner for the next render.
+  // Send the admin to the public /results page so they can immediately
+  // see the just-imported event alongside the rest. The `view=events`
+  // param opens the Events tab (the just-imported race is a single
+  // event, which is far easier to spot there than in the per-row
+  // Results list). `/results` reads the `imported/created/event` trio
+  // and renders a green banner for the next render.
   redirect(
-    `/admin?imported=${rowsInserted}&created=${athletesCreated}&event=${encodeURIComponent(meta.eventName)}`,
+    `/results?view=events&imported=${rowsInserted}&created=${athletesCreated}&event=${encodeURIComponent(meta.eventName)}`,
   );
 }
