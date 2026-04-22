@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import SiteHeader from '@/app/site-header';
+import EventPhotoCarousel from '@/app/event-photo-carousel';
+import { getLatestEventPhotos } from '@/lib/events';
 import {
   categorySlug,
   getLeaderboardPage,
@@ -22,6 +24,11 @@ const PAGE_SIZE = 25;
 // enough distance that most imports will have populated rows for it,
 // so the empty state is rarer than it would be with the marathon.
 const DEFAULT_CATEGORY: LeaderboardCategory = '10K';
+
+// How many events to feature in the carousel. One photo per event, so
+// this is also the max number of slides. Tuned so the ↑/↓ stays useful
+// but we don't drag in ancient events.
+const CAROUSEL_EVENT_LIMIT = 8;
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
@@ -55,14 +62,22 @@ export default async function HomePage({
   // Page 1 on the home page — the dedicated /leaderboards/[category]
   // route handles deeper pagination. We reuse the same query so the
   // total count comes back for the "See all N finishers" link without
-  // a second round-trip.
-  const { rows, total } = await getLeaderboardPage(category, 1, PAGE_SIZE);
+  // a second round-trip. The carousel photos fetch runs in parallel
+  // since it hits a different table and has nothing to share.
+  const [{ rows, total }, carouselPhotos] = await Promise.all([
+    getLeaderboardPage(category, 1, PAGE_SIZE),
+    getLatestEventPhotos(CAROUSEL_EVENT_LIMIT),
+  ]);
 
   return (
     <main className="min-h-screen bg-white">
       <SiteHeader />
 
       <section className="max-w-4xl mx-auto px-8 pt-16 pb-24">
+        {/* Carousel hides itself when there are no photos, so first-
+            run installs still drop straight into the leaderboard. */}
+        <EventPhotoCarousel photos={carouselPhotos} />
+
         <h1 className="text-3xl font-semibold text-gray-900 mb-2">
           Leaderboards
         </h1>

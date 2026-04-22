@@ -245,6 +245,68 @@ export async function getEventDetail(
   };
 }
 
+// One cover photo per recent event, used by the home page carousel.
+// "Cover" = the lowest-sortOrder photo (then earliest createdAt as
+// tiebreaker) of each event, to match what the admin sees at the top
+// of the photos list on /admin/events/edit.
+export type LatestEventPhoto = {
+  eventName: string;
+  eventDate: string;
+  raceCategory: string;
+  photoUrl: string;
+  caption: string | null;
+};
+
+// Returns up to `limit` photos, newest event first, one per event.
+// Events with no photos are skipped implicitly (the inner join drops
+// them). Safe to render when empty — the carousel component hides
+// itself.
+export async function getLatestEventPhotos(
+  limit: number,
+): Promise<LatestEventPhoto[]> {
+  // Fetch every (event, photo) pair ordered so the row we want per
+  // event comes first. Deduping in JS is fine at this scale: we have
+  // at most a few hundred events with photos, and the alternative
+  // (DISTINCT ON + raw SQL) is harder to read for the same result.
+  const rows = await db
+    .select({
+      eventName: eventMetadata.eventName,
+      eventDate: eventMetadata.eventDate,
+      raceCategory: eventMetadata.raceCategory,
+      photoUrl: eventPhotos.url,
+      caption: eventPhotos.caption,
+    })
+    .from(eventPhotos)
+    .innerJoin(
+      eventMetadata,
+      eq(eventPhotos.eventMetadataId, eventMetadata.id),
+    )
+    .orderBy(
+      desc(eventMetadata.eventDate),
+      asc(eventMetadata.eventName),
+      asc(eventPhotos.sortOrder),
+      asc(eventPhotos.createdAt),
+    );
+
+  const seen = new Set<string>();
+  const out: LatestEventPhoto[] = [];
+  for (const r of rows) {
+    const iso = (r.eventDate ?? new Date()).toISOString();
+    const key = eventKey(r.eventName, iso, r.raceCategory);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      eventName: r.eventName,
+      eventDate: iso,
+      raceCategory: r.raceCategory,
+      photoUrl: r.photoUrl,
+      caption: r.caption,
+    });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
 // Fetch just the metadata + photos for a single event, keyed by the
 // identity triple. Returns null if no metadata row exists yet — the
 // admin edit page uses this to prefill the form, rendering a blank
