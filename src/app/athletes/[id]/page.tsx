@@ -99,52 +99,52 @@ export default async function AthleteProfilePage({
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
         {/* Profile header */}
         <div className="mb-10">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-1">
+          <h1 className="text-3xl font-semibold text-stone-900 mb-1">
             {athlete.name}
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-stone-500">
             {athlete.location ?? 'Location unknown'}
             {athlete.gender ? ` · ${athlete.gender}` : ''}
           </p>
         </div>
 
         {/* Stats row — 6 cells, wraps to two rows on narrow viewports. */}
-        <div className="grid grid-cols-3 gap-x-4 gap-y-6 mb-10 pb-10 border-b border-gray-100">
+        <div className="grid grid-cols-3 gap-x-4 gap-y-6 mb-10 pb-10 border-b border-stone-100">
           <div>
-            <div className="text-xs text-gray-400 mb-1">Races</div>
-            <div className="text-2xl font-semibold text-gray-900">
+            <div className="text-xs text-stone-400 mb-1">Races</div>
+            <div className="text-2xl font-semibold text-stone-900">
               {totalRaces}
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 mb-1">Best percentile</div>
-            <div className="text-2xl font-semibold text-gray-900">
+            <div className="text-xs text-stone-400 mb-1">Best percentile</div>
+            <div className="text-2xl font-semibold text-stone-900">
               {bestPercentile != null
                 ? `Top ${(100 - bestPercentile).toFixed(1)}%`
                 : '—'}
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 mb-1">Avg km time</div>
-            <div className="text-2xl font-semibold text-gray-900">
+            <div className="text-xs text-stone-400 mb-1">Avg km time</div>
+            <div className="text-2xl font-semibold text-stone-900">
               {formatPace(avgPaceSecPerKm)}
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 mb-1">Fastest 10 km</div>
-            <div className="text-2xl font-semibold text-gray-900">
+            <div className="text-xs text-stone-400 mb-1">Fastest 10 km</div>
+            <div className="text-2xl font-semibold text-stone-900">
               {formatTime(fastest10k)}
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 mb-1">Fastest 21 km</div>
-            <div className="text-2xl font-semibold text-gray-900">
+            <div className="text-xs text-stone-400 mb-1">Fastest 21 km</div>
+            <div className="text-2xl font-semibold text-stone-900">
               {formatTime(fastest21k)}
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 mb-1">Fastest 42 km</div>
-            <div className="text-2xl font-semibold text-gray-900">
+            <div className="text-xs text-stone-400 mb-1">Fastest 42 km</div>
+            <div className="text-2xl font-semibold text-stone-900">
               {formatTime(fastest42k)}
             </div>
           </div>

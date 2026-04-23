@@ -9,16 +9,16 @@ export default function Loading() {
       <SiteHeader />
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+        <h1 className="text-3xl font-semibold text-stone-900 mb-2">
           Find your results
         </h1>
-        <p className="text-gray-500 text-sm mb-8">
+        <p className="text-stone-500 text-sm mb-8">
           Search by name to find and claim your race history.
         </p>
 
         {/* Skeleton search input */}
         <div
-          className="h-[46px] w-full rounded-lg bg-gray-100 animate-pulse mb-10"
+          className="h-[46px] w-full rounded-lg bg-stone-100 animate-pulse mb-10"
           aria-hidden="true"
         />
 
@@ -27,20 +27,20 @@ export default function Loading() {
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="border border-gray-100 rounded-2xl p-5"
+              className="border border-stone-100 rounded-2xl p-5"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="w-1/2 space-y-2">
-                  <div className="h-4 bg-gray-100 rounded animate-pulse" />
-                  <div className="h-3 w-2/3 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-4 bg-stone-100 rounded animate-pulse" />
+                  <div className="h-3 w-2/3 bg-stone-100 rounded animate-pulse" />
                 </div>
-                <div className="h-5 w-20 bg-gray-100 rounded-full animate-pulse" />
+                <div className="h-5 w-20 bg-stone-100 rounded-full animate-pulse" />
               </div>
               <div className="grid grid-cols-4 gap-4">
                 {[0, 1, 2, 3].map((j) => (
                   <div key={j} className="space-y-2">
-                    <div className="h-3 w-16 bg-gray-100 rounded animate-pulse" />
-                    <div className="h-4 w-12 bg-gray-100 rounded animate-pulse" />
+                    <div className="h-3 w-16 bg-stone-100 rounded animate-pulse" />
+                    <div className="h-4 w-12 bg-stone-100 rounded animate-pulse" />
                   </div>
                 ))}
               </div>

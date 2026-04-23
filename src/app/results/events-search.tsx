@@ -73,7 +73,7 @@ export default function EventsSearch({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by event name (e.g. Lima Marathon)"
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
@@ -86,14 +86,14 @@ export default function EventsSearch({
             value={country}
             onChange={(e) => setCountry(e.target.value)}
             placeholder="Country (e.g. Peru)"
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-8">
         <div className="flex items-center gap-2">
-          <label htmlFor="evFromDate" className="text-xs text-gray-500">
+          <label htmlFor="evFromDate" className="text-xs text-stone-500">
             From
           </label>
           <input
@@ -102,11 +102,11 @@ export default function EventsSearch({
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
             max={toDate || undefined}
-            className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor="evToDate" className="text-xs text-gray-500">
+          <label htmlFor="evToDate" className="text-xs text-stone-500">
             To
           </label>
           <input
@@ -115,7 +115,7 @@ export default function EventsSearch({
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
             min={fromDate || undefined}
-            className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         {hasFilters && (
@@ -127,7 +127,7 @@ export default function EventsSearch({
               setFromDate('');
               setToDate('');
             }}
-            className="text-xs text-gray-500 hover:text-gray-900 transition-colors ml-auto"
+            className="text-xs text-stone-500 hover:text-stone-900 transition-colors ml-auto"
           >
             Clear filters
           </button>
@@ -136,18 +136,18 @@ export default function EventsSearch({
 
       {events.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-gray-400 text-sm">No events in the database yet</p>
-          <p className="text-gray-300 text-xs mt-1">
+          <p className="text-stone-400 text-sm">No events in the database yet</p>
+          <p className="text-stone-300 text-xs mt-1">
             Check back once race data has been ingested.
           </p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 text-sm">
+        <div className="text-center py-16 text-stone-400 text-sm">
           No events match your filters.
         </div>
       ) : (
         <>
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs text-stone-400 mb-4">
             {filtered.length === events.length
               ? `Showing all ${events.length.toLocaleString()} event${events.length !== 1 ? 's' : ''}, most recent first.`
               : `${filtered.length.toLocaleString()} of ${events.length.toLocaleString()} match${filtered.length === 1 ? '' : 'es'}.`}
@@ -160,11 +160,11 @@ export default function EventsSearch({
               <Link
                 key={ev.key}
                 href={eventHref(ev)}
-                className="group block border border-gray-100 rounded-2xl p-5 hover:border-gray-300 hover:shadow-sm transition-all"
+                className="group block border border-stone-100 rounded-2xl p-5 hover:border-stone-300 hover:shadow-sm transition-all"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="font-medium text-gray-900 text-sm group-hover:text-blue-600 transition-colors truncate">
+                    <div className="font-medium text-stone-900 text-sm group-hover:text-blue-600 transition-colors truncate">
                       {ev.eventName}
                       <span
                         aria-hidden="true"
@@ -173,16 +173,16 @@ export default function EventsSearch({
                         →
                       </span>
                     </div>
-                    <div className="text-xs text-gray-400 mt-0.5">
+                    <div className="text-xs text-stone-400 mt-0.5">
                       {formatEventDate(ev.eventDate)}
                       {ev.eventCountry ? ` · ${ev.eventCountry}` : ''}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="inline-block text-xs font-medium text-gray-700 bg-gray-100 rounded-full px-2.5 py-1">
+                    <span className="inline-block text-xs font-medium text-stone-700 bg-stone-100 rounded-full px-2.5 py-1">
                       {ev.raceCategory}
                     </span>
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="text-xs text-stone-400 mt-1">
                       {ev.participantCount.toLocaleString()} finisher
                       {ev.participantCount === 1 ? '' : 's'}
                     </div>

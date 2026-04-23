@@ -49,15 +49,15 @@ export default function EventPhotoCarousel({
   return (
     <section aria-label="Recent event photos" className="mb-12">
       <div className="flex items-baseline justify-between mb-3">
-        <h2 className="text-sm font-medium text-gray-700 uppercase tracking-wide">
+        <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wide">
           Recent events
         </h2>
-        <span className="text-xs text-gray-400 tabular-nums">
+        <span className="text-xs text-stone-400 tabular-nums">
           {idx + 1} / {total}
         </span>
       </div>
 
-      <div className="relative rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
+      <div className="relative rounded-2xl overflow-hidden border border-stone-100 bg-stone-50">
         <Link href={eventHref(current)} className="block group">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -92,7 +92,7 @@ export default function EventPhotoCarousel({
             aria-label="Previous event"
             onClick={() => step(-1)}
             disabled={disabled}
-            className="w-9 h-9 rounded-full bg-white/90 hover:bg-white text-gray-900 shadow-sm flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-900 shadow-sm flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span aria-hidden="true" className="text-base leading-none">↑</span>
           </button>
@@ -101,7 +101,7 @@ export default function EventPhotoCarousel({
             aria-label="Next event"
             onClick={() => step(1)}
             disabled={disabled}
-            className="w-9 h-9 rounded-full bg-white/90 hover:bg-white text-gray-900 shadow-sm flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-9 h-9 rounded-full bg-white/90 hover:bg-white text-stone-900 shadow-sm flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span aria-hidden="true" className="text-base leading-none">↓</span>
           </button>

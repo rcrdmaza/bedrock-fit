@@ -24,7 +24,7 @@ export default function EventRoute({ metadata }: { metadata: EventMetadata }) {
   return (
     <div className="space-y-6">
       {hasImage ? (
-        <div className="rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
+        <div className="rounded-2xl overflow-hidden border border-stone-100 bg-stone-50">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={metadata.routeImageUrl!}
@@ -41,7 +41,7 @@ export default function EventRoute({ metadata }: { metadata: EventMetadata }) {
           className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
         >
           View full route
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-stone-400">
             {prettyHost(metadata.routeUrl!)}
           </span>
           <span aria-hidden="true">↗</span>

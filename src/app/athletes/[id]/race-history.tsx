@@ -91,18 +91,18 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
   return (
     <div>
       <div className="mb-4 flex items-baseline justify-between">
-        <h2 className="text-sm font-medium text-gray-900">Race history</h2>
+        <h2 className="text-sm font-medium text-stone-900">Race history</h2>
         <div className="flex items-center gap-3">
           {anyUnclaimed && (
             <button
               type="button"
               onClick={toggleAll}
-              className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
+              className="text-xs text-stone-500 hover:text-stone-900 transition-colors"
             >
               {allSelected ? 'Clear selection' : 'Select all unclaimed'}
             </button>
           )}
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-stone-400">
             {rows.filter((r) => r.status === 'claimed').length} of {rows.length}{' '}
             claimed
           </span>
@@ -110,7 +110,7 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
       </div>
 
       {rows.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 text-sm border border-dashed border-gray-200 rounded-2xl">
+        <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-stone-200 rounded-2xl">
           No results on file for this athlete yet.
         </div>
       ) : (
@@ -127,8 +127,8 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
                   canClaim
                     ? checked
                       ? 'border-blue-400 bg-blue-50/40 cursor-pointer'
-                      : 'border-gray-100 hover:border-gray-300 cursor-pointer'
-                    : 'border-gray-100 cursor-default'
+                      : 'border-stone-100 hover:border-stone-300 cursor-pointer'
+                    : 'border-stone-100 cursor-default'
                 }`}
               >
                 <div className="flex items-start gap-4">
@@ -140,7 +140,7 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggle(r.id)}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-stone-300 text-blue-600 focus:ring-blue-500"
                         aria-label={`Select ${r.eventName} for claim`}
                       />
                     )}
@@ -148,10 +148,10 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <div className="font-medium text-gray-900 text-sm">
+                        <div className="font-medium text-stone-900 text-sm">
                           {r.eventName}
                         </div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-xs text-stone-400 mt-0.5">
                           {r.eventDate
                             ? new Date(r.eventDate).toLocaleDateString(
                                 'en-US',
@@ -173,27 +173,27 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <div className="text-xs text-gray-400 mb-0.5">
+                        <div className="text-xs text-stone-400 mb-0.5">
                           Finish time
                         </div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-stone-900">
                           {formatTime(r.finishTime)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-400 mb-0.5">
+                        <div className="text-xs text-stone-400 mb-0.5">
                           Overall rank
                         </div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-stone-900">
                           {r.overallRank ?? '—'}
                           {r.totalFinishers ? ` / ${r.totalFinishers}` : ''}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-400 mb-0.5">
+                        <div className="text-xs text-stone-400 mb-0.5">
                           Percentile
                         </div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-stone-900">
                           {r.percentile != null
                             ? `Top ${(100 - Number(r.percentile)).toFixed(1)}%`
                             : '—'}
@@ -214,7 +214,7 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
       {anyUnclaimed && (
         <form
           action={formAction}
-          className="mt-8 rounded-2xl border border-gray-100 p-6 bg-white"
+          className="mt-8 rounded-2xl border border-stone-100 p-6 bg-white"
         >
           {/* Hidden inputs — one per selected id so FormData carries an
               array-shaped "resultIds" field the server action can read. */}
@@ -223,10 +223,10 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
           ))}
 
           <div className="flex items-baseline justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-900">
+            <h3 className="text-sm font-semibold text-stone-900">
               Claim your results
             </h3>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-stone-400">
               {selectedCount === 0
                 ? 'Select the rows that belong to you'
                 : `${selectedCount} selected`}
@@ -237,7 +237,7 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
             <div>
               <label
                 htmlFor="claim-email"
-                className="block text-xs text-gray-500 mb-1"
+                className="block text-xs text-stone-500 mb-1"
               >
                 Your email
               </label>
@@ -247,16 +247,16 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
                 type="email"
                 required
                 placeholder="you@example.com"
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
               <label
                 htmlFor="claim-note"
-                className="block text-xs text-gray-500 mb-1"
+                className="block text-xs text-stone-500 mb-1"
               >
                 Verification note{' '}
-                <span className="text-gray-400">
+                <span className="text-stone-400">
                   (bib #, strava link, anything that proves it was you —
                   covers every row you&apos;ve selected)
                 </span>
@@ -266,7 +266,7 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
                 name="note"
                 maxLength={500}
                 rows={2}
-                className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 

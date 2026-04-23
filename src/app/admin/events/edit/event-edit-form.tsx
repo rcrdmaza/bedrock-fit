@@ -60,7 +60,7 @@ export default function EventEditForm({
           maxLength={8000}
           defaultValue={val(metadata?.summary)}
           placeholder="A paragraph or two about the course, weather, vibe…"
-          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none transition-colors"
+          className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-stone-900 focus:outline-none transition-colors"
         />
       </div>
 
@@ -98,7 +98,7 @@ function Label({
   return (
     <label
       htmlFor={htmlFor}
-      className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5"
+      className="block text-xs font-medium text-stone-500 uppercase tracking-wide mb-1.5"
     >
       {children}
     </label>
@@ -128,7 +128,7 @@ function Field({
         defaultValue={defaultValue}
         placeholder={placeholder}
         maxLength={2000}
-        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:outline-none transition-colors"
+        className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-stone-900 focus:outline-none transition-colors"
       />
     </div>
   );
@@ -140,7 +140,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center gap-2 text-sm bg-gray-900 text-white px-5 py-2.5 rounded-xl hover:bg-gray-800 transition-colors font-medium disabled:opacity-60"
+      className="inline-flex items-center gap-2 text-sm bg-stone-900 text-white px-5 py-2.5 rounded-xl hover:bg-stone-800 transition-colors font-medium disabled:opacity-60"
     >
       {pending ? 'Saving…' : 'Save changes'}
     </button>

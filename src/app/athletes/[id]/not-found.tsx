@@ -7,10 +7,10 @@ export default function AthleteNotFound() {
       <SiteHeader />
 
       <section className="max-w-xl mx-auto px-8 pt-24 pb-24 text-center">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+        <h1 className="text-2xl font-semibold text-stone-900 mb-2">
           Athlete not found
         </h1>
-        <p className="text-sm text-gray-500 mb-8">
+        <p className="text-sm text-stone-500 mb-8">
           We couldn&apos;t find an athlete with that id. They may have been
           removed, or the link might be wrong.
         </p>

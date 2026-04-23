@@ -110,22 +110,22 @@ export default async function EventDetailPage({
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
         <Link
           href="/results"
-          className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 transition-colors mb-4"
+          className="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-900 transition-colors mb-4"
         >
           <span aria-hidden="true">←</span> Back to events
         </Link>
         <div className="flex items-start justify-between gap-4 mb-2">
-          <h1 className="text-3xl font-semibold text-gray-900">
+          <h1 className="text-3xl font-semibold text-stone-900">
             {detail.eventName}
           </h1>
-          <span className="inline-block text-xs font-medium text-gray-700 bg-gray-100 rounded-full px-3 py-1.5 mt-2 shrink-0">
+          <span className="inline-block text-xs font-medium text-stone-700 bg-stone-100 rounded-full px-3 py-1.5 mt-2 shrink-0">
             {detail.raceCategory}
           </span>
         </div>
         {locationLine ? (
-          <p className="text-sm text-gray-600 mb-1">{locationLine}</p>
+          <p className="text-sm text-stone-600 mb-1">{locationLine}</p>
         ) : null}
-        <p className="text-gray-500 text-sm mb-8">
+        <p className="text-stone-500 text-sm mb-8">
           {eventDateFormatted} · {detail.total.toLocaleString()} finisher
           {detail.total === 1 ? '' : 's'}, fastest first.
           {detail.participants.length < detail.total
@@ -135,7 +135,7 @@ export default async function EventDetailPage({
 
         {summary ? (
           <section aria-label="Event summary" className="mb-10">
-            <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
+            <p className="text-stone-700 text-sm leading-relaxed whitespace-pre-line">
               {summary}
             </p>
           </section>

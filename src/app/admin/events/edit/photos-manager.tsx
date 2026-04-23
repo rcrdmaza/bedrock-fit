@@ -33,7 +33,7 @@ export default function PhotosManager({
           redirect and the inputs' defaults are empty. */}
       <form
         action={addAction}
-        className="border border-gray-100 rounded-2xl p-5 space-y-3"
+        className="border border-stone-100 rounded-2xl p-5 space-y-3"
       >
         <input type="hidden" name="eventName" value={eventName} />
         <input type="hidden" name="eventDate" value={eventDate} />
@@ -41,7 +41,7 @@ export default function PhotosManager({
         <div>
           <label
             htmlFor="url"
-            className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5"
+            className="block text-xs font-medium text-stone-500 uppercase tracking-wide mb-1.5"
           >
             Photo URL
           </label>
@@ -51,14 +51,14 @@ export default function PhotosManager({
             type="url"
             required
             placeholder="https://…/photo.jpg"
-            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-gray-900 focus:outline-none"
+            className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:border-stone-900 focus:outline-none"
             maxLength={2000}
           />
         </div>
         <div>
           <label
             htmlFor="caption"
-            className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5"
+            className="block text-xs font-medium text-stone-500 uppercase tracking-wide mb-1.5"
           >
             Caption (optional)
           </label>
@@ -68,19 +68,19 @@ export default function PhotosManager({
             type="text"
             placeholder="Start line at 6 AM"
             maxLength={400}
-            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-gray-900 focus:outline-none"
+            className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:border-stone-900 focus:outline-none"
           />
         </div>
         <button
           type="submit"
-          className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+          className="text-sm bg-stone-900 text-white px-4 py-2 rounded-lg hover:bg-stone-800 transition-colors font-medium"
         >
           Add photo
         </button>
       </form>
 
       {photos.length === 0 ? (
-        <div className="text-center py-10 text-gray-400 text-sm border border-dashed border-gray-200 rounded-2xl">
+        <div className="text-center py-10 text-stone-400 text-sm border border-dashed border-stone-200 rounded-2xl">
           No photos yet.
         </div>
       ) : (
@@ -88,12 +88,12 @@ export default function PhotosManager({
           {photos.map((p, idx) => (
             <li
               key={p.id}
-              className="flex items-start gap-4 border border-gray-100 rounded-2xl p-4"
+              className="flex items-start gap-4 border border-stone-100 rounded-2xl p-4"
             >
               {/* Thumbnail. Plain img on purpose — URLs are arbitrary
                   external hosts, so we're not funnelling them through
                   Next.js Image. */}
-              <div className="w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+              <div className="w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-stone-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={p.url}
@@ -102,7 +102,7 @@ export default function PhotosManager({
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm text-gray-900 truncate">
+                <div className="text-sm text-stone-900 truncate">
                   <a
                     href={p.url}
                     target="_blank"
@@ -112,12 +112,12 @@ export default function PhotosManager({
                     {p.url}
                   </a>
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-stone-500 mt-1">
                   {p.caption ?? (
-                    <span className="italic text-gray-400">(no caption)</span>
+                    <span className="italic text-stone-400">(no caption)</span>
                   )}
                 </div>
-                <div className="text-[11px] text-gray-400 mt-1">
+                <div className="text-[11px] text-stone-400 mt-1">
                   Position {idx + 1} · sort {p.sortOrder}
                 </div>
               </div>
@@ -194,7 +194,7 @@ function ReorderButton({
         type="submit"
         disabled={disabled}
         title={direction === 'up' ? 'Move up' : 'Move down'}
-        className="text-xs text-gray-500 hover:text-gray-900 px-2 py-1 rounded transition-colors disabled:text-gray-300 disabled:cursor-not-allowed"
+        className="text-xs text-stone-500 hover:text-stone-900 px-2 py-1 rounded transition-colors disabled:text-stone-300 disabled:cursor-not-allowed"
       >
         {direction === 'up' ? '↑' : '↓'}
       </button>

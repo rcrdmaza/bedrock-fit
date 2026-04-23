@@ -10,7 +10,7 @@ export default function EventPhotos({ photos }: { photos: EventPhoto[] }) {
   // but a concurrent delete could strand us here with an empty array.
   if (photos.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-400 text-sm">
+      <div className="text-center py-12 text-stone-400 text-sm">
         No photos yet.
       </div>
     );
@@ -21,7 +21,7 @@ export default function EventPhotos({ photos }: { photos: EventPhoto[] }) {
       {photos.map((photo) => (
         <figure
           key={photo.id}
-          className="rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 group"
+          className="rounded-2xl overflow-hidden border border-stone-100 bg-stone-50 group"
         >
           <a
             href={photo.url}
@@ -38,7 +38,7 @@ export default function EventPhotos({ photos }: { photos: EventPhoto[] }) {
             />
           </a>
           {photo.caption ? (
-            <figcaption className="px-4 py-3 text-xs text-gray-500">
+            <figcaption className="px-4 py-3 text-xs text-stone-500">
               {photo.caption}
             </figcaption>
           ) : null}

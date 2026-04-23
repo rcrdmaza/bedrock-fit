@@ -38,7 +38,7 @@ export function ClaimForm({
       <div>
         <label
           htmlFor={`email-${resultId}`}
-          className="block text-xs text-gray-500 mb-1"
+          className="block text-xs text-stone-500 mb-1"
         >
           Your email
         </label>
@@ -48,16 +48,16 @@ export function ClaimForm({
           type="email"
           required
           placeholder="you@example.com"
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
       <div>
         <label
           htmlFor={`note-${resultId}`}
-          className="block text-xs text-gray-500 mb-1"
+          className="block text-xs text-stone-500 mb-1"
         >
           Verification note{' '}
-          <span className="text-gray-400">
+          <span className="text-stone-400">
             (bib #, strava link, anything that proves it was you)
           </span>
         </label>
@@ -66,7 +66,7 @@ export function ClaimForm({
           name="note"
           maxLength={500}
           rows={2}
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
       {state.status === 'error' && (
@@ -84,7 +84,7 @@ export function ClaimForm({
           type="button"
           onClick={onCancel}
           disabled={pending}
-          className="text-xs text-gray-500 hover:text-gray-900 px-3 py-2 transition-colors disabled:opacity-50"
+          className="text-xs text-stone-500 hover:text-stone-900 px-3 py-2 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

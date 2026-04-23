@@ -73,7 +73,7 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-3 mb-4">
-        <div className="flex items-stretch rounded-lg border border-gray-200 focus-within:ring-2 focus-within:ring-blue-500 overflow-hidden">
+        <div className="flex items-stretch rounded-lg border border-stone-200 focus-within:ring-2 focus-within:ring-blue-500 overflow-hidden">
           <label htmlFor="searchField" className="sr-only">
             Search by
           </label>
@@ -83,7 +83,7 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
             onChange={(e) =>
               setSearchField(e.target.value as ResultSearchField)
             }
-            className="px-3 py-3 text-sm text-gray-700 bg-gray-50 border-r border-gray-200 focus:outline-none"
+            className="px-3 py-3 text-sm text-stone-700 bg-stone-50 border-r border-stone-200 focus:outline-none"
           >
             {RESULT_SEARCH_FIELDS.map((f) => (
               <option key={f} value={f}>
@@ -98,14 +98,14 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
             inputMode={meta.inputMode}
             placeholder={meta.placeholder}
             aria-label={`Search by ${meta.label}`}
-            className="flex-1 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
+            className="flex-1 px-4 py-3 text-sm text-stone-900 placeholder-stone-400 focus:outline-none"
           />
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-8">
         <div className="flex items-center gap-2">
-          <label htmlFor="fromDate" className="text-xs text-gray-500">
+          <label htmlFor="fromDate" className="text-xs text-stone-500">
             From
           </label>
           <input
@@ -117,11 +117,11 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
             // filter logic tolerates inverted ranges (returns []), but
             // nudging the picker prevents that state in practice.
             max={toDate || undefined}
-            className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor="toDate" className="text-xs text-gray-500">
+          <label htmlFor="toDate" className="text-xs text-stone-500">
             To
           </label>
           <input
@@ -130,7 +130,7 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
             min={fromDate || undefined}
-            className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         {hasFilters && (
@@ -141,7 +141,7 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
               setFromDate('');
               setToDate('');
             }}
-            className="text-xs text-gray-500 hover:text-gray-900 transition-colors ml-auto"
+            className="text-xs text-stone-500 hover:text-stone-900 transition-colors ml-auto"
           >
             Clear filters
           </button>
@@ -150,18 +150,18 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
 
       {rows.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-gray-400 text-sm">No results in the database yet</p>
-          <p className="text-gray-300 text-xs mt-1">
+          <p className="text-stone-400 text-sm">No results in the database yet</p>
+          <p className="text-stone-300 text-xs mt-1">
             Check back once race data has been ingested.
           </p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 text-sm">
+        <div className="text-center py-16 text-stone-400 text-sm">
           No results match your filters.
         </div>
       ) : (
         <>
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs text-stone-400 mb-4">
             {filtered.length === rows.length
               ? `Showing all ${rows.length.toLocaleString()} result${rows.length !== 1 ? 's' : ''}, most recent first.`
               : `${filtered.length.toLocaleString()} of ${rows.length.toLocaleString()} match${filtered.length === 1 ? '' : 'es'}.`}
@@ -176,7 +176,7 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
               return (
                 <div
                   key={result.id}
-                  className="group border border-gray-100 rounded-2xl p-5 hover:border-gray-300 hover:shadow-sm transition-all"
+                  className="group border border-stone-100 rounded-2xl p-5 hover:border-stone-300 hover:shadow-sm transition-all"
                 >
                   {/* Clickable area → athlete profile. The claim form lives
                       outside this link so its inputs don't trigger nav. */}
@@ -186,7 +186,7 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <div className="font-medium text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
+                        <div className="font-medium text-stone-900 text-sm group-hover:text-blue-600 transition-colors">
                           {result.athleteName}
                           <span
                             aria-hidden="true"
@@ -195,7 +195,7 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
                             →
                           </span>
                         </div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-xs text-stone-400 mt-0.5">
                           {avgSpeedKmh(
                             result.finishTime,
                             result.raceCategory,
@@ -215,18 +215,18 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
                     </div>
                     <div className="grid grid-cols-4 gap-4 mb-4">
                       <div>
-                        <div className="text-xs text-gray-400 mb-0.5">
+                        <div className="text-xs text-stone-400 mb-0.5">
                           Finish time
                         </div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-stone-900">
                           {formatTime(result.finishTime)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-400 mb-0.5">
+                        <div className="text-xs text-stone-400 mb-0.5">
                           Overall rank
                         </div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-stone-900">
                           {result.overallRank ?? '—'}
                           {result.totalFinishers
                             ? ` / ${result.totalFinishers}`
@@ -234,21 +234,21 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-400 mb-0.5">
+                        <div className="text-xs text-stone-400 mb-0.5">
                           Percentile
                         </div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-stone-900">
                           {result.percentile != null
                             ? `Top ${(100 - result.percentile).toFixed(1)}%`
                             : '—'}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-400 mb-0.5">Event</div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-xs text-stone-400 mb-0.5">Event</div>
+                        <div className="text-sm font-medium text-stone-900">
                           {result.eventName}
                         </div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-xs text-stone-400 mt-0.5">
                           {new Date(result.eventDate).toLocaleDateString(
                             'en-US',
                             {

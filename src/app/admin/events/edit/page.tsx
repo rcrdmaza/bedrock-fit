@@ -70,30 +70,30 @@ export default async function EditEventMetadataPage({
 
       <nav
         aria-label="Admin"
-        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-gray-100 bg-gray-50"
+        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-stone-100 bg-stone-50"
       >
         <Link
           href="/admin"
-          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
         >
           Claims
         </Link>
         <Link
           href="/admin/events"
-          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
         >
           Events
         </Link>
         <Link
           href="/admin/import"
-          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
         >
           Import results
         </Link>
         <form action={adminLogout}>
           <button
             type="submit"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+            className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
           >
             Sign out
           </button>
@@ -103,20 +103,20 @@ export default async function EditEventMetadataPage({
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
         <Link
           href="/admin/events"
-          className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 transition-colors mb-4"
+          className="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-900 transition-colors mb-4"
         >
           <span aria-hidden="true">←</span> All events
         </Link>
 
         <div className="flex items-start justify-between gap-4 mb-1">
-          <h1 className="text-3xl font-semibold text-gray-900">
+          <h1 className="text-3xl font-semibold text-stone-900">
             {detail.eventName}
           </h1>
-          <span className="inline-block text-xs font-medium text-gray-700 bg-gray-100 rounded-full px-3 py-1.5 mt-2 shrink-0">
+          <span className="inline-block text-xs font-medium text-stone-700 bg-stone-100 rounded-full px-3 py-1.5 mt-2 shrink-0">
             {detail.raceCategory}
           </span>
         </div>
-        <p className="text-sm text-gray-500 mb-2">
+        <p className="text-sm text-stone-500 mb-2">
           {eventDateFormatted} · {detail.total.toLocaleString()} finisher
           {detail.total === 1 ? '' : 's'}
         </p>
@@ -149,11 +149,11 @@ export default async function EditEventMetadataPage({
           upsertAction={upsertEventMetadata}
         />
 
-        <div className="mt-12 border-t border-gray-100 pt-10">
-          <h2 className="text-xl font-semibold text-gray-900 mb-1">
+        <div className="mt-12 border-t border-stone-100 pt-10">
+          <h2 className="text-xl font-semibold text-stone-900 mb-1">
             Photos
           </h2>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-stone-500 mb-6">
             URLs only — paste links to images hosted elsewhere. New photos
             land at the end; use ↑ and ↓ to reorder.
           </p>

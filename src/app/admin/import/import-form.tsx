@@ -41,7 +41,7 @@ export default function ImportForm() {
       <div>
         <label
           htmlFor="eventName"
-          className="block text-xs text-gray-500 mb-1"
+          className="block text-xs text-stone-500 mb-1"
         >
           Event name
         </label>
@@ -52,14 +52,14 @@ export default function ImportForm() {
           required
           maxLength={200}
           placeholder="Lima Marathon 2026"
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
       <div>
         <label
           htmlFor="eventDate"
-          className="block text-xs text-gray-500 mb-1"
+          className="block text-xs text-stone-500 mb-1"
         >
           Event date
         </label>
@@ -67,12 +67,12 @@ export default function ImportForm() {
           id="eventDate"
           name="eventDate"
           type="date"
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
       <div>
-        <label htmlFor="csvFile" className="block text-xs text-gray-500 mb-1">
+        <label htmlFor="csvFile" className="block text-xs text-stone-500 mb-1">
           Finisher CSV
         </label>
         <input
@@ -81,19 +81,19 @@ export default function ImportForm() {
           type="file"
           accept=".csv,text/csv"
           required
-          className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+          className="w-full text-sm text-stone-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200"
         />
-        <p className="mt-2 text-xs text-gray-400">
+        <p className="mt-2 text-xs text-stone-400">
           Columns, in order:{' '}
-          <code className="px-1 py-0.5 rounded bg-gray-100 text-gray-700">
+          <code className="px-1 py-0.5 rounded bg-stone-100 text-stone-700">
             name, finish_time, overall_rank, gender, location, race_category
           </code>
           {', optionally followed by '}
-          <code className="px-1 py-0.5 rounded bg-gray-100 text-gray-700">
+          <code className="px-1 py-0.5 rounded bg-stone-100 text-stone-700">
             bib
           </code>{' '}
           and{' '}
-          <code className="px-1 py-0.5 rounded bg-gray-100 text-gray-700">
+          <code className="px-1 py-0.5 rounded bg-stone-100 text-stone-700">
             event_country
           </code>
           . Finish time as <code>H:MM:SS</code> or <code>MM:SS</code>.
@@ -157,13 +157,13 @@ function PreviewStep({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-gray-100 p-6 space-y-4">
+      <div className="rounded-2xl border border-stone-100 p-6 space-y-4">
         <div>
-          <div className="text-xs text-gray-400 mb-0.5">Event</div>
-          <div className="text-base font-medium text-gray-900">
+          <div className="text-xs text-stone-400 mb-0.5">Event</div>
+          <div className="text-base font-medium text-stone-900">
             {preview.eventName}
           </div>
-          <div className="text-xs text-gray-500 mt-0.5">
+          <div className="text-xs text-stone-500 mt-0.5">
             {preview.eventDateISO
               ? new Date(preview.eventDateISO).toLocaleDateString('en-US', {
                   year: 'numeric',
@@ -182,22 +182,22 @@ function PreviewStep({
 
         {preview.categories.length > 0 && (
           <div className="pt-2">
-            <div className="text-xs text-gray-400 mb-2">
+            <div className="text-xs text-stone-400 mb-2">
               Finishers by category
             </div>
             <div className="flex flex-wrap gap-2">
               {preview.categories.map((cat) => (
                 <span
                   key={cat.label}
-                  className="text-xs rounded-full bg-gray-50 border border-gray-100 px-3 py-1 text-gray-700"
+                  className="text-xs rounded-full bg-stone-50 border border-stone-100 px-3 py-1 text-stone-700"
                 >
                   <span className="font-medium">{cat.label}</span>
-                  <span className="text-gray-400"> · </span>
+                  <span className="text-stone-400"> · </span>
                   <span className="tabular-nums">{cat.count}</span>
                 </span>
               ))}
             </div>
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs text-stone-400 mt-2">
               Ranks and percentiles are computed inside each category, so the
               10K and Marathon fields don&apos;t mix.
             </p>
@@ -206,24 +206,24 @@ function PreviewStep({
       </div>
 
       {preview.matches.length > 0 && (
-        <div className="rounded-2xl border border-gray-100 p-6">
-          <h2 className="text-sm font-semibold text-gray-900 mb-1">
+        <div className="rounded-2xl border border-stone-100 p-6">
+          <h2 className="text-sm font-semibold text-stone-900 mb-1">
             Will attach to existing athletes
           </h2>
-          <p className="text-xs text-gray-500 mb-3">
+          <p className="text-xs text-stone-500 mb-3">
             Auto-matched on normalized name. Cancel and edit the CSV if any of
             these look wrong.
           </p>
-          <ul className="text-xs text-gray-700 space-y-1">
+          <ul className="text-xs text-stone-700 space-y-1">
             {sampleMatches.map((m) => (
               <li key={m.existingAthleteId}>
                 <span className="font-medium">{m.csvName}</span>
-                <span className="text-gray-400"> → </span>
+                <span className="text-stone-400"> → </span>
                 <span>{m.existingAthleteName}</span>
               </li>
             ))}
             {preview.matches.length > sampleMatches.length && (
-              <li className="italic text-gray-400">
+              <li className="italic text-stone-400">
                 … and {preview.matches.length - sampleMatches.length} more.
               </li>
             )}
@@ -231,17 +231,17 @@ function PreviewStep({
         </div>
       )}
 
-      <div className="rounded-2xl border border-gray-100 p-6">
-        <h2 className="text-sm font-semibold text-gray-900 mb-1">
+      <div className="rounded-2xl border border-stone-100 p-6">
+        <h2 className="text-sm font-semibold text-stone-900 mb-1">
           Sample rows
         </h2>
-        <p className="text-xs text-gray-500 mb-3">
+        <p className="text-xs text-stone-500 mb-3">
           First {sampleRows.length} of {preview.rows.length} parsed rows.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-gray-400 text-left">
+              <tr className="text-stone-400 text-left">
                 <th className="py-1 pr-4 font-medium">Name</th>
                 <th className="py-1 pr-4 font-medium">Finish</th>
                 <th className="py-1 pr-4 font-medium">Rank</th>
@@ -252,9 +252,9 @@ function PreviewStep({
                 <th className="py-1 pr-4 font-medium">Country</th>
               </tr>
             </thead>
-            <tbody className="text-gray-700">
+            <tbody className="text-stone-700">
               {sampleRows.map((row) => (
-                <tr key={row.lineNumber} className="border-t border-gray-50">
+                <tr key={row.lineNumber} className="border-t border-stone-50">
                   <td className="py-1 pr-4">{row.name}</td>
                   <td className="py-1 pr-4 tabular-nums">
                     {formatTime(row.finishTimeSeconds)}
@@ -304,7 +304,7 @@ function PreviewStep({
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="text-sm text-gray-500 hover:text-gray-900 px-3 py-2 transition-colors"
+            className="text-sm text-stone-500 hover:text-stone-900 px-3 py-2 transition-colors"
           >
             Cancel
           </button>
@@ -317,8 +317,8 @@ function PreviewStep({
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div>
-      <div className="text-xs text-gray-400 mb-0.5">{label}</div>
-      <div className="text-2xl font-semibold text-gray-900 tabular-nums">
+      <div className="text-xs text-stone-400 mb-0.5">{label}</div>
+      <div className="text-2xl font-semibold text-stone-900 tabular-nums">
         {value}
       </div>
     </div>

@@ -98,25 +98,25 @@ export default async function AdminEventsPage() {
 
       <nav
         aria-label="Admin"
-        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-gray-100 bg-gray-50"
+        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-stone-100 bg-stone-50"
       >
         <Link
           href="/admin"
-          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
         >
           Claims
         </Link>
-        <span className="text-sm text-gray-900 font-medium">Events</span>
+        <span className="text-sm text-stone-900 font-medium">Events</span>
         <Link
           href="/admin/import"
-          className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
         >
           Import results
         </Link>
         <form action={adminLogout}>
           <button
             type="submit"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+            className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
           >
             Sign out
           </button>
@@ -125,10 +125,10 @@ export default async function AdminEventsPage() {
 
       <section className="max-w-4xl mx-auto px-8 pt-16 pb-24">
         <div className="mb-10">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-1">
+          <h1 className="text-3xl font-semibold text-stone-900 mb-1">
             Event metadata
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-stone-500">
             {events.length === 0
               ? 'No events on file yet — import results first.'
               : `${events.length} event${events.length === 1 ? '' : 's'}. Click one to edit its summary, location, route, and photos.`}
@@ -136,9 +136,9 @@ export default async function AdminEventsPage() {
         </div>
 
         {events.length === 0 ? null : (
-          <div className="border border-gray-100 rounded-2xl overflow-hidden">
+          <div className="border border-stone-100 rounded-2xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+              <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
                 <tr>
                   <th className="text-left font-medium px-5 py-3">Event</th>
                   <th className="text-left font-medium px-5 py-3">Category</th>
@@ -162,15 +162,15 @@ export default async function AdminEventsPage() {
                   return (
                     <tr
                       key={ev.key}
-                      className="border-t border-gray-100 hover:bg-gray-50/60 transition-colors"
+                      className="border-t border-stone-100 hover:bg-stone-50/60 transition-colors"
                     >
-                      <td className="px-5 py-3 text-gray-900">
+                      <td className="px-5 py-3 text-stone-900">
                         {ev.eventName}
                       </td>
-                      <td className="px-5 py-3 text-gray-600">
+                      <td className="px-5 py-3 text-stone-600">
                         {ev.raceCategory}
                       </td>
-                      <td className="px-5 py-3 text-gray-600 tabular-nums">
+                      <td className="px-5 py-3 text-stone-600 tabular-nums">
                         {new Date(ev.eventDate).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
@@ -205,7 +205,7 @@ export default async function AdminEventsPage() {
 function StatusBadges({ status }: { status: MetadataStatus | null }) {
   if (!status) {
     return (
-      <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500 font-medium">
+      <span className="text-xs px-2 py-1 rounded-full bg-stone-100 text-stone-500 font-medium">
         Empty
       </span>
     );
@@ -226,7 +226,7 @@ function StatusBadges({ status }: { status: MetadataStatus | null }) {
           className={`text-[11px] px-2 py-1 rounded-full font-medium ${
             c.on
               ? 'bg-emerald-50 text-emerald-700'
-              : 'bg-gray-100 text-gray-500'
+              : 'bg-stone-100 text-stone-500'
           }`}
         >
           {c.label}

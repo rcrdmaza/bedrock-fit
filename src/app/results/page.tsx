@@ -65,10 +65,10 @@ export default async function ResultsPage({
           </div>
         )}
 
-        <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+        <h1 className="text-3xl font-semibold text-stone-900 mb-2">
           Find your results
         </h1>
-        <p className="text-gray-500 text-sm mb-8">
+        <p className="text-stone-500 text-sm mb-8">
           Switch between individual results and the events they belong to.
           Filter by name, bib, event, country, or date range — newest first.
         </p>

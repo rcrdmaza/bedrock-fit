@@ -32,7 +32,7 @@ export default function EventParticipants({
 
   if (participants.length === 0) {
     return (
-      <div className="text-center py-16 text-gray-400 text-sm border border-dashed border-gray-200 rounded-2xl">
+      <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-stone-200 rounded-2xl">
         No finishers on file for this event.
       </div>
     );
@@ -46,10 +46,10 @@ export default function EventParticipants({
         return (
           <div
             key={p.id}
-            className="group border border-gray-100 rounded-2xl p-5 hover:border-gray-300 hover:shadow-sm transition-all"
+            className="group border border-stone-100 rounded-2xl p-5 hover:border-stone-300 hover:shadow-sm transition-all"
           >
             <div className="flex items-start gap-4">
-              <div className="tabular-nums text-gray-400 w-8 shrink-0 text-sm pt-0.5">
+              <div className="tabular-nums text-stone-400 w-8 shrink-0 text-sm pt-0.5">
                 {idx + 1}
               </div>
               <div className="flex-1 min-w-0">
@@ -59,7 +59,7 @@ export default function EventParticipants({
                 >
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="min-w-0">
-                      <div className="font-medium text-gray-900 text-sm group-hover:text-blue-600 transition-colors truncate">
+                      <div className="font-medium text-stone-900 text-sm group-hover:text-blue-600 transition-colors truncate">
                         {p.athleteName}
                         <span
                           aria-hidden="true"
@@ -69,7 +69,7 @@ export default function EventParticipants({
                         </span>
                       </div>
                       {p.bib ? (
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-xs text-stone-400 mt-0.5">
                           bib {p.bib}
                         </div>
                       ) : null}
@@ -82,27 +82,27 @@ export default function EventParticipants({
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <div className="text-xs text-gray-400 mb-0.5">
+                      <div className="text-xs text-stone-400 mb-0.5">
                         Finish time
                       </div>
-                      <div className="text-sm font-medium text-gray-900 tabular-nums">
+                      <div className="text-sm font-medium text-stone-900 tabular-nums">
                         {formatTime(p.finishTime)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-400 mb-0.5">
+                      <div className="text-xs text-stone-400 mb-0.5">
                         Overall rank
                       </div>
-                      <div className="text-sm font-medium text-gray-900 tabular-nums">
+                      <div className="text-sm font-medium text-stone-900 tabular-nums">
                         {p.overallRank ?? '—'}
                         {p.totalFinishers ? ` / ${p.totalFinishers}` : ''}
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-400 mb-0.5">
+                      <div className="text-xs text-stone-400 mb-0.5">
                         Percentile
                       </div>
-                      <div className="text-sm font-medium text-gray-900 tabular-nums">
+                      <div className="text-sm font-medium text-stone-900 tabular-nums">
                         {p.percentile != null
                           ? `Top ${(100 - p.percentile).toFixed(1)}%`
                           : '—'}

@@ -63,14 +63,14 @@ export default async function LeaderboardCategoryPage({
       <section className="max-w-4xl mx-auto px-8 pt-16 pb-24">
         <Link
           href={`/?category=${encodeURIComponent(category)}`}
-          className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 transition-colors mb-4"
+          className="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-900 transition-colors mb-4"
         >
           <span aria-hidden="true">←</span> All leaderboards
         </Link>
-        <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+        <h1 className="text-3xl font-semibold text-stone-900 mb-2">
           {category} leaderboard
         </h1>
-        <p className="text-gray-500 text-sm mb-8">
+        <p className="text-stone-500 text-sm mb-8">
           {data.total === 0
             ? 'No finishers on file yet.'
             : `${data.total.toLocaleString()} finisher${data.total === 1 ? '' : 's'}, sorted fastest to slowest.`}
@@ -79,7 +79,7 @@ export default async function LeaderboardCategoryPage({
         <CategoryChips active={category} />
 
         {data.rows.length === 0 ? (
-          <div className="text-center py-16 text-gray-400 text-sm border border-dashed border-gray-200 rounded-2xl">
+          <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-stone-200 rounded-2xl">
             No results in this range.
           </div>
         ) : (
@@ -113,8 +113,8 @@ function CategoryChips({ active }: { active: LeaderboardCategory }) {
             href={`/leaderboards/${categorySlug(c)}`}
             className={`text-sm rounded-full px-4 py-1.5 border transition-colors ${
               isActive
-                ? 'bg-gray-900 text-white border-gray-900'
-                : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                ? 'bg-stone-900 text-white border-stone-900'
+                : 'bg-white text-stone-700 border-stone-200 hover:border-stone-400'
             }`}
             aria-current={isActive ? 'page' : undefined}
           >
@@ -136,10 +136,10 @@ function LeaderboardTable({
   startRank: number;
 }) {
   return (
-    <div className="border border-gray-100 rounded-2xl overflow-hidden">
+    <div className="border border-stone-100 rounded-2xl overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50">
-          <tr className="text-gray-500 text-left text-xs uppercase tracking-wide">
+        <thead className="bg-stone-50">
+          <tr className="text-stone-500 text-left text-xs uppercase tracking-wide">
             <th className="px-5 py-3 font-medium w-12">#</th>
             <th className="px-5 py-3 font-medium">Athlete</th>
             <th className="px-5 py-3 font-medium">Event</th>
@@ -150,22 +150,22 @@ function LeaderboardTable({
           {rows.map((r, idx) => (
             <tr
               key={r.id}
-              className="border-t border-gray-100 hover:bg-gray-50/60 transition-colors"
+              className="border-t border-stone-100 hover:bg-stone-50/60 transition-colors"
             >
-              <td className="px-5 py-3 tabular-nums text-gray-400">
+              <td className="px-5 py-3 tabular-nums text-stone-400">
                 {startRank + idx}
               </td>
               <td className="px-5 py-3">
                 <Link
                   href={`/athletes/${r.athleteId}`}
-                  className="font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                  className="font-medium text-stone-900 hover:text-blue-600 transition-colors"
                 >
                   {r.athleteName}
                 </Link>
               </td>
-              <td className="px-5 py-3 text-gray-600">
+              <td className="px-5 py-3 text-stone-600">
                 <div>{r.eventName}</div>
-                <div className="text-xs text-gray-400 mt-0.5">
+                <div className="text-xs text-stone-400 mt-0.5">
                   {new Date(r.eventDate).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'short',
@@ -176,7 +176,7 @@ function LeaderboardTable({
                     : ''}
                 </div>
               </td>
-              <td className="px-5 py-3 text-right tabular-nums font-medium text-gray-900">
+              <td className="px-5 py-3 text-right tabular-nums font-medium text-stone-900">
                 {formatTime(r.finishTime)}
               </td>
             </tr>
@@ -210,29 +210,29 @@ function PageNav({
       {prevHref ? (
         <Link
           href={prevHref}
-          className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
+          className="text-sm text-stone-700 hover:text-stone-900 transition-colors"
         >
           ← Previous
         </Link>
       ) : (
-        <span className="text-sm text-gray-300" aria-disabled="true">
+        <span className="text-sm text-stone-300" aria-disabled="true">
           ← Previous
         </span>
       )}
 
-      <span className="text-xs text-gray-400 tabular-nums">
+      <span className="text-xs text-stone-400 tabular-nums">
         Page {data.page} of {data.totalPages}
       </span>
 
       {nextHref ? (
         <Link
           href={nextHref}
-          className="text-sm text-gray-700 hover:text-gray-900 transition-colors"
+          className="text-sm text-stone-700 hover:text-stone-900 transition-colors"
         >
           Next →
         </Link>
       ) : (
-        <span className="text-sm text-gray-300" aria-disabled="true">
+        <span className="text-sm text-stone-300" aria-disabled="true">
           Next →
         </span>
       )}

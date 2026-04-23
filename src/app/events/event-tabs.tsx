@@ -31,7 +31,7 @@ export default function EventTabs({ tabs }: { tabs: EventTab[] }) {
       <div
         role="tablist"
         aria-label="Event sections"
-        className="flex gap-1 border-b border-gray-100 mb-6"
+        className="flex gap-1 border-b border-stone-100 mb-6"
       >
         {tabs.map((tab) => {
           const isActive = tab.id === active;
@@ -46,8 +46,8 @@ export default function EventTabs({ tabs }: { tabs: EventTab[] }) {
               onClick={() => setActive(tab.id)}
               className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
                 isActive
-                  ? 'border-gray-900 text-gray-900'
-                  : 'border-transparent text-gray-500 hover:text-gray-900'
+                  ? 'border-stone-900 text-stone-900'
+                  : 'border-transparent text-stone-500 hover:text-stone-900'
               }`}
             >
               {tab.label}
