@@ -1,23 +1,22 @@
 import Link from 'next/link';
+import { getCurrentUser } from '@/lib/auth';
 
 // Top-level site chrome rendered by every page, public and admin alike.
 //
 // Layout is a 3-column grid: Bedrock.fit mark on the left, the nav
 // links (Home / Race Results / Blog) centered in the middle, and the
-// Sign In pill pinned to the right. Grid (not flex-between) keeps the
-// nav column visually centered on the viewport even when the mark and
-// the Sign In pill have different widths.
+// sign-in affordance pinned to the right. Grid (not flex-between)
+// keeps the nav column visually centered on the viewport even when
+// the mark and the right-hand control have different widths.
 //
-// Blog and Sign In are placeholders (href="#") — the routes don't
-// exist yet. Swap the hrefs here when they do and every page picks up
-// the change without touching the pages themselves.
-//
-// Server component: pure <Link>s, no state. Admin pages that need
-// extra navigation (Claims / Import / Sign out) render their own
-// secondary row below this header — SiteHeader stays identical
-// everywhere so it's the one piece of chrome users learn once.
+// Async server component — reads the user session cookie per request
+// so the right-hand control reflects the real state. No prop plumbing,
+// no client-side fetch: every page just drops <SiteHeader /> in and
+// gets the right thing.
 
-export default function SiteHeader() {
+export default async function SiteHeader() {
+  const user = await getCurrentUser();
+
   return (
     <nav
       aria-label="Primary"
@@ -56,15 +55,36 @@ export default function SiteHeader() {
         </Link>
       </div>
 
-      {/* Sign In is the primary CTA — dark stone pill anchored right.
-          Placeholder href for now; the product has no public auth
-          model yet. */}
-      <Link
-        href="#"
-        className="justify-self-end text-sm bg-stone-900 text-white px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors"
-      >
-        Sign In
-      </Link>
+      {/* Right slot: sign-in CTA when logged out, profile + sign-out
+          when logged in. Both variants keep the same visual weight so
+          the header shape stays stable between states. */}
+      {user ? (
+        <div className="justify-self-end flex items-center gap-3">
+          <Link
+            href="/me"
+            className="text-sm text-stone-600 hover:text-stone-900 transition-colors"
+            title={user.email}
+          >
+            {user.name ?? user.email.split('@')[0]}
+          </Link>
+          {/* Plain form POST — no client JS needed for sign-out. */}
+          <form action="/auth/sign-out" method="post">
+            <button
+              type="submit"
+              className="text-sm bg-stone-900 text-white px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors"
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
+      ) : (
+        <Link
+          href="/auth/sign-in"
+          className="justify-self-end text-sm bg-stone-900 text-white px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors"
+        >
+          Sign in
+        </Link>
+      )}
     </nav>
   );
 }

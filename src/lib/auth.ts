@@ -1,23 +1,37 @@
-// Minimal shared-secret admin auth. One password, one cookie, no user table.
-// The cookie stores a timestamp signed with SESSION_SECRET via HMAC-SHA256 so
-// a stolen cookie can't be forged without the secret. Rotating SESSION_SECRET
-// invalidates every outstanding session.
+// Session primitives for both the shared-secret admin ("admin_session"
+// cookie) and the public magic-link users ("bf_user" cookie). Both use
+// HMAC-SHA256 over SESSION_SECRET so rotating the env var invalidates
+// every outstanding session of every kind.
 //
 // Everything here is server-only (Node crypto, next/headers). Do not import
 // from client components — bundling would fail on `node:crypto` anyway.
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { eq } from 'drizzle-orm';
+import { db } from '@/db';
+import { users } from '@/db/schema';
 import { getAdminPassword, getSessionSecret } from '@/lib/env';
 
-const COOKIE_NAME = 'admin_session';
-const MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days
+// Shape of `users` rows as Drizzle infers them. Exported so callers
+// (route handlers, the header, /me) can pass them around without
+// reaching into the schema module directly.
+export type AuthUser = typeof users.$inferSelect;
 
-function sign(payload: string): string {
+const COOKIE_NAME = 'admin_session';
+const USER_COOKIE_NAME = 'bf_user';
+const MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 days (admin)
+const USER_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 days (public user)
+
+// Exported so `magic-link.ts` can hash tokens against the same secret
+// without re-deriving the HMAC primitive. Keeping one call-site for
+// sign()/safeEqual() means a future crypto change (e.g. moving to a
+// keyed BLAKE3) only has to happen here.
+export function sign(payload: string): string {
   return createHmac('sha256', getSessionSecret()).update(payload).digest('hex');
 }
 
-function safeEqual(a: string, b: string): boolean {
+export function safeEqual(a: string, b: string): boolean {
   // timingSafeEqual throws on unequal lengths, so guard first.
   const ab = Buffer.from(a);
   const bb = Buffer.from(b);
@@ -83,4 +97,77 @@ export async function isAdmin(): Promise<boolean> {
 // Throws a NEXT_REDIRECT (via redirect()) if the caller isn't authenticated.
 export async function requireAdmin(): Promise<void> {
   if (!(await isAdmin())) redirect('/admin/login');
+}
+
+// --- Public user session (magic-link) ---------------------------------
+//
+// Cookie value: `<userId>.<issuedAtMs>.<hmac(userId|issuedAtMs)>`.
+// Including the userId in the signed payload means an attacker who
+// steals a cookie still needs SESSION_SECRET to forge sessions for
+// *other* users. issuedAt is there for server-side expiry.
+
+function encodeUserSession(userId: string): string {
+  const issued = Date.now().toString(10);
+  const payload = `${userId}|${issued}`;
+  return `${userId}.${issued}.${sign(payload)}`;
+}
+
+function decodeUserSession(
+  raw: string | undefined,
+): { userId: string; issued: number } | null {
+  if (!raw) return null;
+  const parts = raw.split('.');
+  if (parts.length !== 3) return null;
+  const [userId, issued, provided] = parts;
+  // UUIDs are 36 chars; anything drastically off is malformed and not
+  // worth hashing. Cheap prefilter for garbage cookies.
+  if (!userId || !issued || !provided) return null;
+  const expected = sign(`${userId}|${issued}`);
+  if (!safeEqual(provided, expected)) return null;
+  const issuedMs = Number(issued);
+  if (!Number.isFinite(issuedMs)) return null;
+  if (Date.now() - issuedMs > USER_MAX_AGE_SECONDS * 1000) return null;
+  return { userId, issued: issuedMs };
+}
+
+export async function setUserCookie(userId: string): Promise<void> {
+  const store = await cookies();
+  store.set(USER_COOKIE_NAME, encodeUserSession(userId), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: USER_MAX_AGE_SECONDS,
+  });
+}
+
+export async function clearUserCookie(): Promise<void> {
+  const store = await cookies();
+  store.delete(USER_COOKIE_NAME);
+}
+
+// Returns the signed-in user or null. Reads the cookie, verifies the
+// HMAC, then does a single SELECT by id — we refuse to trust the
+// cookie alone in case the user row has since been deleted or the
+// admin wants to force-logout someone by wiping the row.
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  const store = await cookies();
+  const decoded = decodeUserSession(store.get(USER_COOKIE_NAME)?.value);
+  if (!decoded) return null;
+  const rows = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, decoded.userId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+// Mirror of requireAdmin() for public pages that need a logged-in user.
+// Redirects to the sign-in page with `?next=` so we can bounce back.
+export async function requireUser(redirectTo = '/me'): Promise<AuthUser> {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect(`/auth/sign-in?next=${encodeURIComponent(redirectTo)}`);
+  }
+  return user;
 }

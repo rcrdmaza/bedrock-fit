@@ -95,3 +95,37 @@ export function getSessionSecret(): string {
   );
   return sessionSecret;
 }
+
+// --- Magic-link email config ------------------------------------------
+//
+// Everything below is *optional* at dev time: if the Resend key isn't
+// set, the sender falls back to logging the link to stdout so a
+// developer can copy-paste it. In production Railway, both RESEND_*
+// vars must be set or sign-in silently "works" without delivering mail,
+// which is worse than failing loud — sendMagicLink() throws in that
+// case when NODE_ENV === 'production'.
+
+export function getResendApiKey(): string | null {
+  ensureLoaded();
+  const v = process.env.RESEND_API_KEY?.trim();
+  return v && v.length > 0 ? v : null;
+}
+
+export function getEmailFrom(): string {
+  ensureLoaded();
+  const v = process.env.EMAIL_FROM?.trim();
+  // Sensible dev fallback so the preview link in stdout still prints
+  // something reasonable as "from". Not used when RESEND_API_KEY is set.
+  return v && v.length > 0 ? v : 'Bedrock.fit <noreply@bedrock.fit>';
+}
+
+export function getAppUrl(): string {
+  ensureLoaded();
+  const v = process.env.APP_URL?.trim();
+  if (v) return v.replace(/\/$/, '');
+  // Railway injects RAILWAY_STATIC_URL for services that have a public
+  // domain. Fall back to localhost in dev.
+  const railway = process.env.RAILWAY_STATIC_URL?.trim();
+  if (railway) return `https://${railway.replace(/\/$/, '')}`;
+  return 'http://localhost:3000';
+}

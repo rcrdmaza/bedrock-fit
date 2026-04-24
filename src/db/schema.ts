@@ -104,3 +104,46 @@ export const eventPhotos = pgTable('event_photos', {
   sortOrder: integer('sort_order').default(0).notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+// Public-auth user accounts. Created on the first successful magic-link
+// verification, keyed by a lowercased email. `athleteId` is the link to
+// the `athletes` row that owns this person's results — nullable because
+// a brand-new signup may not have any claimed results yet, and we
+// auto-link lazily on first sign-in when an athletes row with a
+// matching email exists.
+//
+// The admin login stays on its own HMAC cookie; this table only
+// describes *public* users so rolling out multi-admin later is a
+// superset (add a `role` column) rather than a migration.
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  // Lowercase-normalized on write so "Alice@x.com" and "alice@x.com"
+  // can't both register. `.unique()` enforces it at the DB level.
+  email: text('email').notNull().unique(),
+  // Display name. Optional — magic-link sign-in doesn't collect it;
+  // the /me page can let users edit it later.
+  name: text('name'),
+  athleteId: uuid('athlete_id').references(() => athletes.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  lastSignInAt: timestamp('last_sign_in_at'),
+});
+
+// Single-use, short-lived magic-link tokens. We store only a SHA-256
+// hash of the random token so a DB leak can't replay outstanding
+// links. `consumedAt` doubles as a replay guard — set on first use,
+// future requests with the same hash no-op.
+//
+// Cleanup is lazy: expired rows stay until the next admin vacuum. The
+// table is tiny (one row per sign-in attempt, expiring in 15 min) so
+// this doesn't matter operationally.
+export const loginTokens = pgTable('login_tokens', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: text('email').notNull(),
+  // SHA-256 hex of the raw token that went out in the email. The raw
+  // token exists only inside that one email; we can't re-send the same
+  // link even if we wanted to.
+  tokenHash: text('token_hash').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  consumedAt: timestamp('consumed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
