@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useActionState } from 'react';
 import { claimResults, type BulkClaimState } from '@/app/actions/claim';
 
@@ -50,6 +50,16 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [state, formAction, pending] = useActionState(claimResults, INITIAL);
 
+  // After a successful submit, clear selection so the user can't
+  // double-submit the same rows. React 19 pattern: track prev value and
+  // reset during render rather than in an effect — avoids the
+  // set-state-in-effect lint rule and the extra paint.
+  const [prevStatus, setPrevStatus] = useState(state.status);
+  if (state.status !== prevStatus) {
+    setPrevStatus(state.status);
+    if (state.status === 'success') setSelected(new Set());
+  }
+
   // Only unclaimed rows are checkable. Everything else shows status as
   // read-only. Split up-front so we can render "Select all" sensibly.
   const unclaimed = useMemo(
@@ -78,15 +88,6 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
       return next;
     });
   }
-
-  // After a successful submit, clear selection so the banner reflects a
-  // done state and the user can't double-submit the same rows. The
-  // server revalidates the page, so the new (pending) statuses arrive
-  // on the next render anyway — this just ensures our local checkbox
-  // state doesn't lag behind.
-  useEffect(() => {
-    if (state.status === 'success') setSelected(new Set());
-  }, [state.status]);
 
   return (
     <div>
