@@ -6,6 +6,7 @@ import EventParticipants from './event-participants';
 import EventTabs, { type EventTab } from './event-tabs';
 import EventRoute from './event-route';
 import EventPhotos from './event-photos';
+import SponsorStripe from './sponsor-stripe';
 
 // Event participant lists change when new rows are imported or claims
 // resolve — no caching here.
@@ -132,6 +133,12 @@ export default async function EventDetailPage({
             ? ` Showing the top ${detail.participants.length.toLocaleString()}.`
             : ''}
         </p>
+
+        <SponsorStripe
+          sponsorName={detail.metadata?.sponsorName ?? null}
+          sponsorUrl={detail.metadata?.sponsorUrl ?? null}
+          sponsorLogoUrl={detail.metadata?.sponsorLogoUrl ?? null}
+        />
 
         {summary ? (
           <section aria-label="Event summary" className="mb-10">

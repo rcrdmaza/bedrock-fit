@@ -74,6 +74,14 @@ export const eventMetadata = pgTable(
     // plus one optional image URL for the course map preview.
     routeUrl: text('route_url'),
     routeImageUrl: text('route_image_url'),
+    // "Presented by" sponsor — one slot per event in v1. All three fields
+    // are independently optional: name-only renders a text chip, logo-only
+    // renders just the image, url-only is meaningless and the renderer
+    // ignores it. The stripe hides entirely when name and logo are both
+    // missing.
+    sponsorName: text('sponsor_name'),
+    sponsorUrl: text('sponsor_url'),
+    sponsorLogoUrl: text('sponsor_logo_url'),
     // Multi-tenant ownership. Lazily backfilled to a default org for
     // events imported before multi-tenancy shipped. Nullable so legacy
     // rows in tests/local DBs without the migration applied still work

@@ -93,6 +93,12 @@ export type EventMetadata = {
   summary: string | null;
   routeUrl: string | null;
   routeImageUrl: string | null;
+  // "Presented by" sponsor for the event. All three optional and
+  // independent — the public page hides the stripe when both
+  // sponsorName and sponsorLogoUrl are null.
+  sponsorName: string | null;
+  sponsorUrl: string | null;
+  sponsorLogoUrl: string | null;
 };
 
 export type EventPhoto = {
@@ -175,6 +181,9 @@ export async function getEventDetail(
         summary: eventMetadata.summary,
         routeUrl: eventMetadata.routeUrl,
         routeImageUrl: eventMetadata.routeImageUrl,
+        sponsorName: eventMetadata.sponsorName,
+        sponsorUrl: eventMetadata.sponsorUrl,
+        sponsorLogoUrl: eventMetadata.sponsorLogoUrl,
       })
       .from(eventMetadata)
       .where(
@@ -334,6 +343,9 @@ export async function getEventMetadata(
       summary: eventMetadata.summary,
       routeUrl: eventMetadata.routeUrl,
       routeImageUrl: eventMetadata.routeImageUrl,
+      sponsorName: eventMetadata.sponsorName,
+      sponsorUrl: eventMetadata.sponsorUrl,
+      sponsorLogoUrl: eventMetadata.sponsorLogoUrl,
     })
     .from(eventMetadata)
     .where(where)
