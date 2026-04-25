@@ -1,14 +1,17 @@
 import Link from 'next/link';
-import { requireAdmin } from '@/lib/auth';
 import SiteHeader from '@/app/site-header';
 import { adminLogout } from '@/app/actions/admin';
+import { requireOrgOrAdmin } from '@/lib/org';
 import ImportForm from './import-form';
 
 // The form talks to the DB and the admin cookie — no prerender.
 export const dynamic = 'force-dynamic';
 
 export default async function AdminImportPage() {
-  await requireAdmin();
+  // Any admin or org member can import. The commit action stamps the
+  // resulting event_metadata row with the caller's org so future edits
+  // are scoped correctly.
+  const ctx = await requireOrgOrAdmin();
 
   return (
     <main className="min-h-screen bg-white">
@@ -31,6 +34,12 @@ export default async function AdminImportPage() {
           Events
         </Link>
         <span className="text-sm text-stone-900 font-medium">Import results</span>
+        <Link
+          href="/admin/org"
+          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
+        >
+          Org
+        </Link>
         <form action={adminLogout}>
           <button
             type="submit"
@@ -50,6 +59,15 @@ export default async function AdminImportPage() {
             Upload a finisher CSV and attach it to an event. Every row becomes
             one result; new athletes are created as needed.
           </p>
+          {ctx.kind === 'org' && (
+            <p className="text-xs text-stone-500 mt-2">
+              Importing as{' '}
+              <span className="font-medium text-stone-700">
+                {ctx.membership.org.name}
+              </span>
+              . The event will be owned by your organization.
+            </p>
+          )}
         </div>
 
         <ImportForm />

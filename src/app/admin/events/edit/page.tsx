@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { requireAdmin } from '@/lib/auth';
+import { notFound, redirect } from 'next/navigation';
 import SiteHeader from '@/app/site-header';
 import { adminLogout } from '@/app/actions/admin';
 import { getEventDetail, getEventMetadata } from '@/lib/events';
@@ -10,6 +9,11 @@ import {
   reorderEventPhoto,
   upsertEventMetadata,
 } from '@/app/actions/events';
+import {
+  canEditEventMetadata,
+  findEventMetadataByTriple,
+  requireOrgOrAdmin,
+} from '@/lib/org';
 import EventEditForm from './event-edit-form';
 import PhotosManager from './photos-manager';
 
@@ -29,7 +33,7 @@ export default async function EditEventMetadataPage({
 }: {
   searchParams: SearchParams;
 }) {
-  await requireAdmin();
+  const ctx = await requireOrgOrAdmin();
   const sp = await searchParams;
   const name = first(sp.name);
   const date = first(sp.date);
@@ -45,6 +49,20 @@ export default async function EditEventMetadataPage({
   // never existed and create orphan metadata rows.
   const detail = await getEventDetail(name, date, category);
   if (!detail) notFound();
+
+  // Org-scoping guard. If a metadata row exists, the caller must be
+  // allowed to act on it (admin god-mode, or member of the owning org).
+  // If no row exists yet, only admin (god-mode) and org members get
+  // here — both can author the first metadata row, with the org
+  // member's row stamped to their org by the upsert action.
+  const triple = await findEventMetadataByTriple({
+    eventName: name,
+    eventDate: new Date(date),
+    raceCategory: category,
+  });
+  if (triple && !canEditEventMetadata(ctx, triple.ownerOrgId)) {
+    redirect('/admin/events?error=forbidden');
+  }
 
   // Metadata may not exist yet — the form renders blanks in that case.
   const md = await getEventMetadata(name, date, category);
@@ -89,6 +107,12 @@ export default async function EditEventMetadataPage({
           className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
         >
           Import results
+        </Link>
+        <Link
+          href="/admin/org"
+          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
+        >
+          Org
         </Link>
         <form action={adminLogout}>
           <button

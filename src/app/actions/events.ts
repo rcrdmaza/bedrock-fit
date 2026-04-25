@@ -11,7 +11,11 @@ import { redirect } from 'next/navigation';
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { eventMetadata, eventPhotos } from '@/db/schema';
-import { requireAdmin } from '@/lib/auth';
+import {
+  canEditEventMetadata,
+  requireOrgOrAdmin,
+  type AdminOrOrg,
+} from '@/lib/org';
 
 // Reasonable upper bounds so a stray paste or an attacker poking the
 // form can't dump unbounded text into the DB. Summary is generous
@@ -93,6 +97,38 @@ function bustEventCaches() {
   revalidatePath('/admin/events/edit');
 }
 
+// Look up the existing metadata row's owner (if any). Used by every
+// action below to decide whether the caller can act on this event.
+async function findOwnerOrgId(
+  key: EventKey,
+): Promise<{ id: string; ownerOrgId: string | null } | null> {
+  const rows = await db
+    .select({
+      id: eventMetadata.id,
+      ownerOrgId: eventMetadata.ownerOrgId,
+    })
+    .from(eventMetadata)
+    .where(
+      and(
+        eq(eventMetadata.eventName, key.eventName),
+        eq(eventMetadata.eventDate, key.eventDate),
+        eq(eventMetadata.raceCategory, key.raceCategory),
+      ),
+    )
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+  return { id: row.id, ownerOrgId: row.ownerOrgId ?? null };
+}
+
+// What owner_org_id should a freshly-created metadata row get? Org
+// members get their own org; legacy admin (god-mode) creates rows
+// owned by no one — they can be edited by admin only until an
+// importing org claims them.
+function ownerOrgIdForCreate(ctx: AdminOrOrg): string | null {
+  return ctx.kind === 'org' ? ctx.membership.org.id : null;
+}
+
 // Upsert one metadata row keyed by the identity triple. Relies on the
 // unique constraint `event_metadata_triple_key` defined on the schema
 // so ON CONFLICT DO UPDATE lands on the same row every time.
@@ -101,10 +137,19 @@ function bustEventCaches() {
 // leaves the row with nulls, which renders as "no metadata" in the UI
 // the same as a missing row. The row itself anchors photo rows via the
 // FK, so deleting it would cascade the gallery away.
+//
+// Org-scoping: if a row already exists, the caller must be allowed to
+// edit it (admin god-mode, or member of the owning org). New rows get
+// owner_org_id stamped to the caller's org (or null for god-mode).
 export async function upsertEventMetadata(formData: FormData): Promise<void> {
-  await requireAdmin();
+  const ctx = await requireOrgOrAdmin();
   const key = readEventKey(formData);
   if (!key) return;
+
+  const existing = await findOwnerOrgId(key);
+  if (existing && !canEditEventMetadata(ctx, existing.ownerOrgId)) {
+    redirect('/admin/events?error=forbidden');
+  }
 
   const payload = {
     eventName: key.eventName,
@@ -116,6 +161,9 @@ export async function upsertEventMetadata(formData: FormData): Promise<void> {
     summary: str(formData, 'summary', LIMITS.summary),
     routeUrl: str(formData, 'routeUrl', LIMITS.url),
     routeImageUrl: str(formData, 'routeImageUrl', LIMITS.url),
+    // For new rows we stamp the owner; for existing rows we don't
+    // touch it (the SET clause omits owner_org_id below).
+    ownerOrgId: existing ? existing.ownerOrgId : ownerOrgIdForCreate(ctx),
     updatedAt: new Date(),
   };
 
@@ -135,6 +183,10 @@ export async function upsertEventMetadata(formData: FormData): Promise<void> {
         summary: payload.summary,
         routeUrl: payload.routeUrl,
         routeImageUrl: payload.routeImageUrl,
+        // Deliberately NOT updating ownerOrgId on conflict: an org
+        // member must not be able to take over an event by editing
+        // its metadata. Ownership only changes via dedicated tooling
+        // (none in v1).
         updatedAt: payload.updatedAt,
       },
     });
@@ -151,7 +203,14 @@ export async function upsertEventMetadata(formData: FormData): Promise<void> {
 // has no metadata yet needs a placeholder row. We bootstrap one with
 // nothing but the identity triple set; the admin can fill the rest
 // later.
-async function ensureMetadataId(key: EventKey): Promise<string> {
+//
+// Permission contract: callers must already have verified `ctx` can
+// act on the existing row (if any). We pass `ctx` so brand-new rows
+// can stamp `owner_org_id` to the creator's org.
+async function ensureMetadataId(
+  key: EventKey,
+  ctx: AdminOrOrg,
+): Promise<string> {
   const existing = await db
     .select({ id: eventMetadata.id })
     .from(eventMetadata)
@@ -171,6 +230,7 @@ async function ensureMetadataId(key: EventKey): Promise<string> {
       eventName: key.eventName,
       eventDate: key.eventDate,
       raceCategory: key.raceCategory,
+      ownerOrgId: ownerOrgIdForCreate(ctx),
     })
     .returning({ id: eventMetadata.id });
   return inserted[0]!.id;
@@ -191,7 +251,7 @@ async function nextSortOrder(metadataId: string): Promise<number> {
 }
 
 export async function addEventPhoto(formData: FormData): Promise<void> {
-  await requireAdmin();
+  const ctx = await requireOrgOrAdmin();
   const key = readEventKey(formData);
   if (!key) return;
   const url = str(formData, 'url', LIMITS.url);
@@ -202,7 +262,12 @@ export async function addEventPhoto(formData: FormData): Promise<void> {
   }
   const caption = str(formData, 'caption', LIMITS.caption);
 
-  const metadataId = await ensureMetadataId(key);
+  const existing = await findOwnerOrgId(key);
+  if (existing && !canEditEventMetadata(ctx, existing.ownerOrgId)) {
+    redirect('/admin/events?error=forbidden');
+  }
+
+  const metadataId = await ensureMetadataId(key, ctx);
   const sortOrder = await nextSortOrder(metadataId);
 
   await db.insert(eventPhotos).values({
@@ -217,34 +282,27 @@ export async function addEventPhoto(formData: FormData): Promise<void> {
 }
 
 export async function deleteEventPhoto(formData: FormData): Promise<void> {
-  await requireAdmin();
+  const ctx = await requireOrgOrAdmin();
   const key = readEventKey(formData);
   if (!key) return;
   const photoId = str(formData, 'photoId', 100);
   if (!photoId) return;
 
-  // Extra safety: join through metadata so an admin can't delete a
-  // photo by guessing an id that belongs to a different event.
-  const metadataRows = await db
-    .select({ id: eventMetadata.id })
-    .from(eventMetadata)
-    .where(
-      and(
-        eq(eventMetadata.eventName, key.eventName),
-        eq(eventMetadata.eventDate, key.eventDate),
-        eq(eventMetadata.raceCategory, key.raceCategory),
-      ),
-    )
-    .limit(1);
-  const metadataId = metadataRows[0]?.id;
-  if (!metadataId) return;
+  // Look up the metadata row + verify the caller can act on it. The
+  // join below also keeps us from deleting a photo that belongs to a
+  // different event by guessing its id.
+  const owner = await findOwnerOrgId(key);
+  if (!owner) return;
+  if (!canEditEventMetadata(ctx, owner.ownerOrgId)) {
+    redirect('/admin/events?error=forbidden');
+  }
 
   await db
     .delete(eventPhotos)
     .where(
       and(
         eq(eventPhotos.id, photoId),
-        eq(eventPhotos.eventMetadataId, metadataId),
+        eq(eventPhotos.eventMetadataId, owner.id),
       ),
     );
 
@@ -256,30 +314,19 @@ export async function deleteEventPhoto(formData: FormData): Promise<void> {
 // than dense renumbering and preserves the admin's existing ordering.
 // If the photo is already at the edge, this is a no-op.
 export async function reorderEventPhoto(formData: FormData): Promise<void> {
-  await requireAdmin();
+  const ctx = await requireOrgOrAdmin();
   const key = readEventKey(formData);
   if (!key) return;
   const photoId = str(formData, 'photoId', 100);
   const direction = str(formData, 'direction', 10);
   if (!photoId || (direction !== 'up' && direction !== 'down')) return;
 
-  // Pull the whole gallery for this event (bounded — admins won't
-  // reasonably queue hundreds of photos) so we can find the neighbor
-  // by position. We join through metadata to confine the query to the
-  // caller's event.
-  const metadataRows = await db
-    .select({ id: eventMetadata.id })
-    .from(eventMetadata)
-    .where(
-      and(
-        eq(eventMetadata.eventName, key.eventName),
-        eq(eventMetadata.eventDate, key.eventDate),
-        eq(eventMetadata.raceCategory, key.raceCategory),
-      ),
-    )
-    .limit(1);
-  const metadataId = metadataRows[0]?.id;
-  if (!metadataId) return;
+  const owner = await findOwnerOrgId(key);
+  if (!owner) return;
+  if (!canEditEventMetadata(ctx, owner.ownerOrgId)) {
+    redirect('/admin/events?error=forbidden');
+  }
+  const metadataId = owner.id;
 
   const gallery = await db
     .select({
@@ -325,7 +372,9 @@ export async function reorderEventPhoto(formData: FormData): Promise<void> {
 }
 
 export async function redirectToEventPage(formData: FormData): Promise<void> {
-  await requireAdmin();
+  // Read-only: any admin or org member can navigate to the public
+  // page. We still gate on a session so this isn't an open redirect.
+  await requireOrgOrAdmin();
   const key = readEventKey(formData);
   if (!key) return;
   redirect(eventHref(key));

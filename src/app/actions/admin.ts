@@ -4,13 +4,13 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
-import { results } from '@/db/schema';
+import { eventMetadata, results } from '@/db/schema';
 import {
   clearAdminCookie,
   passwordMatches,
-  requireAdmin,
   setAdminCookie,
 } from '@/lib/auth';
+import { requireOrgOrAdmin, type AdminOrOrg } from '@/lib/org';
 
 // Hard upper bound for a single approve/reject batch. Mirrors the cap
 // on the athlete-side bulk-claim flow — an admin should only ever be
@@ -48,16 +48,47 @@ export async function adminLogout(): Promise<void> {
 // on `status = 'pending'` at the WHERE so a stale form submission
 // (e.g. admin opens two tabs, or the claim was already withdrawn)
 // can't double-apply or revive a rejected claim.
+//
+// Org-scoping: when the caller is a non-admin org member, we narrow
+// the candidate set to ids whose result row matches an event_metadata
+// row owned by the caller's org. The narrowing is a pre-filter — the
+// final UPDATE still runs by id, so a stale submission for an id that
+// doesn't belong to the caller is silently ignored rather than 403'd.
 async function updatePendingBatch(
+  ctx: AdminOrOrg,
   resultIds: string[],
   updates: Record<string, unknown>,
 ): Promise<number> {
   if (resultIds.length === 0) return 0;
+
+  let allowedIds = resultIds;
+  if (ctx.kind === 'org') {
+    const allowed = await db
+      .select({ id: results.id })
+      .from(results)
+      .innerJoin(
+        eventMetadata,
+        and(
+          eq(eventMetadata.eventName, results.eventName),
+          eq(eventMetadata.eventDate, results.eventDate),
+          eq(eventMetadata.raceCategory, results.raceCategory),
+        ),
+      )
+      .where(
+        and(
+          inArray(results.id, resultIds),
+          eq(eventMetadata.ownerOrgId, ctx.membership.org.id),
+        ),
+      );
+    allowedIds = allowed.map((r) => r.id);
+    if (allowedIds.length === 0) return 0;
+  }
+
   const updated = await db
     .update(results)
     .set(updates)
     .where(
-      and(inArray(results.id, resultIds), eq(results.status, 'pending')),
+      and(inArray(results.id, allowedIds), eq(results.status, 'pending')),
     )
     .returning({ id: results.id });
   return updated.length;
@@ -82,22 +113,22 @@ function readResultIds(formData: FormData): string[] {
 }
 
 export async function approveClaims(formData: FormData): Promise<void> {
-  await requireAdmin();
+  const ctx = await requireOrgOrAdmin();
   const ids = readResultIds(formData);
   if (ids.length === 0) return;
 
-  await updatePendingBatch(ids, { status: 'claimed' });
+  await updatePendingBatch(ctx, ids, { status: 'claimed' });
   bustClaimCaches();
 }
 
 export async function rejectClaims(formData: FormData): Promise<void> {
-  await requireAdmin();
+  const ctx = await requireOrgOrAdmin();
   const ids = readResultIds(formData);
   if (ids.length === 0) return;
 
   // Revert to unclaimed and wipe the claim metadata so the next claimer
   // starts from a clean slate — we're not keeping a rejection audit log.
-  await updatePendingBatch(ids, {
+  await updatePendingBatch(ctx, ids, {
     status: 'unclaimed',
     claimEmail: null,
     claimNote: null,

@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
-import { athletes, results } from '@/db/schema';
-import { requireAdmin } from '@/lib/auth';
+import { athletes, eventMetadata, results } from '@/db/schema';
+import { requireOrgOrAdmin, type AdminOrOrg } from '@/lib/org';
 import SiteHeader from '@/app/site-header';
 import {
   adminLogout,
@@ -25,7 +25,35 @@ function formatTime(seconds: number | null): string {
 
 type PendingRow = Awaited<ReturnType<typeof getPendingClaims>>[number];
 
-async function getPendingClaims() {
+// When the caller is an org member, we narrow to claims whose event
+// triple matches an event_metadata row owned by the caller's org.
+// Legacy admin (god-mode) sees the full pool. The join is INNER so
+// org members don't see results for events that have no metadata row
+// at all — those events haven't been "claimed" by any org yet, so
+// nobody but god-mode admin should be reviewing their claims.
+async function getPendingClaims(ctx: AdminOrOrg) {
+  if (ctx.kind === 'admin') {
+    return db
+      .select({
+        id: results.id,
+        athleteId: athletes.id,
+        athleteName: athletes.name,
+        eventName: results.eventName,
+        eventDate: results.eventDate,
+        raceCategory: results.raceCategory,
+        finishTime: results.finishTime,
+        overallRank: results.overallRank,
+        totalFinishers: results.totalFinishers,
+        claimEmail: results.claimEmail,
+        claimNote: results.claimNote,
+        claimSubmittedAt: results.claimSubmittedAt,
+      })
+      .from(results)
+      .innerJoin(athletes, eq(results.athleteId, athletes.id))
+      .where(eq(results.status, 'pending'))
+      .orderBy(desc(results.claimSubmittedAt));
+  }
+
   return db
     .select({
       id: results.id,
@@ -43,7 +71,20 @@ async function getPendingClaims() {
     })
     .from(results)
     .innerJoin(athletes, eq(results.athleteId, athletes.id))
-    .where(eq(results.status, 'pending'))
+    .innerJoin(
+      eventMetadata,
+      and(
+        eq(eventMetadata.eventName, results.eventName),
+        eq(eventMetadata.eventDate, results.eventDate),
+        eq(eventMetadata.raceCategory, results.raceCategory),
+      ),
+    )
+    .where(
+      and(
+        eq(results.status, 'pending'),
+        eq(eventMetadata.ownerOrgId, ctx.membership.org.id),
+      ),
+    )
     .orderBy(desc(results.claimSubmittedAt));
 }
 
@@ -97,8 +138,8 @@ function groupPending(rows: PendingRow[]): ClaimGroup[] {
 }
 
 export default async function AdminPage() {
-  await requireAdmin();
-  const pending = await getPendingClaims();
+  const ctx = await requireOrgOrAdmin();
+  const pending = await getPendingClaims(ctx);
   const groups = groupPending(pending);
 
   return (
@@ -126,6 +167,12 @@ export default async function AdminPage() {
           className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
         >
           Import results
+        </Link>
+        <Link
+          href="/admin/org"
+          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
+        >
+          Org
         </Link>
         <form action={adminLogout}>
           <button
