@@ -116,6 +116,12 @@ function renderEmailBody(url: string): { text: string; html: string } {
 // the URL to stdout so you can click through without a mail setup. In
 // production without the key, it throws — silent "nothing happens" is
 // a worse UX than a visible crash we can fix by setting the env var.
+//
+// Every branch logs something tagged `[magic-link]` so Railway logs
+// give us a definitive "what happened" trace per request: which path
+// fired, did Resend accept it, what was the response id. Without
+// these we end up guessing whether the failure is config, network,
+// or delivery.
 export async function sendMagicLink(
   email: string,
   token: string,
@@ -125,35 +131,61 @@ export async function sendMagicLink(
 
   if (!apiKey) {
     if (process.env.NODE_ENV === 'production') {
+      console.error(
+        `[magic-link] RESEND_API_KEY missing in production — refusing to send to ${email}`,
+      );
       throw new Error(
         'RESEND_API_KEY is not set — cannot deliver magic-link email in production.',
       );
     }
-    console.log(`[magic-link] ${email} → ${url}`);
+    // Dev fallback. Always print the URL so a developer can click
+    // through without a mail setup.
+    console.log(`[magic-link] dev fallback (no key) ${email} → ${url}`);
     return;
   }
 
+  const from = getEmailFrom();
+  console.log(
+    `[magic-link] resend POST from="${from}" to="${email}" tokenPrefix=${token.slice(0, 8)}…`,
+  );
+
   const { text, html } = renderEmailBody(url);
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: getEmailFrom(),
-      to: [email],
-      subject: 'Your Bedrock.fit sign-in link',
-      text,
-      html,
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from,
+        to: [email],
+        subject: 'Your Bedrock.fit sign-in link',
+        text,
+        html,
+      }),
+    });
+  } catch (err) {
+    // Network-level failure (DNS, TLS, hung socket). Distinct from a
+    // 4xx/5xx body, and worth its own log line so we can tell them
+    // apart in Railway.
+    console.error(`[magic-link] resend network error: ${String(err)}`);
+    throw err;
+  }
+
+  const body = await res.text().catch(() => '');
   if (!res.ok) {
-    // Resend returns JSON errors; surface the message so Sentry
-    // captures something actionable.
-    const body = await res.text().catch(() => '');
+    console.error(
+      `[magic-link] resend rejected ${res.status}: ${body.slice(0, 300)}`,
+    );
     throw new Error(
       `Resend API returned ${res.status}: ${body.slice(0, 200)}`,
     );
   }
+  // Resend returns `{ "id": "..." }` for successes. Logging it makes
+  // it trivial to look up the message in Resend's dashboard if the
+  // recipient never sees it (delivery vs. send is two different
+  // things).
+  console.log(`[magic-link] resend accepted: ${body.slice(0, 200)}`);
 }
