@@ -6,6 +6,7 @@ import {
   timestamp,
   numeric,
   unique,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 
 export const athletes = pgTable('athletes', {
@@ -73,6 +74,12 @@ export const eventMetadata = pgTable(
     // plus one optional image URL for the course map preview.
     routeUrl: text('route_url'),
     routeImageUrl: text('route_image_url'),
+    // Multi-tenant ownership. Lazily backfilled to a default org for
+    // events imported before multi-tenancy shipped. Nullable so legacy
+    // rows in tests/local DBs without the migration applied still work
+    // — the scoping helpers treat null as "no org owns this", which
+    // means only legacy admin-password sessions can edit it.
+    ownerOrgId: uuid('owner_org_id').references((): AnyPgColumn => organizations.id),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
@@ -145,5 +152,76 @@ export const loginTokens = pgTable('login_tokens', {
   tokenHash: text('token_hash').notNull().unique(),
   expiresAt: timestamp('expires_at').notNull(),
   consumedAt: timestamp('consumed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// --- Multi-tenancy ----------------------------------------------------
+//
+// An `organization` is the unit a paying customer (race director,
+// timing company, club) corresponds to. It owns events; members of an
+// org can edit those events and approve their claims. Public pages are
+// unaware of orgs — the public site stays one big results pool. This
+// is a pure backend scoping primitive for v1.
+//
+// `slug` is reserved for future use (per-org vanity URLs, /o/[slug]),
+// but we generate it on creation so we don't have to backfill later.
+export const organizations = pgTable('organizations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  // URL-safe lowercase identifier. Unique so /o/[slug] can be added
+  // without a collision pass later.
+  slug: text('slug').notNull().unique(),
+  // Who created the org. Nullable because the seed/backfill insert
+  // creates the default org before any user exists in some test
+  // setups; production rows always have it.
+  createdByUserId: uuid('created_by_user_id').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Membership join row: user X belongs to org Y with role Z. role is a
+// flat string today ('owner' | 'admin'); promoting to a real enum is a
+// later migration once we have more than two roles.
+export const orgMembers = pgTable(
+  'org_members',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    orgId: uuid('org_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // 'owner' can invite/remove members and delete the org; 'admin' can
+    // do everything event-related but not modify membership. Defaults
+    // to 'admin' on invite acceptance — the inviter explicitly chooses
+    // when granting owner.
+    role: text('role').notNull().default('admin'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    // One membership row per (org, user). Without this constraint a
+    // double-clicked accept-invite would write two rows and the listing
+    // would show the user twice.
+    uniqOrgUser: unique('org_members_org_user_key').on(t.orgId, t.userId),
+  }),
+);
+
+// Pending invites. Same hash-not-raw discipline as login_tokens — the
+// raw token exists only inside the email. `consumedAt` doubles as a
+// replay guard; an accepted invite can't be re-used.
+export const orgInvites = pgTable('org_invites', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  orgId: uuid('org_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  // Lowercase-normalized on write. We do NOT require a `users` row to
+  // pre-exist — invites can land at brand-new emails, and the accept
+  // flow signs them in via magic-link first.
+  email: text('email').notNull(),
+  role: text('role').notNull().default('admin'),
+  tokenHash: text('token_hash').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  consumedAt: timestamp('consumed_at'),
+  invitedByUserId: uuid('invited_by_user_id').references(() => users.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
