@@ -13,6 +13,9 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:migrate": "tsx src/db/migrate.ts"
   },
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "dependencies": {
     "@sentry/nextjs": "^10.49.0",
     "dotenv": "^17.4.2",
