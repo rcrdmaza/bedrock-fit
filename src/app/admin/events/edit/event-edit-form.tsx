@@ -81,6 +81,42 @@ export default function EventEditForm({
         />
       </div>
 
+      {/* Sponsor block — "presented by" slot. Optional; the public page
+          hides the stripe entirely when name and logo are both empty.
+          Three independent fields so a sponsor can be text-only, logo-
+          only, or fully wired. */}
+      <fieldset className="border-t border-stone-100 pt-6">
+        <legend className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-1.5">
+          Sponsor
+        </legend>
+        <p className="text-xs text-stone-500 mb-4">
+          Renders as a single &ldquo;presented by&rdquo; stripe under the event
+          title. Leave all three blank to hide it.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Field
+            label="Sponsor name"
+            name="sponsorName"
+            defaultValue={val(metadata?.sponsorName)}
+            placeholder="Acme Running Co."
+          />
+          <Field
+            label="Sponsor URL"
+            name="sponsorUrl"
+            type="url"
+            defaultValue={val(metadata?.sponsorUrl)}
+            placeholder="https://acmerunning.com"
+          />
+          <Field
+            label="Sponsor logo URL"
+            name="sponsorLogoUrl"
+            type="url"
+            defaultValue={val(metadata?.sponsorLogoUrl)}
+            placeholder="https://…/logo.svg"
+          />
+        </div>
+      </fieldset>
+
       <div className="pt-2">
         <SubmitButton />
       </div>

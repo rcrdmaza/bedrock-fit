@@ -27,6 +27,7 @@ const LIMITS = {
   summary: 8000,
   url: 2000,
   caption: 400,
+  sponsorName: 200,
 } as const;
 
 // Trim + clamp, treating "" and whitespace as null so "clear this field"
@@ -161,6 +162,9 @@ export async function upsertEventMetadata(formData: FormData): Promise<void> {
     summary: str(formData, 'summary', LIMITS.summary),
     routeUrl: str(formData, 'routeUrl', LIMITS.url),
     routeImageUrl: str(formData, 'routeImageUrl', LIMITS.url),
+    sponsorName: str(formData, 'sponsorName', LIMITS.sponsorName),
+    sponsorUrl: str(formData, 'sponsorUrl', LIMITS.url),
+    sponsorLogoUrl: str(formData, 'sponsorLogoUrl', LIMITS.url),
     // For new rows we stamp the owner; for existing rows we don't
     // touch it (the SET clause omits owner_org_id below).
     ownerOrgId: existing ? existing.ownerOrgId : ownerOrgIdForCreate(ctx),
@@ -183,6 +187,9 @@ export async function upsertEventMetadata(formData: FormData): Promise<void> {
         summary: payload.summary,
         routeUrl: payload.routeUrl,
         routeImageUrl: payload.routeImageUrl,
+        sponsorName: payload.sponsorName,
+        sponsorUrl: payload.sponsorUrl,
+        sponsorLogoUrl: payload.sponsorLogoUrl,
         // Deliberately NOT updating ownerOrgId on conflict: an org
         // member must not be able to take over an event by editing
         // its metadata. Ownership only changes via dedicated tooling
