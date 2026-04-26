@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
@@ -9,6 +10,31 @@ import ProfileBadge from './profile-badge';
 import RaceHistory, {
   type RaceHistoryRow,
 } from './race-history';
+
+// Pull a country guess off the free-form `athletes.location` text. The
+// admin import doesn't normalize the field, so values look like "Lima,
+// Peru", "Peru", or just "" — the convention in the wild is "city,
+// country" with country last, so we take the trailing comma-chunk and
+// trim it. Anything blank → null, which the caller treats as "skip the
+// country deep-link param".
+function guessCountry(location: string | null): string | null {
+  if (!location) return null;
+  const parts = location.split(',').map((p) => p.trim());
+  const last = parts[parts.length - 1];
+  return last && last.length > 0 ? last : null;
+}
+
+// Build the /results URL that pre-fills the search for this athlete:
+// name as the primary query, country as the sub-filter when we have
+// one. The /results page parses ?q, ?field, and ?country on entry and
+// seeds the search form with them.
+function buildClaimSearchUrl(name: string, country: string | null): string {
+  const params = new URLSearchParams();
+  params.set('field', 'name');
+  params.set('q', name);
+  if (country) params.set('country', country);
+  return `/results?${params.toString()}`;
+}
 
 // Athletes and their results change over time; rendered per request.
 export const dynamic = 'force-dynamic';
@@ -172,6 +198,42 @@ export default async function AthleteProfilePage({
             </div>
           </div>
         </div>
+
+        {/* No-claims CTA. Surfaces a nudge for athletes who haven't
+            claimed anything yet — the link drops them into /results
+            with their name and (best-guess) country pre-filled, so the
+            very first thing they see is the candidate rows to claim.
+            Hidden once they have at least one claimed result; the race
+            history below handles every other state. */}
+        {claimedRaces === 0 ? (
+          <div className="mb-8 rounded-2xl border border-blue-100 bg-blue-50/60 px-5 py-4 flex items-start gap-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-stone-900">
+                No claimed races yet
+              </p>
+              <p className="text-xs text-stone-500 mt-0.5">
+                Search the results pool for{' '}
+                <span className="font-medium text-stone-700">
+                  {athlete.name}
+                </span>
+                {guessCountry(athlete.location)
+                  ? ` in ${guessCountry(athlete.location)}`
+                  : ''}{' '}
+                and claim every finish that&apos;s yours — even ones from
+                imports that didn&apos;t spell your name the same way.
+              </p>
+            </div>
+            <Link
+              href={buildClaimSearchUrl(
+                athlete.name,
+                guessCountry(athlete.location),
+              )}
+              className="text-xs font-medium bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shrink-0"
+            >
+              Find my results →
+            </Link>
+          </div>
+        ) : null}
 
         {/* Race history + bulk-claim UI is a client component because the
             checkbox state + submit banner need local reactivity. The server

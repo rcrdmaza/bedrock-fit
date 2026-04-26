@@ -7,7 +7,7 @@
 // more confusing than useful.
 
 import { useState } from 'react';
-import ResultsSearch from './results-search';
+import ResultsSearch, { type ResultsSearchInitial } from './results-search';
 import EventsSearch from './events-search';
 import type { ResultRow } from '@/lib/results-filter';
 import type { EventSummary } from '@/lib/events-filter';
@@ -18,6 +18,7 @@ export default function ResultsBrowser({
   rows,
   events,
   defaultView = 'results',
+  initialResultsFilter,
 }: {
   rows: ResultRow[];
   events: EventSummary[];
@@ -25,6 +26,10 @@ export default function ResultsBrowser({
   // just-imported event is the first thing visible. Everything else
   // (home nav, direct link) still defaults to the Results tab.
   defaultView?: View;
+  // URL-sourced initial state for the results search (q/field/country).
+  // Only applies on the Results tab; the Events tab manages its own
+  // filter state.
+  initialResultsFilter?: ResultsSearchInitial;
 }) {
   const [view, setView] = useState<View>(defaultView);
 
@@ -65,7 +70,7 @@ export default function ResultsBrowser({
           for no benefit — each child re-mounts with fresh state on
           first switch, which is fine. */}
       {view === 'results' ? (
-        <ResultsSearch rows={rows} />
+        <ResultsSearch rows={rows} initial={initialResultsFilter} />
       ) : (
         <EventsSearch events={events} />
       )}

@@ -50,25 +50,49 @@ const SEARCH_FIELD_META: Record<
 // to narrow the query rather than painting 5k rows into the DOM.
 const MAX_VISIBLE = 200;
 
-export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
+// Optional URL-sourced initial filter values. The /results page reads
+// `?q=`, `?field=`, and `?country=` from searchParams and forwards
+// them so deep links (notably the "claim your races" CTA on athlete
+// profiles with no claimed results) seed the form.
+export interface ResultsSearchInitial {
+  searchField?: ResultSearchField;
+  query?: string;
+  country?: string;
+}
+
+export default function ResultsSearch({
+  rows,
+  initial,
+}: {
+  rows: ResultRow[];
+  initial?: ResultsSearchInitial;
+}) {
   // Dropdown picks the primary text field; the input's placeholder and
-  // input-mode change with it. Date range stays visible always.
-  const [searchField, setSearchField] = useState<ResultSearchField>('name');
-  const [query, setQuery] = useState('');
+  // input-mode change with it. Date range stays visible always. The
+  // country sub-filter is independent and ANDs with whatever the
+  // primary field matched.
+  const [searchField, setSearchField] = useState<ResultSearchField>(
+    initial?.searchField ?? 'name',
+  );
+  const [query, setQuery] = useState(initial?.query ?? '');
+  const [country, setCountry] = useState(initial?.country ?? '');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [claimingId, setClaimingId] = useState<string | null>(null);
 
   const filtered = useMemo(
-    () => filterResults(rows, { searchField, query, fromDate, toDate }),
-    [rows, searchField, query, fromDate, toDate],
+    () =>
+      filterResults(rows, { searchField, query, fromDate, toDate, country }),
+    [rows, searchField, query, fromDate, toDate, country],
   );
 
   // getResults already orders by eventDate desc, so filtered preserves
   // that ordering. We just slice to keep the DOM reasonable.
   const visible = filtered.slice(0, MAX_VISIBLE);
   const meta = SEARCH_FIELD_META[searchField];
-  const hasFilters = Boolean(query.trim() || fromDate || toDate);
+  const hasFilters = Boolean(
+    query.trim() || country.trim() || fromDate || toDate,
+  );
 
   return (
     <>
@@ -105,6 +129,23 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
 
       <div className="flex flex-wrap items-center gap-3 mb-8">
         <div className="flex items-center gap-2">
+          <label htmlFor="filterCountry" className="text-xs text-stone-500">
+            Country
+          </label>
+          <input
+            id="filterCountry"
+            type="text"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            placeholder="e.g. Peru"
+            // Sub-filter — ANDs with whatever the primary search picks.
+            // Independent from the primary "country" search field so a
+            // deep link "name=Carlos + country=Peru" works without
+            // burning the single primary slot.
+            className="px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+          />
+        </div>
+        <div className="flex items-center gap-2">
           <label htmlFor="fromDate" className="text-xs text-stone-500">
             From
           </label>
@@ -138,6 +179,7 @@ export default function ResultsSearch({ rows }: { rows: ResultRow[] }) {
             type="button"
             onClick={() => {
               setQuery('');
+              setCountry('');
               setFromDate('');
               setToDate('');
             }}

@@ -2,6 +2,11 @@ import { getResults } from '@/lib/results';
 import { getEventSummaries } from '@/lib/events';
 import SiteHeader from '@/app/site-header';
 import ResultsBrowser from './results-browser';
+import {
+  RESULT_SEARCH_FIELDS,
+  type ResultSearchField,
+} from '@/lib/results-filter';
+import type { ResultsSearchInitial } from './results-search';
 
 // Always fetch fresh data on each request — results will change as new rows
 // get ingested and claimed.
@@ -30,6 +35,33 @@ function readImportFlash(
   return { imported, created, event };
 }
 
+// Pull the search-form initial state out of `?q=`, `?field=`, and
+// `?country=`. Returns undefined when nothing is set so we don't burn
+// memo cycles on an empty object. The athlete profile page links here
+// with `?q=<name>&country=<country>` when an athlete has no claimed
+// results, to seed the form for them.
+function readResultsInitialFilter(
+  params: Awaited<SearchParams>,
+): ResultsSearchInitial | undefined {
+  const q = typeof params.q === 'string' ? params.q : '';
+  const country = typeof params.country === 'string' ? params.country : '';
+  // Only accept fields we know about; anything else (typo, stale URL)
+  // falls through to the component's default of "name".
+  const fieldRaw = typeof params.field === 'string' ? params.field : '';
+  const searchField = (RESULT_SEARCH_FIELDS as readonly string[]).includes(
+    fieldRaw,
+  )
+    ? (fieldRaw as ResultSearchField)
+    : undefined;
+
+  if (!q && !country && !searchField) return undefined;
+  return {
+    query: q || undefined,
+    country: country || undefined,
+    searchField,
+  };
+}
+
 export default async function ResultsPage({
   searchParams,
 }: {
@@ -48,6 +80,7 @@ export default async function ResultsPage({
   // param) falls through to the default Results tab so direct links
   // keep their old behavior.
   const defaultView = params.view === 'events' ? 'events' : 'results';
+  const initialResultsFilter = readResultsInitialFilter(params);
 
   return (
     <main className="min-h-screen bg-white">
@@ -77,6 +110,7 @@ export default async function ResultsPage({
           rows={rows}
           events={events}
           defaultView={defaultView}
+          initialResultsFilter={initialResultsFilter}
         />
       </section>
     </main>
