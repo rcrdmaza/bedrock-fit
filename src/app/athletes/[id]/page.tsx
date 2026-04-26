@@ -5,8 +5,11 @@ import { db } from '@/db';
 import { athletes, results } from '@/db/schema';
 import { distanceKm, formatPace } from '@/lib/race';
 import { resolveTier } from '@/lib/tiers';
+import { getResults } from '@/lib/results';
+import { rankSimilarResults } from '@/lib/name-match';
 import SiteHeader from '@/app/site-header';
 import ProfileBadge from './profile-badge';
+import SuggestedClaims from './suggested-claims';
 import RaceHistory, {
   type RaceHistoryRow,
 } from './race-history';
@@ -134,6 +137,25 @@ export default async function AthleteProfilePage({
   const bannerBg = tier?.theme.bannerBg ?? 'bg-stone-50';
   const dividerBorder = tier?.theme.divider ?? 'border-stone-100';
 
+  // Suggested claims. Only computed when this athlete has *no* results
+  // on file yet — otherwise the race-history card is the right surface.
+  // We pull the full results pool, drop rows already linked to another
+  // athlete's profile (anything but `unclaimed`) and rows that somehow
+  // belong to this athlete already, then rank top 10 by name similarity
+  // (see src/lib/name-match.ts). This is an extra query but it's
+  // gated to the empty-profile path, which is exactly the population
+  // we want to spend a query on.
+  const suggestedClaims =
+    athleteResults.length === 0
+      ? rankSimilarResults(
+          athlete.name,
+          (await getResults()).filter(
+            (r) => r.status === 'unclaimed' && r.athleteId !== athlete.id,
+          ),
+          10,
+        )
+      : [];
+
   return (
     <main className="min-h-screen bg-white">
       <SiteHeader />
@@ -203,9 +225,11 @@ export default async function AthleteProfilePage({
             claimed anything yet — the link drops them into /results
             with their name and (best-guess) country pre-filled, so the
             very first thing they see is the candidate rows to claim.
-            Hidden once they have at least one claimed result; the race
-            history below handles every other state. */}
-        {claimedRaces === 0 ? (
+            Hidden once they have at least one claimed result *or* when
+            we're already rendering the SuggestedClaims panel below
+            (which has its own claim CTAs and an escalation link), so we
+            don't double up. */}
+        {claimedRaces === 0 && suggestedClaims.length === 0 ? (
           <div className="mb-8 rounded-2xl border border-blue-100 bg-blue-50/60 px-5 py-4 flex items-start gap-3">
             <div className="flex-1">
               <p className="text-sm font-medium text-stone-900">
@@ -235,24 +259,41 @@ export default async function AthleteProfilePage({
           </div>
         ) : null}
 
-        {/* Race history + bulk-claim UI is a client component because the
-            checkbox state + submit banner need local reactivity. The server
-            still does all the data work; we just pass rows through. */}
-        <RaceHistory
-          rows={athleteResults.map(
-            (r): RaceHistoryRow => ({
-              id: r.id,
-              eventName: r.eventName,
-              eventDate: r.eventDate,
-              raceCategory: r.raceCategory,
-              finishTime: r.finishTime,
-              overallRank: r.overallRank,
-              totalFinishers: r.totalFinishers,
-              percentile: r.percentile,
-              status: r.status,
-            }),
-          )}
-        />
+        {/* When the profile has zero results on file *and* we found
+            similarly-named candidates in the global pool, surface the
+            claim panel in place of the race-history empty box. Falls
+            through to RaceHistory (which renders its own "no results"
+            box) when there are no candidates either, or whenever the
+            athlete already has at least one result on the profile. */}
+        {athleteResults.length === 0 && suggestedClaims.length > 0 ? (
+          <SuggestedClaims
+            athleteName={athlete.name}
+            candidates={suggestedClaims}
+            searchHref={buildClaimSearchUrl(
+              athlete.name,
+              guessCountry(athlete.location),
+            )}
+          />
+        ) : (
+          // Race history + bulk-claim UI is a client component because the
+          // checkbox state + submit banner need local reactivity. The server
+          // still does all the data work; we just pass rows through.
+          <RaceHistory
+            rows={athleteResults.map(
+              (r): RaceHistoryRow => ({
+                id: r.id,
+                eventName: r.eventName,
+                eventDate: r.eventDate,
+                raceCategory: r.raceCategory,
+                finishTime: r.finishTime,
+                overallRank: r.overallRank,
+                totalFinishers: r.totalFinishers,
+                percentile: r.percentile,
+                status: r.status,
+              }),
+            )}
+          />
+        )}
       </section>
     </main>
   );
