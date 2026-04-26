@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   numeric,
+  boolean,
   unique,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
@@ -17,6 +18,22 @@ export const athletes = pgTable('athletes', {
   gender: text('gender'),
   location: text('location'),
   xp: integer('xp').default(0),
+  // Optional public alias. When set and `displayPreference` is
+  // 'nickname', the public-facing surfaces (profile header, leaderboards,
+  // results athlete column) render this instead of `name`. `name` stays
+  // canonical for matching, claim suggestions, and admin views.
+  nickname: text('nickname'),
+  // Which of `name`/`nickname` to render publicly. 'name' is the default
+  // — legacy rows and brand-new athletes show their real name. 'nickname'
+  // only takes effect when nickname is non-empty (the helper guards
+  // against a stale preference + cleared nickname combo).
+  displayPreference: text('display_preference').default('name').notNull(),
+  // Soft privacy. When true, non-owners see a redacted profile (name
+  // visible but with a strikethrough + redaction bar; stats and race
+  // history hidden). The owner always sees the full page. Profile URL
+  // still resolves — we don't 404 — so existing shared links keep
+  // working but reveal nothing new.
+  isPrivate: boolean('is_private').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
