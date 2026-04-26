@@ -7,9 +7,12 @@ import { distanceKm, formatPace } from '@/lib/race';
 import { resolveTier } from '@/lib/tiers';
 import { getResults } from '@/lib/results';
 import { rankSimilarResults } from '@/lib/name-match';
+import { getDisplayName } from '@/lib/athlete-display';
+import { getCurrentUser } from '@/lib/auth';
 import SiteHeader from '@/app/site-header';
 import ProfileBadge from './profile-badge';
 import SuggestedClaims from './suggested-claims';
+import RedactedName from './redacted-name';
 import RaceHistory, {
   type RaceHistoryRow,
 } from './race-history';
@@ -82,10 +85,25 @@ export default async function AthleteProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const data = await getAthleteWithResults(id);
+  // Two parallel reads: the athlete + their results, and the viewing
+  // user. Both are server-only and the page is `force-dynamic`, so
+  // racing them keeps the privacy check on the cheap path.
+  const [data, viewer] = await Promise.all([
+    getAthleteWithResults(id),
+    getCurrentUser(),
+  ]);
   if (!data) notFound();
 
   const { athlete, results: athleteResults } = data;
+
+  // Owner check drives both the privacy redaction and the future
+  // "edit my profile" affordances. We compare athleteId because the
+  // user→athlete link is the canonical identity, not email.
+  const isOwner = viewer?.athleteId === athlete.id;
+  const showRedacted = athlete.isPrivate && !isOwner;
+  // Public-facing display name. Owner always sees their full name so
+  // they don't get confused about which one is the "real" identity.
+  const displayName = isOwner ? athlete.name : getDisplayName(athlete);
 
   // Simple summary stats computed in-memory — cheap enough to avoid a
   // second query.
@@ -162,21 +180,85 @@ export default async function AthleteProfilePage({
 
       {/* Tinted banner — fills the full width but the inner content
           stays in the same 3xl column as the rest of the page so the
-          stats row doesn't feel like it shifted. */}
+          stats row doesn't feel like it shifted. The badge initials are
+          derived from displayName so a nickname-rendering profile gets
+          a circle that matches what's underneath. When the profile is
+          private to this viewer, location/gender are suppressed too —
+          they'd leak the same identity the redaction bar is hiding. */}
       <section className={`${bannerBg} pt-12 pb-10 transition-colors`}>
         <div className="max-w-3xl mx-auto px-8 flex flex-col items-center text-center">
-          <ProfileBadge name={athlete.name} tier={tier} />
+          <ProfileBadge name={displayName} tier={tier} />
           <h1 className="mt-5 text-3xl font-semibold text-stone-900">
-            {athlete.name}
+            {showRedacted ? (
+              <RedactedName name={displayName} />
+            ) : (
+              displayName
+            )}
           </h1>
-          <p className="text-sm text-stone-500 mt-1">
-            {athlete.location ?? 'Location unknown'}
-            {athlete.gender ? ` · ${athlete.gender}` : ''}
-          </p>
+          {showRedacted ? (
+            <p className="text-sm text-stone-500 mt-1">Private profile</p>
+          ) : (
+            <p className="text-sm text-stone-500 mt-1">
+              {athlete.location ?? 'Location unknown'}
+              {athlete.gender ? ` · ${athlete.gender}` : ''}
+            </p>
+          )}
+          {/* Owner-only discoverability link — small, stone-tone so it
+              doesn't compete with the badge/name. Only the owner sees
+              it; other visitors don't get an "Edit" hint that wouldn't
+              do anything anyway. */}
+          {isOwner ? (
+            <Link
+              href="/me/settings"
+              className="mt-3 text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors"
+            >
+              Edit profile settings →
+            </Link>
+          ) : null}
         </div>
       </section>
 
       <section className="max-w-3xl mx-auto px-8 pt-12 pb-24">
+        {/* Owner-private banner. Soft "you can see this, others can't"
+            indicator with a deep-link to the settings toggle so it's a
+            single click to flip back to public. Hidden for non-owners
+            entirely (they shouldn't even know the profile is private —
+            just that there's nothing to see). */}
+        {athlete.isPrivate && isOwner ? (
+          <div className="mb-8 rounded-2xl border border-stone-200 bg-stone-50 px-5 py-3 flex items-center justify-between gap-3">
+            <p className="text-xs text-stone-600">
+              <span className="font-medium text-stone-800">Private:</span>{' '}
+              other users see your name redacted and the rest of this
+              page hidden.
+            </p>
+            <Link
+              href="/me/settings"
+              className="text-xs font-medium text-blue-700 hover:text-blue-900 shrink-0"
+            >
+              Edit settings →
+            </Link>
+          </div>
+        ) : null}
+
+        {/* Redacted body for non-owners on a private profile. Replaces
+            stats, claim CTA, suggestions, and race history with a
+            single placeholder. The header above still rendered the
+            badge + redacted name so the page doesn't look broken. */}
+        {showRedacted ? (
+          <div
+            className="rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50/60 px-6 py-12 text-center"
+            aria-label="Private profile — content hidden"
+          >
+            <p className="text-sm font-medium text-stone-800 mb-1">
+              This profile is private
+            </p>
+            <p className="text-xs text-stone-500 max-w-sm mx-auto leading-relaxed">
+              The owner has chosen to keep their stats and race history
+              hidden. Only they can see the full profile.
+            </p>
+          </div>
+        ) : (
+          <>
         {/* Stats row — 6 cells, wraps to two rows on narrow viewports.
             Bottom border picks up the tier color when an athlete is
             tiered, falling back to stone-100 otherwise. */}
@@ -293,6 +375,8 @@ export default async function AthleteProfilePage({
               }),
             )}
           />
+        )}
+          </>
         )}
       </section>
     </main>
