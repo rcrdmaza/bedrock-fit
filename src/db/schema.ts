@@ -34,6 +34,13 @@ export const athletes = pgTable('athletes', {
   // still resolves — we don't 404 — so existing shared links keep
   // working but reveal nothing new.
   isPrivate: boolean('is_private').default(false).notNull(),
+  // Profile picture. Stored inline as a `data:image/...;base64,...`
+  // URL so we don't need separate object storage in v1 — uploads are
+  // capped at 200 KB by the server action, which keeps row size sane.
+  // NULL means "no upload yet"; the UI falls back to the running-hero
+  // placeholder. Future migration can swap this to an external URL +
+  // backfill from the data URLs.
+  avatarUrl: text('avatar_url'),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
