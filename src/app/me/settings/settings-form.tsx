@@ -1,10 +1,11 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useRef, useState } from 'react';
 import {
   updateProfileSettings,
   type ProfileSettingsState,
 } from '@/app/actions/profile-settings';
+import RunningHeroAvatar from '@/app/components/running-hero-avatar';
 
 // Initial values come from the server. We hydrate them into local state
 // so the radio "Use my nickname" can be disabled live as the user
@@ -15,9 +16,15 @@ export interface SettingsFormInitial {
   nickname: string;
   displayPreference: 'name' | 'nickname';
   isPrivate: boolean;
+  avatarUrl: string | null;
 }
 
 const INITIAL_ACTION: ProfileSettingsState = { status: 'idle' };
+
+// Mirror of the server-side cap so the helper text stays in sync. Soft
+// constraint — the server re-checks; this is just to set expectations
+// before the user picks a 5MB image.
+const MAX_AVATAR_KB = 200;
 
 export default function SettingsForm({
   initial,
@@ -38,11 +45,131 @@ export default function SettingsForm({
   );
   const [isPrivate, setIsPrivate] = useState(initial.isPrivate);
 
+  // Avatar preview state. `previewUrl` is what the <img> shows: a
+  // freshly-picked file's data URL when the user has chosen one,
+  // otherwise the saved avatar from the DB. `removeAvatar` is a flag
+  // we POST so the server can clear the column without us pretending
+  // to upload a 0-byte file.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    initial.avatarUrl,
+  );
+  const [removeAvatar, setRemoveAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const nicknameTrimmed = nickname.trim();
   const canUseNickname = nicknameTrimmed.length > 0;
 
+  function onPickAvatar(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setPreviewUrl(initial.avatarUrl);
+      return;
+    }
+    // Sanity-check size client-side before encoding — the same cap as
+    // the server. Failed picks reset to the saved avatar so the UI
+    // doesn't pretend the upload happened.
+    if (file.size > MAX_AVATAR_KB * 1024) {
+      e.target.value = '';
+      setPreviewUrl(initial.avatarUrl);
+      window.alert(`Image is too large (max ${MAX_AVATAR_KB} KB).`);
+      return;
+    }
+    // Picking a new file implicitly cancels a pending "remove" — the
+    // user clearly wants this image, not the placeholder.
+    setRemoveAvatar(false);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') setPreviewUrl(reader.result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function onRequestRemove() {
+    setRemoveAvatar(true);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
   return (
-    <form action={formAction} className="space-y-8">
+    <form
+      action={formAction}
+      className="space-y-8"
+      // Required for file uploads — without it the browser sends the
+      // file as a string rather than a multipart blob.
+      encType="multipart/form-data"
+    >
+      {/* Profile picture. The preview is a 96-px circle that mirrors
+          the size on the actual profile page — what you see here is
+          how it'll render. When no avatar exists (initial empty + no
+          file picked) we drop in the running-hero placeholder so the
+          slot never looks empty. */}
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-semibold text-stone-900 mb-1">
+          Profile picture
+        </legend>
+        <div className="flex items-center gap-5">
+          <div
+            className="overflow-hidden rounded-full w-24 h-24 ring-4 ring-stone-200 flex items-center justify-center"
+            aria-hidden="true"
+          >
+            {previewUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={previewUrl}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <RunningHeroAvatar size={96} bgClassName="bg-sky-100" />
+            )}
+          </div>
+          <div className="flex-1 space-y-2">
+            <label className="inline-flex items-center text-xs font-medium bg-stone-900 text-white px-3 py-2 rounded-lg hover:bg-stone-700 transition-colors cursor-pointer">
+              {previewUrl && previewUrl !== initial.avatarUrl
+                ? 'Pick a different image'
+                : initial.avatarUrl
+                  ? 'Replace image'
+                  : 'Upload image'}
+              <input
+                ref={fileInputRef}
+                type="file"
+                name="avatar"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                onChange={onPickAvatar}
+                className="sr-only"
+              />
+            </label>
+            {(previewUrl || initial.avatarUrl) && !removeAvatar ? (
+              <button
+                type="button"
+                onClick={onRequestRemove}
+                className="block text-xs text-stone-500 hover:text-stone-900 transition-colors"
+              >
+                Remove image
+              </button>
+            ) : null}
+            {removeAvatar ? (
+              <p className="text-xs text-amber-700">
+                Image will be cleared on save. The running-hero
+                placeholder will return.
+              </p>
+            ) : null}
+            <p className="text-xs text-stone-500">
+              PNG, JPEG, WebP, or GIF. Max {MAX_AVATAR_KB} KB. The
+              running-hero placeholder shows whenever you don&apos;t
+              have an image.
+            </p>
+          </div>
+          {/* Hidden flag — the server treats this as "clear the
+              avatar_url column." The checkbox is invisible; we toggle
+              it via the Remove button so the data side is just one
+              FormData boolean. */}
+          {removeAvatar ? (
+            <input type="hidden" name="removeAvatar" value="1" />
+          ) : null}
+        </div>
+      </fieldset>
+
       {/* Name + nickname pair. Two stacked text fields with light
           helper text; no fancy label component because the rest of the
           app uses bare <label> + <input>. */}

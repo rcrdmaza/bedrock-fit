@@ -74,6 +74,7 @@ export default async function SettingsPage() {
     displayPreference:
       athlete.displayPreference === 'nickname' ? 'nickname' : 'name',
     isPrivate: athlete.isPrivate,
+    avatarUrl: athlete.avatarUrl,
   };
 
   return (

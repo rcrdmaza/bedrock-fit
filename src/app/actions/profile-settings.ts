@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { athletes } from '@/db/schema';
 import { requireUser } from '@/lib/auth';
+import { validateAvatarFile } from '@/lib/avatar';
 
 // Settings form state. Mirrors the {claim,sign-in} action shape so the
 // `useActionState` hook in the form component can render `pending`,
@@ -84,14 +85,44 @@ export async function updateProfileSettings(
   const resolvedPreference =
     safePreference === 'nickname' && !nickname ? 'name' : safePreference;
 
+  // Avatar handling. Three states:
+  //   • removeAvatar checkbox set → clear the column to NULL
+  //   • a real File with size > 0 → validate + encode + set
+  //   • neither → leave the column untouched
+  // We only include `avatarUrl` in the update payload when the user
+  // explicitly changed it, so a settings-only edit (e.g. flipping
+  // privacy) doesn't clobber an existing image.
+  const removeAvatar = formData.get('removeAvatar') != null;
+  const avatarRaw = formData.get('avatar');
+  const avatarFile =
+    avatarRaw instanceof File && avatarRaw.size > 0 ? avatarRaw : null;
+
+  const updates: {
+    name: string;
+    nickname: string | null;
+    displayPreference: string;
+    isPrivate: boolean;
+    avatarUrl?: string | null;
+  } = {
+    name,
+    nickname,
+    displayPreference: resolvedPreference,
+    isPrivate,
+  };
+
+  if (removeAvatar) {
+    updates.avatarUrl = null;
+  } else if (avatarFile) {
+    const result = await validateAvatarFile(avatarFile);
+    if (!result.ok) {
+      return { status: 'error', error: result.error };
+    }
+    updates.avatarUrl = result.dataUrl;
+  }
+
   await db
     .update(athletes)
-    .set({
-      name,
-      nickname,
-      displayPreference: resolvedPreference,
-      isPrivate,
-    })
+    .set(updates)
     .where(eq(athletes.id, user.athleteId));
 
   // Bust the cache for every public surface that renders this athlete.

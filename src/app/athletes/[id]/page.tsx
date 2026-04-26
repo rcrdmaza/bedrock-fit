@@ -187,7 +187,14 @@ export default async function AthleteProfilePage({
           they'd leak the same identity the redaction bar is hiding. */}
       <section className={`${bannerBg} pt-12 pb-10 transition-colors`}>
         <div className="max-w-3xl mx-auto px-8 flex flex-col items-center text-center">
-          <ProfileBadge name={displayName} tier={tier} />
+          <ProfileBadge
+            name={displayName}
+            tier={tier}
+            // Hide the uploaded avatar from non-owners on private
+            // profiles — the redaction is the whole point. Owners and
+            // public-profile visitors get the real picture.
+            avatarUrl={showRedacted ? null : athlete.avatarUrl}
+          />
           <h1 className="mt-5 text-3xl font-semibold text-stone-900">
             {showRedacted ? (
               <RedactedName name={displayName} />
