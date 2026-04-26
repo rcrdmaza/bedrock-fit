@@ -10,10 +10,12 @@
 // the list and dropping in the same form per row would mean every row
 // shares one client island; we want independent state per row.
 //
-// The frame is intentionally loud (amber border + "Are any of these
+// The frame is intentionally loud (navy border + "Are any of these
 // you?" header) — it lives in the slot where the empty "no results
 // yet" message used to be, and it's the user's main path to building
-// out their profile.
+// out their profile. Navy ties to the brand's primary blue without
+// competing with the amber tier accents on tiered profiles or the
+// emerald success states elsewhere.
 
 import Link from 'next/link';
 import { useState } from 'react';
@@ -59,7 +61,7 @@ export default function SuggestedClaims({
   return (
     <section
       aria-label="Suggested results to claim"
-      className="rounded-2xl border-2 border-amber-200 bg-amber-50/60 p-5"
+      className="rounded-2xl border-2 border-blue-900 bg-blue-50/60 p-5"
     >
       <div className="flex items-baseline justify-between gap-3 mb-1.5">
         <h2 className="text-base font-semibold text-stone-900">
@@ -83,7 +85,7 @@ export default function SuggestedClaims({
           return (
             <li
               key={r.id}
-              className="rounded-xl bg-white border border-amber-100 p-4"
+              className="rounded-xl bg-white border border-blue-100 p-4"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
