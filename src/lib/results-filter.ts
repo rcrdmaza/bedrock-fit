@@ -47,6 +47,13 @@ export interface ResultsFilter {
   // bound may be empty to mean "open-ended". Inclusive on both ends.
   fromDate: string;
   toDate: string;
+  // Optional case-insensitive substring constraint applied to the
+  // result's eventCountry, ANDed with whatever the primary search
+  // field already filtered. Empty / undefined means "any country".
+  // Lets the profile page deep-link "search my name in my country"
+  // and the user combine "name = X + country = Peru" without
+  // exhausting the single primary-field slot above.
+  country?: string;
 }
 
 // Return the field we test `query` against for a given row. Isolating
@@ -73,6 +80,7 @@ export function filterResults(
   filter: ResultsFilter,
 ): ResultRow[] {
   const q = filter.query.trim().toLowerCase();
+  const country = filter.country?.trim().toLowerCase() ?? '';
   // <input type="date"> emits YYYY-MM-DD. Parsing as UTC midnight keeps
   // comparisons stable regardless of the admin's local timezone.
   const fromMs = filter.fromDate
@@ -84,12 +92,18 @@ export function filterResults(
     ? Date.parse(`${filter.toDate}T00:00:00Z`) + 24 * 3600 * 1000 - 1
     : null;
 
-  if (!q && fromMs == null && toMs == null) return rows;
+  if (!q && !country && fromMs == null && toMs == null) return rows;
 
   return rows.filter((row) => {
     if (q) {
       const hay = searchHaystack(row, filter.searchField).toLowerCase();
       if (!hay.includes(q)) return false;
+    }
+    if (country) {
+      // Country sub-filter — null/empty eventCountry never matches a
+      // non-empty country query (drop the row rather than swallow it).
+      const ec = row.eventCountry?.toLowerCase() ?? '';
+      if (!ec.includes(country)) return false;
     }
     if (fromMs != null || toMs != null) {
       const t = Date.parse(row.eventDate);
