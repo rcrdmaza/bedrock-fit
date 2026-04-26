@@ -5,13 +5,19 @@ export default function Loading() {
     <main className="min-h-screen bg-white">
       <SiteHeader />
 
-      <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
-        {/* Profile header skeleton */}
-        <div className="mb-10 space-y-3" aria-hidden="true">
-          <div className="h-8 w-56 bg-stone-100 rounded animate-pulse" />
+      {/* Banner skeleton — keeps the layout from jumping when the real
+          page resolves and a tinted tier banner replaces the neutral
+          placeholder. */}
+      <section className="bg-stone-50 pt-12 pb-10" aria-hidden="true">
+        <div className="max-w-3xl mx-auto px-8 flex flex-col items-center text-center gap-3">
+          <div className="w-24 h-24 rounded-full bg-stone-100 animate-pulse" />
+          <div className="h-5 w-24 bg-stone-100 rounded-full animate-pulse" />
+          <div className="h-8 w-56 bg-stone-100 rounded animate-pulse mt-2" />
           <div className="h-4 w-40 bg-stone-100 rounded animate-pulse" />
         </div>
+      </section>
 
+      <section className="max-w-3xl mx-auto px-8 pt-12 pb-24">
         {/* Stats row skeleton — matches the 6-cell, 2-row layout. */}
         <div
           className="grid grid-cols-3 gap-x-4 gap-y-6 mb-10 pb-10 border-b border-stone-100"

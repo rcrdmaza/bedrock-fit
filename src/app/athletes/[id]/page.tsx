@@ -3,7 +3,9 @@ import { desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { athletes, results } from '@/db/schema';
 import { distanceKm, formatPace } from '@/lib/race';
+import { resolveTier } from '@/lib/tiers';
 import SiteHeader from '@/app/site-header';
+import ProfileBadge from './profile-badge';
 import RaceHistory, {
   type RaceHistoryRow,
 } from './race-history';
@@ -59,6 +61,12 @@ export default async function AthleteProfilePage({
   // Simple summary stats computed in-memory — cheap enough to avoid a
   // second query.
   const totalRaces = athleteResults.length;
+  // Claimed-races drives the tier (only commitments count, not stray
+  // import rows). See src/lib/tiers.ts for thresholds.
+  const claimedRaces = athleteResults.filter(
+    (r) => r.status === 'claimed',
+  ).length;
+  const tier = resolveTier(claimedRaces);
   const bestPercentile = athleteResults.reduce<number | null>((best, r) => {
     const p = r.percentile != null ? Number(r.percentile) : null;
     if (p == null) return best;
@@ -92,24 +100,39 @@ export default async function AthleteProfilePage({
   const fastest21k = fastestAt(21);
   const fastest42k = fastestAt(42);
 
+  // Tier-driven page chrome. Untiered athletes get the original plain
+  // layout; tiered athletes get a tinted banner across the profile
+  // header and a tier-colored divider under the stats row. Every tier
+  // class string is enumerated in tiers.ts so Tailwind's JIT picks
+  // them up — see TIERS.theme.
+  const bannerBg = tier?.theme.bannerBg ?? 'bg-stone-50';
+  const dividerBorder = tier?.theme.divider ?? 'border-stone-100';
+
   return (
     <main className="min-h-screen bg-white">
       <SiteHeader />
 
-      <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
-        {/* Profile header */}
-        <div className="mb-10">
-          <h1 className="text-3xl font-semibold text-stone-900 mb-1">
+      {/* Tinted banner — fills the full width but the inner content
+          stays in the same 3xl column as the rest of the page so the
+          stats row doesn't feel like it shifted. */}
+      <section className={`${bannerBg} pt-12 pb-10 transition-colors`}>
+        <div className="max-w-3xl mx-auto px-8 flex flex-col items-center text-center">
+          <ProfileBadge name={athlete.name} tier={tier} />
+          <h1 className="mt-5 text-3xl font-semibold text-stone-900">
             {athlete.name}
           </h1>
-          <p className="text-sm text-stone-500">
+          <p className="text-sm text-stone-500 mt-1">
             {athlete.location ?? 'Location unknown'}
             {athlete.gender ? ` · ${athlete.gender}` : ''}
           </p>
         </div>
+      </section>
 
-        {/* Stats row — 6 cells, wraps to two rows on narrow viewports. */}
-        <div className="grid grid-cols-3 gap-x-4 gap-y-6 mb-10 pb-10 border-b border-stone-100">
+      <section className="max-w-3xl mx-auto px-8 pt-12 pb-24">
+        {/* Stats row — 6 cells, wraps to two rows on narrow viewports.
+            Bottom border picks up the tier color when an athlete is
+            tiered, falling back to stone-100 otherwise. */}
+        <div className={`grid grid-cols-3 gap-x-4 gap-y-6 mb-10 pb-10 border-b ${dividerBorder}`}>
           <div>
             <div className="text-xs text-stone-400 mb-1">Races</div>
             <div className="text-2xl font-semibold text-stone-900">
