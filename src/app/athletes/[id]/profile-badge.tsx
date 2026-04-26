@@ -18,38 +18,47 @@
 // on any of our four palettes.
 
 import type { Tier } from '@/lib/tiers';
+import RunningHeroAvatar from '@/app/components/running-hero-avatar';
 
 interface Props {
   name: string;
   tier: Tier | null;
+  // Optional uploaded avatar. When present, rendered as a cover-fitted
+  // image inside the circle; when null/empty we fall back to the
+  // running-hero placeholder so every athlete has a face from day one.
+  avatarUrl?: string | null;
 }
 
-// Take up to two leading characters from the first two name parts.
-// Empty string → "?", because an empty avatar would look like a bug.
-function initialsFor(name: string): string {
-  const parts = name
-    .trim()
-    .split(/\s+/)
-    .filter((p) => p.length > 0);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0]!.charAt(0).toUpperCase();
-  return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toUpperCase();
+function AvatarBody({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
+  // The presence of a non-empty avatar URL wins. Anything blank routes
+  // to the running-hero placeholder — including stale empty strings
+  // from a previous "remove" that didn't normalize the column.
+  if (avatarUrl && avatarUrl.length > 0) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarUrl}
+        alt={`${name} profile picture`}
+        className="w-full h-full object-cover"
+      />
+    );
+  }
+  return <RunningHeroAvatar size={96} bgClassName="bg-sky-100" />;
 }
 
-export default function ProfileBadge({ name, tier }: Props) {
-  const initials = initialsFor(name);
-
-  // Untiered branch — plain stone avatar, no badge underneath. This
-  // also serves as the visual baseline before an athlete claims any
-  // races, so they can see what the slot looks like empty.
+export default function ProfileBadge({ name, tier, avatarUrl }: Props) {
+  // Untiered branch — plain stone avatar ring, no tier label below.
+  // The avatar body itself is the running hero (or uploaded image), so
+  // even brand-new athletes get a visual identity rather than a blank
+  // initial-circle.
   if (!tier) {
     return (
       <div className="flex flex-col items-center gap-3">
         <div
           aria-hidden="true"
-          className="flex items-center justify-center w-24 h-24 rounded-full bg-stone-100 text-2xl font-semibold text-stone-500 ring-4 ring-stone-200"
+          className="overflow-hidden flex items-center justify-center w-24 h-24 rounded-full ring-4 ring-stone-200"
         >
-          {initials}
+          <AvatarBody name={name} avatarUrl={avatarUrl} />
         </div>
       </div>
     );
@@ -61,9 +70,9 @@ export default function ProfileBadge({ name, tier }: Props) {
     <div className="flex flex-col items-center gap-3">
       <div
         aria-hidden="true"
-        className={`flex items-center justify-center w-24 h-24 rounded-full bg-white text-2xl font-semibold text-stone-700 ring-4 ${tier.theme.ring}`}
+        className={`overflow-hidden flex items-center justify-center w-24 h-24 rounded-full ring-4 ${tier.theme.ring}`}
       >
-        {initials}
+        <AvatarBody name={name} avatarUrl={avatarUrl} />
       </div>
       <div
         className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide ${tier.theme.badgeBg} ${tier.theme.badgeText}`}

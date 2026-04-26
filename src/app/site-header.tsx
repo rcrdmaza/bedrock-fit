@@ -1,5 +1,10 @@
 import Link from 'next/link';
+import { eq } from 'drizzle-orm';
+import { db } from '@/db';
+import { athletes } from '@/db/schema';
 import { getCurrentUser } from '@/lib/auth';
+import { getDisplayName } from '@/lib/athlete-display';
+import RunningHeroAvatar from '@/app/components/running-hero-avatar';
 
 // Top-level site chrome rendered by every page, public and admin alike.
 //
@@ -16,6 +21,27 @@ import { getCurrentUser } from '@/lib/auth';
 
 export default async function SiteHeader() {
   const user = await getCurrentUser();
+  // Pull the athlete row alongside the user so the profile button can
+  // show their picked display name + avatar. One extra select-by-PK
+  // per request — cheap, and only when signed in. Falls through to
+  // null if the link is missing (admin nuked, brand-new user before
+  // claim).
+  const athlete =
+    user?.athleteId != null
+      ? (
+          await db
+            .select({
+              id: athletes.id,
+              name: athletes.name,
+              nickname: athletes.nickname,
+              displayPreference: athletes.displayPreference,
+              avatarUrl: athletes.avatarUrl,
+            })
+            .from(athletes)
+            .where(eq(athletes.id, user.athleteId))
+            .limit(1)
+        )[0] ?? null
+      : null;
 
   return (
     <nav
@@ -55,17 +81,39 @@ export default async function SiteHeader() {
         </Link>
       </div>
 
-      {/* Right slot: sign-in CTA when logged out, profile + sign-out
-          when logged in. Both variants keep the same visual weight so
-          the header shape stays stable between states. */}
+      {/* Right slot: sign-in CTA when logged out, profile button +
+          sign-out when logged in. The profile button is now a chip
+          containing the avatar (uploaded picture or running-hero
+          placeholder) plus the display name — replaces the bare-text
+          username link so it's visually obvious that clicking goes to
+          the user's profile. Both signed-in/out variants keep the same
+          visual weight so the header shape stays stable between
+          states. */}
       {user ? (
         <div className="justify-self-end flex items-center gap-3">
           <Link
             href="/me"
-            className="text-sm text-stone-600 hover:text-stone-900 transition-colors"
+            className="group inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white pl-1 pr-3 py-1 text-sm text-stone-700 hover:border-stone-300 hover:text-stone-900 transition-colors"
             title={user.email}
+            aria-label="Open my profile"
           >
-            {user.name ?? user.email.split('@')[0]}
+            <span className="overflow-hidden rounded-full w-7 h-7 flex items-center justify-center ring-1 ring-stone-200 group-hover:ring-stone-300 transition-colors">
+              {athlete?.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={athlete.avatarUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <RunningHeroAvatar size={28} bgClassName="bg-sky-100" />
+              )}
+            </span>
+            <span className="font-medium">
+              {athlete
+                ? getDisplayName(athlete)
+                : (user.name ?? user.email.split('@')[0])}
+            </span>
           </Link>
           {/* Plain form POST — no client JS needed for sign-out. */}
           <form action="/auth/sign-out" method="post">
