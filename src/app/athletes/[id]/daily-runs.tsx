@@ -26,6 +26,8 @@ import {
 import { getDisplayName } from '@/lib/athlete-display';
 import DailyRunsToggle from './daily-runs-toggle';
 import DeleteDailyRunButton from './delete-daily-run-button';
+import EditDailyRunRow from './edit-daily-run-row';
+import type { DailyRunInitial } from './add-daily-run-form';
 
 interface Props {
   athleteId: string;
@@ -55,6 +57,30 @@ function formatRunDate(d: Date): string {
     month: 'short',
     day: 'numeric',
   });
+}
+
+// runDate is stored as midnight UTC of the chosen calendar day, so the
+// UTC components are exactly the YYYY-MM-DD the user originally picked.
+// Local-time accessors would shift it for anyone west of UTC.
+function toIsoDate(d: Date): string {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// Mirror of the duration parser for display in the edit form. We feed
+// the form a "32:15" / "1:05:00" string the user can re-edit, not raw
+// seconds; the action layer re-parses on save.
+function formatDurationForInput(seconds: number | null): string {
+  if (seconds == null || seconds === 0) return '';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  return `${m}:${String(s).padStart(2, '0')}`;
 }
 
 export default async function DailyRunsSection({
@@ -189,77 +215,112 @@ export default async function DailyRunsSection({
             if (a) companions.push(a);
           }
 
+          // Read-only card body. We extract it so the owner+author
+          // branch can wrap it in <EditDailyRunRow>, which swaps it
+          // for the edit form when the Edit button is clicked.
+          const cardBody = (
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                {/* Date + distance + duration is the lead row. We
+                    lean on font weights instead of icons so the card
+                    reads cleanly at the small sizes we use. */}
+                <div className="text-sm font-semibold text-stone-900">
+                  {formatDistance(distanceNumber, unit)}
+                  <span className="text-stone-400 font-normal mx-1.5">·</span>
+                  {formatDuration(run.durationSeconds)}
+                  <span className="text-stone-400 font-normal mx-1.5">·</span>
+                  <span className="text-stone-500 font-normal">
+                    {paceLabel(run.durationSeconds, distanceNumber, unit)}
+                  </span>
+                </div>
+                <div className="text-xs text-stone-500 mt-1">
+                  {formatRunDate(run.runDate)}
+                  {run.location ? (
+                    <>
+                      <span className="mx-1.5">·</span>
+                      {run.location}
+                    </>
+                  ) : null}
+                </div>
+
+                {companions.length > 0 ? (
+                  <div className="text-xs text-stone-500 mt-1.5">
+                    with{' '}
+                    {companions.map((a, idx, arr) => (
+                      <span key={a.id}>
+                        <Link
+                          href={`/athletes/${a.id}`}
+                          className="text-blue-700 hover:text-blue-900"
+                        >
+                          {getDisplayName(a)}
+                        </Link>
+                        {idx < arr.length - 1 ? ', ' : ''}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+
+                {run.notes ? (
+                  <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                    {run.notes}
+                  </p>
+                ) : null}
+              </div>
+
+              {/* Right rail — Strava link + (owner-only) delete.
+                  Stays compact so the card doesn't feel button-heavy.
+                  The Edit affordance lives below the body when the
+                  viewer is the author (added by EditDailyRunRow). */}
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
+                {run.stravaUrl ? (
+                  <a
+                    href={run.stravaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-medium text-orange-600 hover:text-orange-700 transition-colors"
+                  >
+                    Strava ↗
+                  </a>
+                ) : null}
+                {isOwner && isAuthor ? (
+                  <DeleteDailyRunButton runId={run.id} />
+                ) : null}
+              </div>
+            </div>
+          );
+
+          // Build the edit payload only for owner+author rows. We
+          // resolve each tagged athleteId to a display label so the
+          // combobox can render chips immediately, without a round-trip
+          // to the search endpoint just to re-show an existing tag.
+          const canEdit = isOwner && isAuthor;
+          const editInitial: DailyRunInitial | null = canEdit
+            ? {
+                runId: run.id,
+                runDate: toIsoDate(run.runDate),
+                distanceValue: String(run.distanceValue),
+                distanceUnit: unit,
+                duration: formatDurationForInput(run.durationSeconds),
+                location: run.location ?? '',
+                stravaUrl: run.stravaUrl ?? '',
+                selectedAthletes: taggedIds.flatMap((id) => {
+                  const a = athletesById.get(id);
+                  return a ? [{ id: a.id, display: getDisplayName(a) }] : [];
+                }),
+                notes: run.notes ?? '',
+              }
+            : null;
+
           return (
             <li
               key={run.id}
               className="rounded-2xl border border-stone-200 bg-white p-4"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  {/* Date + distance + duration is the lead row. We
-                      lean on font weights instead of icons so the card
-                      reads cleanly at the small sizes we use. */}
-                  <div className="text-sm font-semibold text-stone-900">
-                    {formatDistance(distanceNumber, unit)}
-                    <span className="text-stone-400 font-normal mx-1.5">·</span>
-                    {formatDuration(run.durationSeconds)}
-                    <span className="text-stone-400 font-normal mx-1.5">·</span>
-                    <span className="text-stone-500 font-normal">
-                      {paceLabel(run.durationSeconds, distanceNumber, unit)}
-                    </span>
-                  </div>
-                  <div className="text-xs text-stone-500 mt-1">
-                    {formatRunDate(run.runDate)}
-                    {run.location ? (
-                      <>
-                        <span className="mx-1.5">·</span>
-                        {run.location}
-                      </>
-                    ) : null}
-                  </div>
-
-                  {companions.length > 0 ? (
-                    <div className="text-xs text-stone-500 mt-1.5">
-                      with{' '}
-                      {companions.map((a, idx, arr) => (
-                        <span key={a.id}>
-                          <Link
-                            href={`/athletes/${a.id}`}
-                            className="text-blue-700 hover:text-blue-900"
-                          >
-                            {getDisplayName(a)}
-                          </Link>
-                          {idx < arr.length - 1 ? ', ' : ''}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  {run.notes ? (
-                    <p className="text-xs text-stone-600 mt-2 leading-relaxed">
-                      {run.notes}
-                    </p>
-                  ) : null}
-                </div>
-
-                {/* Right rail — Strava link + (owner-only) delete.
-                    Stays compact so the card doesn't feel button-heavy. */}
-                <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  {run.stravaUrl ? (
-                    <a
-                      href={run.stravaUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs font-medium text-orange-600 hover:text-orange-700 transition-colors"
-                    >
-                      Strava ↗
-                    </a>
-                  ) : null}
-                  {isOwner && isAuthor ? (
-                    <DeleteDailyRunButton runId={run.id} />
-                  ) : null}
-                </div>
-              </div>
+              {editInitial ? (
+                <EditDailyRunRow initial={editInitial}>{cardBody}</EditDailyRunRow>
+              ) : (
+                cardBody
+              )}
             </li>
           );
         })}
