@@ -16,6 +16,7 @@ import {
   DISTANCE_UNITS,
   MAX_DISTANCE_VALUE,
 } from '@/lib/daily-runs';
+import AthleteCombobox from './athlete-combobox';
 
 const INITIAL: DailyRunState = { status: 'idle' };
 
@@ -199,28 +200,19 @@ export default function AddDailyRunForm({
         />
       </div>
 
-      {/* Tagged athletes — paste-IDs fallback for v1 of the form. Each
-          token is a `/athletes/<uuid>` reference that the parser splits
-          on commas/whitespace. Private profiles never surface in the
-          search UI we'll add later, but the parser will still accept
-          them here so an inviter who knows the UUID can always tag. */}
+      {/* Tagged athletes — typeahead-driven multi-select. The chips
+          serialize to a hidden `participants` input as
+          `/athletes/<uuid>` tokens, which the existing parser already
+          accepts; private profiles are filtered out of the search
+          results so the typeahead doesn't reveal an opt-out user. */}
       <div>
-        <label
-          htmlFor="participants"
-          className="block text-xs font-medium text-stone-500 mb-1"
-        >
+        <label className="block text-xs font-medium text-stone-500 mb-1">
           Ran with (optional)
         </label>
-        <input
-          id="participants"
-          name="participants"
-          type="text"
-          placeholder="/athletes/abc, /athletes/def"
-          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <AthleteCombobox />
         <p className="text-[11px] text-stone-400 mt-1">
-          Comma-separated /athletes/&lt;uuid&gt; tokens. Tagged athletes
-          see this run on their profile too.
+          Search by name, click to add. Tagged athletes see this run on
+          their profile too.
         </p>
       </div>
 
