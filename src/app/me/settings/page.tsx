@@ -75,6 +75,11 @@ export default async function SettingsPage() {
       athlete.displayPreference === 'nickname' ? 'nickname' : 'name',
     isPrivate: athlete.isPrivate,
     avatarUrl: athlete.avatarUrl,
+    // Same narrowing posture as displayPreference. Anything other than
+    // 'km' resolves to 'mi' so a hand-edited DB row never picks an
+    // unselected radio. The action re-checks against isDistanceUnit on
+    // save.
+    distancePreference: athlete.distancePreference === 'km' ? 'km' : 'mi',
   };
 
   return (

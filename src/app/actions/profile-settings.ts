@@ -6,6 +6,7 @@ import { db } from '@/db';
 import { athletes } from '@/db/schema';
 import { requireUser } from '@/lib/auth';
 import { validateAvatarFile } from '@/lib/avatar';
+import { isDistanceUnit } from '@/lib/daily-runs';
 
 // Settings form state. Mirrors the {claim,sign-in} action shape so the
 // `useActionState` hook in the form component can render `pending`,
@@ -51,6 +52,16 @@ export async function updateProfileSettings(
   // Standard checkbox encoding — present means checked. Any value
   // (HTML checkboxes default to "on") flips it on; absent means off.
   const isPrivate = formData.get('isPrivate') != null;
+  // Preferred distance unit. We re-use the same 'mi' | 'km' guard the
+  // daily-runs action uses so the two surfaces can never drift on what
+  // counts as a valid unit. Anything off-band falls back to 'mi' to
+  // match the column default.
+  const rawDistancePreference = String(
+    formData.get('distancePreference') ?? 'mi',
+  );
+  const distancePreference = isDistanceUnit(rawDistancePreference)
+    ? rawDistancePreference
+    : 'mi';
 
   if (name.length === 0) {
     return { status: 'error', error: 'Name cannot be empty.' };
@@ -102,12 +113,14 @@ export async function updateProfileSettings(
     nickname: string | null;
     displayPreference: string;
     isPrivate: boolean;
+    distancePreference: string;
     avatarUrl?: string | null;
   } = {
     name,
     nickname,
     displayPreference: resolvedPreference,
     isPrivate,
+    distancePreference,
   };
 
   if (removeAvatar) {

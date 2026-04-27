@@ -37,9 +37,8 @@ export default function AddDailyRunForm({
   onSuccess,
   onCancel,
 }: {
-  // Owner's preferred unit gets used as the radio default. We don't
-  // actually persist a per-athlete preference yet; the form falls back
-  // to miles to match the most common locale of bedrock.fit's audience.
+  // Owner's preferred unit gets used as the radio default. Threaded
+  // down from the profile page (which reads it off the athlete row).
   defaultUnit?: DistanceUnit;
   onSuccess?: () => void;
   onCancel?: () => void;
@@ -65,8 +64,9 @@ export default function AddDailyRunForm({
       className="rounded-2xl border border-stone-200 bg-stone-50/60 p-5 space-y-4"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Date — defaults to today. Native picker keeps the bundle
-            light and matches platform conventions. */}
+        {/* Date — defaults to today via a local-tz YYYY-MM-DD. Native
+            picker keeps the bundle light and matches platform
+            conventions. */}
         <div>
           <label
             htmlFor="runDate"
@@ -199,9 +199,11 @@ export default function AddDailyRunForm({
         />
       </div>
 
-      {/* Tagged athletes — paste-list of profile URLs or IDs. We chose
-          this over a typeahead in v1 because there's no global athlete
-          search yet; pasting from another tab is the realistic flow. */}
+      {/* Tagged athletes — paste-IDs fallback for v1 of the form. Each
+          token is a `/athletes/<uuid>` reference that the parser splits
+          on commas/whitespace. Private profiles never surface in the
+          search UI we'll add later, but the parser will still accept
+          them here so an inviter who knows the UUID can always tag. */}
       <div>
         <label
           htmlFor="participants"
@@ -213,12 +215,12 @@ export default function AddDailyRunForm({
           id="participants"
           name="participants"
           type="text"
-          placeholder="/athletes/abc-123, /athletes/def-456"
+          placeholder="/athletes/abc, /athletes/def"
           className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <p className="text-[11px] text-stone-400 mt-1">
-          Paste profile links or IDs, separated by commas. Tagged
-          athletes see this run on their profile too.
+          Comma-separated /athletes/&lt;uuid&gt; tokens. Tagged athletes
+          see this run on their profile too.
         </p>
       </div>
 

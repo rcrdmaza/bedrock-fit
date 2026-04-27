@@ -6,6 +6,7 @@ import {
   type ProfileSettingsState,
 } from '@/app/actions/profile-settings';
 import RunningHeroAvatar from '@/app/components/running-hero-avatar';
+import { type DistanceUnit, DISTANCE_UNITS } from '@/lib/daily-runs';
 
 // Initial values come from the server. We hydrate them into local state
 // so the radio "Use my nickname" can be disabled live as the user
@@ -17,6 +18,9 @@ export interface SettingsFormInitial {
   displayPreference: 'name' | 'nickname';
   isPrivate: boolean;
   avatarUrl: string | null;
+  // Preferred distance unit. Drives the default on the "Log a run"
+  // form and the unit used by mileage stats on the profile.
+  distancePreference: DistanceUnit;
 }
 
 const INITIAL_ACTION: ProfileSettingsState = { status: 'idle' };
@@ -44,6 +48,9 @@ export default function SettingsForm({
     initial.displayPreference,
   );
   const [isPrivate, setIsPrivate] = useState(initial.isPrivate);
+  const [distancePreference, setDistancePreference] = useState<DistanceUnit>(
+    initial.distancePreference,
+  );
 
   // Avatar preview state. `previewUrl` is what the <img> shows: a
   // freshly-picked file's data URL when the user has chosen one,
@@ -285,6 +292,48 @@ export default function SettingsForm({
             </div>
           </div>
         </label>
+      </fieldset>
+
+      {/* Preferred distance unit. The toggle is small because miles vs
+          kilometers is a one-line preference, but it gets its own
+          fieldset so the helper line can spell out where the choice
+          actually shows up — defaulting the "Log a run" form and the
+          monthly-mileage cell, not retroactively rewriting old logs. */}
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-semibold text-stone-900 mb-2">
+          Preferred distance unit
+        </legend>
+        <div
+          role="radiogroup"
+          aria-label="Distance unit"
+          className="inline-flex rounded-lg border border-stone-200 bg-white overflow-hidden"
+        >
+          {DISTANCE_UNITS.map((u) => (
+            <label
+              key={u}
+              className={`px-4 py-2 text-sm cursor-pointer transition-colors ${
+                distancePreference === u
+                  ? 'bg-stone-900 text-white'
+                  : 'text-stone-600 hover:bg-stone-100'
+              }`}
+            >
+              <input
+                type="radio"
+                name="distancePreference"
+                value={u}
+                checked={distancePreference === u}
+                onChange={() => setDistancePreference(u)}
+                className="sr-only"
+              />
+              {u === 'mi' ? 'Miles' : 'Kilometers'}
+            </label>
+          ))}
+        </div>
+        <p className="text-xs text-stone-500">
+          Sets the default unit when you log a new run and the unit your
+          monthly mileage shows in. Existing logged runs keep the unit
+          you originally entered.
+        </p>
       </fieldset>
 
       {/* Privacy toggle. Single checkbox with a longer helper line so

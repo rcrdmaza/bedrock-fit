@@ -8,8 +8,15 @@
 
 import { useState } from 'react';
 import AddDailyRunForm from './add-daily-run-form';
+import type { DistanceUnit } from '@/lib/daily-runs';
 
-export default function DailyRunsToggle() {
+export default function DailyRunsToggle({
+  defaultUnit,
+}: {
+  // Owner's preferred unit, threaded down from the profile page so the
+  // form's mi/km radio defaults match their setting.
+  defaultUnit: DistanceUnit;
+}) {
   const [open, setOpen] = useState(false);
 
   if (!open) {
@@ -26,6 +33,7 @@ export default function DailyRunsToggle() {
 
   return (
     <AddDailyRunForm
+      defaultUnit={defaultUnit}
       onSuccess={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     />

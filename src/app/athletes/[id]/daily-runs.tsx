@@ -21,6 +21,7 @@ import {
   formatDuration,
   paceLabel,
   isDistanceUnit,
+  type DistanceUnit,
 } from '@/lib/daily-runs';
 import { getDisplayName } from '@/lib/athlete-display';
 import DailyRunsToggle from './daily-runs-toggle';
@@ -31,6 +32,11 @@ interface Props {
   // Whether the viewing user owns this profile. Drives the form
   // toggle + the Delete button on rows the owner authored.
   isOwner: boolean;
+  // Owner's preferred distance unit. Used as the default for the
+  // "+ Log a run" form. Historical runs render in the unit they were
+  // entered with regardless — flipping the preference doesn't retcon
+  // old rows.
+  defaultUnit: DistanceUnit;
 }
 
 // Shape we render in the "with…" line. Carries enough to call
@@ -51,7 +57,11 @@ function formatRunDate(d: Date): string {
   });
 }
 
-export default async function DailyRunsSection({ athleteId, isOwner }: Props) {
+export default async function DailyRunsSection({
+  athleteId,
+  isOwner,
+  defaultUnit,
+}: Props) {
   // Step 1: collect run IDs the athlete is connected to. This is
   // either as the author (createdByAthleteId) or as a tagged
   // participant. We do the union of two cheap selects rather than a
@@ -81,7 +91,7 @@ export default async function DailyRunsSection({ athleteId, isOwner }: Props) {
         aria-label="Daily runs"
         className="mt-12 pt-10 border-t border-stone-100"
       >
-        <Header isOwner={isOwner} count={0} />
+        <Header isOwner={isOwner} count={0} defaultUnit={defaultUnit} />
         <p className="text-sm text-stone-500 mt-3">
           Log your training runs here — distance, time, where you ran,
           even who you ran with.
@@ -144,7 +154,11 @@ export default async function DailyRunsSection({ athleteId, isOwner }: Props) {
       aria-label="Daily runs"
       className="mt-12 pt-10 border-t border-stone-100"
     >
-      <Header isOwner={isOwner} count={runs.length} />
+      <Header
+        isOwner={isOwner}
+        count={runs.length}
+        defaultUnit={defaultUnit}
+      />
 
       <ul className="mt-5 space-y-3">
         {runs.map((run) => {
@@ -254,7 +268,15 @@ export default async function DailyRunsSection({ athleteId, isOwner }: Props) {
   );
 }
 
-function Header({ isOwner, count }: { isOwner: boolean; count: number }) {
+function Header({
+  isOwner,
+  count,
+  defaultUnit,
+}: {
+  isOwner: boolean;
+  count: number;
+  defaultUnit: DistanceUnit;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-3">
       <div>
@@ -265,7 +287,7 @@ function Header({ isOwner, count }: { isOwner: boolean; count: number }) {
             : `${count} run${count === 1 ? '' : 's'} logged.`}
         </p>
       </div>
-      {isOwner ? <DailyRunsToggle /> : null}
+      {isOwner ? <DailyRunsToggle defaultUnit={defaultUnit} /> : null}
     </div>
   );
 }

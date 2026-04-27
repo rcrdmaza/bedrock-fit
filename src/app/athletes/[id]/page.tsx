@@ -391,7 +391,11 @@ export default async function AthleteProfilePage({
             no runs, and shows the "+ Log a run" toggle only for the
             owner. We don't render it on a redacted private profile —
             that whole branch is gated above. */}
-        <DailyRunsSection athleteId={athlete.id} isOwner={isOwner} />
+        <DailyRunsSection
+          athleteId={athlete.id}
+          isOwner={isOwner}
+          defaultUnit={athlete.distancePreference === 'km' ? 'km' : 'mi'}
+        />
           </>
         )}
       </section>

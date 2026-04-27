@@ -41,6 +41,14 @@ export const athletes = pgTable('athletes', {
   // placeholder. Future migration can swap this to an external URL +
   // backfill from the data URLs.
   avatarUrl: text('avatar_url'),
+  // Preferred distance unit for self-entered training data. Drives the
+  // default unit on the "Log a run" form and the unit used to render
+  // monthly mileage / longest-run stats on the profile. We don't
+  // re-render historical rows in the preferred unit — each daily_runs
+  // row remembers `distanceUnit` verbatim so a profile that switches mi
+  // ↔ km doesn't quietly retcon old logs. 'mi' default matches the
+  // form's pre-preference behavior; existing users see no change.
+  distancePreference: text('distance_preference').default('mi').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
