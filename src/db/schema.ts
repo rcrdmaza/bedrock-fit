@@ -44,6 +44,79 @@ export const athletes = pgTable('athletes', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+// Self-logged daily training runs. Distinct from `results`: results are
+// race finishes (often imported from chip-timing exports, claimable),
+// daily runs are the user's own training entries — short, weekly,
+// numerous. We keep them in their own table so the race history UI
+// doesn't drown in 5K shakeouts and so the importer never touches them.
+//
+// `distanceValue` + `distanceUnit` preserves the user's input verbatim
+// (mi or km) — we display in the same unit they entered. `distanceMeters`
+// is the canonical sortable/aggregatable copy, populated by the action;
+// keeping both means leaderboards or future stat rollups don't need to
+// re-derive units, while the row remembers what the user actually typed.
+export const dailyRuns = pgTable('daily_runs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  // Author / "owner" of the row. Edits and deletes are gated to this
+  // athlete via the linked user account. Cascade delete so wiping an
+  // athlete also wipes their training log.
+  createdByAthleteId: uuid('created_by_athlete_id')
+    .notNull()
+    .references(() => athletes.id, { onDelete: 'cascade' }),
+  // What the user typed and which unit they picked. We store the chosen
+  // unit alongside so a profile that prefers miles always renders miles
+  // for that row, and a future "switch the whole profile to km" doesn't
+  // round-trip through floating-point conversions.
+  distanceValue: numeric('distance_value', { precision: 8, scale: 2 }).notNull(),
+  distanceUnit: text('distance_unit').notNull(), // 'mi' | 'km'
+  // Canonical sortable copy in meters. Computed at write time from
+  // (distanceValue, distanceUnit). Indexed-friendly for "longest run" or
+  // "total distance this month" rollups without a per-row unit branch.
+  distanceMeters: integer('distance_meters').notNull(),
+  // Duration the run took, in seconds. Mirrors `results.finishTime` so
+  // the same formatter renders both surfaces.
+  durationSeconds: integer('duration_seconds'),
+  location: text('location'),
+  // Optional Strava activity link, e.g. https://www.strava.com/activities/12345.
+  // Free-form text so the user can paste any URL — validation just
+  // checks for http(s) at the action layer.
+  stravaUrl: text('strava_url'),
+  // The day the run actually happened. We store a date-typed timestamp
+  // (midnight UTC of the chosen day) — duration timing is in
+  // durationSeconds, not here.
+  runDate: timestamp('run_date').notNull(),
+  // A short freeform note ("easy zone-2", "tempo intervals"…). Optional;
+  // the form leaves it out by default.
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Other athletes who joined this run. The author of the run is *not*
+// stored here — that's `createdByAthleteId` on the parent row. This
+// table is only the "with…" set, so a run with no companions has zero
+// rows here. Each tagged athlete sees the run on their own profile.
+export const dailyRunParticipants = pgTable(
+  'daily_run_participants',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    dailyRunId: uuid('daily_run_id')
+      .notNull()
+      .references(() => dailyRuns.id, { onDelete: 'cascade' }),
+    athleteId: uuid('athlete_id')
+      .notNull()
+      .references(() => athletes.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    // One tag per (run, athlete). Without this a double-submit would
+    // duplicate a friend on the same run.
+    uniqRunAthlete: unique('daily_run_participants_run_athlete_key').on(
+      t.dailyRunId,
+      t.athleteId,
+    ),
+  }),
+);
+
 export const results = pgTable('results', {
   id: uuid('id').defaultRandom().primaryKey(),
   athleteId: uuid('athlete_id').references(() => athletes.id),
