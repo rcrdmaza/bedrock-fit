@@ -16,6 +16,7 @@ import RedactedName from './redacted-name';
 import RaceHistory, {
   type RaceHistoryRow,
 } from './race-history';
+import DailyRunsSection from './daily-runs';
 
 // Pull a country guess off the free-form `athletes.location` text. The
 // admin import doesn't normalize the field, so values look like "Lima,
@@ -383,6 +384,14 @@ export default async function AthleteProfilePage({
             )}
           />
         )}
+
+        {/* Daily training log. Server component does its own fetching
+            so the page-level query stays focused on race results. The
+            section renders nothing for visitors when the athlete has
+            no runs, and shows the "+ Log a run" toggle only for the
+            owner. We don't render it on a redacted private profile —
+            that whole branch is gated above. */}
+        <DailyRunsSection athleteId={athlete.id} isOwner={isOwner} />
           </>
         )}
       </section>
