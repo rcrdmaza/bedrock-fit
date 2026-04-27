@@ -17,6 +17,7 @@ import RaceHistory, {
   type RaceHistoryRow,
 } from './race-history';
 import DailyRunsSection from './daily-runs';
+import DailyRunStats from './daily-run-stats';
 
 // Pull a country guess off the free-form `athletes.location` text. The
 // admin import doesn't normalize the field, so values look like "Lima,
@@ -310,6 +311,16 @@ export default async function AthleteProfilePage({
             </div>
           </div>
         </div>
+
+        {/* Training-log stats — month-to-date mileage + longest run.
+            Renders nothing for athletes with no logged training, so
+            profiles without a training log don't carry a placeholder
+            row of dashes. The stats query runs in parallel with the
+            page render via streaming. */}
+        <DailyRunStats
+          athleteId={athlete.id}
+          preferredUnit={athlete.distancePreference === 'km' ? 'km' : 'mi'}
+        />
 
         {/* No-claims CTA. Surfaces a nudge for athletes who haven't
             claimed anything yet — the link drops them into /results
