@@ -33,7 +33,7 @@ export default function PhotosManager({
           redirect and the inputs' defaults are empty. */}
       <form
         action={addAction}
-        className="border border-stone-100 rounded-2xl p-5 space-y-3"
+        className="border border-slate-100 rounded-2xl p-5 space-y-3"
       >
         <input type="hidden" name="eventName" value={eventName} />
         <input type="hidden" name="eventDate" value={eventDate} />
@@ -51,7 +51,7 @@ export default function PhotosManager({
             type="url"
             required
             placeholder="https://…/photo.jpg"
-            className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:border-stone-900 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-stone-900 focus:outline-none"
             maxLength={2000}
           />
         </div>
@@ -68,7 +68,7 @@ export default function PhotosManager({
             type="text"
             placeholder="Start line at 6 AM"
             maxLength={400}
-            className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:border-stone-900 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-stone-900 focus:outline-none"
           />
         </div>
         <button
@@ -80,7 +80,7 @@ export default function PhotosManager({
       </form>
 
       {photos.length === 0 ? (
-        <div className="text-center py-10 text-stone-400 text-sm border border-dashed border-stone-200 rounded-2xl">
+        <div className="text-center py-10 text-stone-400 text-sm border border-dashed border-slate-200 rounded-2xl">
           No photos yet.
         </div>
       ) : (
@@ -88,12 +88,12 @@ export default function PhotosManager({
           {photos.map((p, idx) => (
             <li
               key={p.id}
-              className="flex items-start gap-4 border border-stone-100 rounded-2xl p-4"
+              className="flex items-start gap-4 border border-slate-100 rounded-2xl p-4"
             >
               {/* Thumbnail. Plain img on purpose — URLs are arbitrary
                   external hosts, so we're not funnelling them through
                   Next.js Image. */}
-              <div className="w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-stone-100">
+              <div className="w-24 h-24 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={p.url}

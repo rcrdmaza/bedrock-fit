@@ -57,7 +57,7 @@ export default async function LeaderboardCategoryPage({
   const data = await getLeaderboardPage(category, page, PAGE_SIZE);
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
       <section className="max-w-4xl mx-auto px-8 pt-16 pb-24">
@@ -79,7 +79,7 @@ export default async function LeaderboardCategoryPage({
         <CategoryChips active={category} />
 
         {data.rows.length === 0 ? (
-          <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-stone-200 rounded-2xl">
+          <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-slate-200 rounded-2xl">
             No results in this range.
           </div>
         ) : (
@@ -114,7 +114,7 @@ function CategoryChips({ active }: { active: LeaderboardCategory }) {
             className={`text-sm rounded-full px-4 py-1.5 border transition-colors ${
               isActive
                 ? 'bg-stone-900 text-white border-stone-900'
-                : 'bg-white text-stone-700 border-stone-200 hover:border-stone-400'
+                : 'bg-white text-stone-700 border-slate-200 hover:border-slate-400'
             }`}
             aria-current={isActive ? 'page' : undefined}
           >
@@ -136,9 +136,9 @@ function LeaderboardTable({
   startRank: number;
 }) {
   return (
-    <div className="border border-stone-100 rounded-2xl overflow-hidden">
+    <div className="border border-slate-100 rounded-2xl overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-stone-50">
+        <thead className="bg-slate-50">
           <tr className="text-stone-500 text-left text-xs uppercase tracking-wide">
             <th className="px-5 py-3 font-medium w-12">#</th>
             <th className="px-5 py-3 font-medium">Athlete</th>
@@ -150,7 +150,7 @@ function LeaderboardTable({
           {rows.map((r, idx) => (
             <tr
               key={r.id}
-              className="border-t border-stone-100 hover:bg-stone-50/60 transition-colors"
+              className="border-t border-slate-100 hover:bg-slate-50/60 transition-colors"
             >
               <td className="px-5 py-3 tabular-nums text-stone-400">
                 {startRank + idx}

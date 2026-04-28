@@ -21,7 +21,7 @@ export default function EventPhotos({ photos }: { photos: EventPhoto[] }) {
       {photos.map((photo) => (
         <figure
           key={photo.id}
-          className="rounded-2xl overflow-hidden border border-stone-100 bg-stone-50 group"
+          className="rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 group"
         >
           <a
             href={photo.url}

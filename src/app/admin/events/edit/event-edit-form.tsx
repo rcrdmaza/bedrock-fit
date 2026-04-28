@@ -60,7 +60,7 @@ export default function EventEditForm({
           maxLength={8000}
           defaultValue={val(metadata?.summary)}
           placeholder="A paragraph or two about the course, weather, vibe…"
-          className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-stone-900 focus:outline-none transition-colors"
+          className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-stone-900 focus:outline-none transition-colors"
         />
       </div>
 
@@ -85,7 +85,7 @@ export default function EventEditForm({
           hides the stripe entirely when name and logo are both empty.
           Three independent fields so a sponsor can be text-only, logo-
           only, or fully wired. */}
-      <fieldset className="border-t border-stone-100 pt-6">
+      <fieldset className="border-t border-slate-100 pt-6">
         <legend className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-1.5">
           Sponsor
         </legend>
@@ -164,7 +164,7 @@ function Field({
         defaultValue={defaultValue}
         placeholder={placeholder}
         maxLength={2000}
-        className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-stone-900 focus:outline-none transition-colors"
+        className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-stone-900 focus:outline-none transition-colors"
       />
     </div>
   );

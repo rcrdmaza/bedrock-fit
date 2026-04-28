@@ -48,7 +48,7 @@ export function ClaimForm({
           type="email"
           required
           placeholder="you@example.com"
-          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
       <div>
@@ -66,7 +66,7 @@ export function ClaimForm({
           name="note"
           maxLength={500}
           rows={2}
-          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
       {state.status === 'error' && (

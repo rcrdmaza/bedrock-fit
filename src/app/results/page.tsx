@@ -83,7 +83,7 @@ export default async function ResultsPage({
   const initialResultsFilter = readResultsInitialFilter(params);
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">

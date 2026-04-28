@@ -198,14 +198,14 @@ export default function AthleteCombobox({ initialSelected = [] }: Props) {
             ? `Up to ${MAX_SELECTED} tagged.`
             : 'Search athletes by name'
         }
-        className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-stone-50 disabled:text-stone-400"
+        className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-stone-400"
       />
 
       {open && query.trim().length > 0 ? (
         <ul
           id={listboxId}
           role="listbox"
-          className="absolute z-10 mt-1 w-full bg-white border border-stone-200 rounded-lg shadow-sm max-h-60 overflow-auto"
+          className="absolute z-10 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-sm max-h-60 overflow-auto"
         >
           {loading ? (
             <li className="px-3 py-2 text-xs text-stone-500">Searching…</li>
@@ -222,7 +222,7 @@ export default function AthleteCombobox({ initialSelected = [] }: Props) {
                     e.preventDefault();
                     add(hit);
                   }}
-                  className="w-full text-left px-3 py-2 text-sm text-stone-900 hover:bg-stone-50 flex items-baseline justify-between gap-2"
+                  className="w-full text-left px-3 py-2 text-sm text-stone-900 hover:bg-slate-50 flex items-baseline justify-between gap-2"
                 >
                   <span>{getDisplayName(hit)}</span>
                   {hit.location ? (

@@ -62,7 +62,7 @@ export default function SponsorStripe({
     return (
       <aside
         aria-label="Event sponsor"
-        className="mb-6 rounded-xl border border-stone-100 bg-stone-50 px-4 py-3"
+        className="mb-6 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
       >
         <a
           href={url}
@@ -79,7 +79,7 @@ export default function SponsorStripe({
   return (
     <aside
       aria-label="Event sponsor"
-      className="mb-6 rounded-xl border border-stone-100 bg-stone-50 px-4 py-3"
+      className="mb-6 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
     >
       {inner}
     </aside>

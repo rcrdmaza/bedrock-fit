@@ -37,7 +37,7 @@ export default async function AdminOrgPage({ searchParams }: PageProps) {
   const isOwner = membership.role === 'owner';
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
       <AdminSubnav />
 
@@ -62,9 +62,9 @@ export default async function AdminOrgPage({ searchParams }: PageProps) {
           <h2 className="text-base font-semibold text-stone-900 mb-3">
             Members
           </h2>
-          <div className="border border-stone-100 rounded-2xl overflow-hidden">
+          <div className="border border-slate-100 rounded-2xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-stone-500">
                 <tr>
                   <th className="text-left font-medium px-5 py-3">Member</th>
                   <th className="text-left font-medium px-5 py-3">Role</th>
@@ -76,7 +76,7 @@ export default async function AdminOrgPage({ searchParams }: PageProps) {
                 {members.map((m) => (
                   <tr
                     key={m.userId}
-                    className="border-t border-stone-100"
+                    className="border-t border-slate-100"
                   >
                     <td className="px-5 py-3">
                       <div className="text-stone-900">{m.name ?? m.email}</div>
@@ -178,7 +178,7 @@ function AdminSubnav() {
   return (
     <nav
       aria-label="Admin"
-      className="flex items-center justify-end gap-5 px-8 py-3 border-b border-stone-100 bg-stone-50"
+      className="flex items-center justify-end gap-5 px-8 py-3 border-b border-slate-100 bg-slate-50"
     >
       <Link
         href="/admin"

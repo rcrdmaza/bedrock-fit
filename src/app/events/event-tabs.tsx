@@ -31,7 +31,7 @@ export default function EventTabs({ tabs }: { tabs: EventTab[] }) {
       <div
         role="tablist"
         aria-label="Event sections"
-        className="flex gap-1 border-b border-stone-100 mb-6"
+        className="flex gap-1 border-b border-slate-100 mb-6"
       >
         {tabs.map((tab) => {
           const isActive = tab.id === active;

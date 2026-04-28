@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import SiteHeader from '@/app/site-header';
 import EventPhotoCarousel from '@/app/event-photo-carousel';
@@ -70,10 +71,28 @@ export default async function HomePage({
   ]);
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50 relative">
+      {/* Decorative sprinter — sits behind the content at 18% opacity so
+          it reads as a backdrop without fighting the leaderboard text.
+          aria-hidden + pointer-events-none keep it out of AT and click
+          targets. Fixed positioning keeps it in place during scroll. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 -z-10 flex items-center justify-center opacity-[0.18]"
+      >
+        <Image
+          src="/runner-bg.png"
+          alt=""
+          width={924}
+          height={576}
+          priority={false}
+          className="max-w-[80vw] h-auto"
+        />
+      </div>
+
       <SiteHeader />
 
-      <section className="max-w-4xl mx-auto px-8 pt-16 pb-24">
+      <section className="relative max-w-4xl mx-auto px-8 pt-16 pb-24">
         {/* Carousel hides itself when there are no photos, so first-
             run installs still drop straight into the leaderboard. */}
         <EventPhotoCarousel photos={carouselPhotos} />
@@ -88,7 +107,7 @@ export default async function HomePage({
         <CategoryChips active={category} />
 
         {rows.length === 0 ? (
-          <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-stone-200 rounded-2xl">
+          <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-slate-200 rounded-2xl">
             No {category} results on file yet.
           </div>
         ) : (
@@ -133,7 +152,7 @@ function CategoryChips({ active }: { active: LeaderboardCategory }) {
             className={`text-sm rounded-full px-4 py-1.5 border transition-colors ${
               isActive
                 ? 'bg-stone-900 text-white border-stone-900'
-                : 'bg-white text-stone-700 border-stone-200 hover:border-stone-400'
+                : 'bg-white text-stone-700 border-slate-200 hover:border-slate-400'
             }`}
             aria-current={isActive ? 'page' : undefined}
           >
@@ -153,9 +172,9 @@ function LeaderboardTable({
   rows: LeaderboardRow[];
 }) {
   return (
-    <div className="border border-stone-100 rounded-2xl overflow-hidden">
+    <div className="border border-slate-100 rounded-2xl overflow-hidden">
       <table className="w-full text-sm">
-        <thead className="bg-stone-50">
+        <thead className="bg-slate-50">
           <tr className="text-stone-500 text-left text-xs uppercase tracking-wide">
             <th className="px-5 py-3 font-medium w-12">#</th>
             <th className="px-5 py-3 font-medium">Athlete</th>
@@ -169,7 +188,7 @@ function LeaderboardTable({
             return (
               <tr
                 key={r.id}
-                className="border-t border-stone-100 hover:bg-stone-50/60 transition-colors"
+                className="border-t border-slate-100 hover:bg-slate-50/60 transition-colors"
               >
                 <td className="px-5 py-3 tabular-nums text-stone-400">
                   {place}

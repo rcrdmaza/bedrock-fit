@@ -110,7 +110,7 @@ export default function AddDailyRunForm({
   return (
     <form
       action={formAction}
-      className="rounded-2xl border border-stone-200 bg-stone-50/60 p-5 space-y-4"
+      className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 space-y-4"
     >
       {/* In edit mode the action needs the run id; we send it as a
           hidden field rather than baking it into a closure so the
@@ -138,7 +138,7 @@ export default function AddDailyRunForm({
               mode === 'edit' && initial ? initial.runDate : todayLocalIso()
             }
             required
-            className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -168,12 +168,12 @@ export default function AddDailyRunForm({
               defaultValue={
                 mode === 'edit' && initial ? initial.distanceValue : undefined
               }
-              className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <div
               role="radiogroup"
               aria-label="Distance unit"
-              className="inline-flex rounded-lg border border-stone-200 bg-white overflow-hidden shrink-0"
+              className="inline-flex rounded-lg border border-slate-200 bg-white overflow-hidden shrink-0"
             >
               {DISTANCE_UNITS.map((u) => (
                 <label
@@ -181,7 +181,7 @@ export default function AddDailyRunForm({
                   className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
                     unit === u
                       ? 'bg-stone-900 text-white'
-                      : 'text-stone-600 hover:bg-stone-100'
+                      : 'text-stone-600 hover:bg-slate-100'
                   }`}
                 >
                   <input
@@ -216,7 +216,7 @@ export default function AddDailyRunForm({
             inputMode="numeric"
             placeholder="32:15"
             defaultValue={mode === 'edit' && initial ? initial.duration : undefined}
-            className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <p className="text-[11px] text-stone-400 mt-1">
             Like 32:15 or 1:05:00
@@ -239,7 +239,7 @@ export default function AddDailyRunForm({
             maxLength={120}
             placeholder="Lima, Peru"
             defaultValue={mode === 'edit' && initial ? initial.location : undefined}
-            className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -259,7 +259,7 @@ export default function AddDailyRunForm({
           type="url"
           placeholder="https://www.strava.com/activities/12345"
           defaultValue={mode === 'edit' && initial ? initial.stravaUrl : undefined}
-          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -300,7 +300,7 @@ export default function AddDailyRunForm({
           maxLength={500}
           placeholder="Easy zone-2 with the crew"
           defaultValue={mode === 'edit' && initial ? initial.notes : undefined}
-          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 

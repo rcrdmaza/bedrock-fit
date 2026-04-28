@@ -52,7 +52,7 @@ export default function ImportForm() {
           required
           maxLength={200}
           placeholder="Lima Marathon 2026"
-          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -67,7 +67,7 @@ export default function ImportForm() {
           id="eventDate"
           name="eventDate"
           type="date"
-          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -81,19 +81,19 @@ export default function ImportForm() {
           type="file"
           accept=".csv,text/csv"
           required
-          className="w-full text-sm text-stone-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200"
+          className="w-full text-sm text-stone-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-stone-700 hover:file:bg-slate-200"
         />
         <p className="mt-2 text-xs text-stone-400">
           Columns, in order:{' '}
-          <code className="px-1 py-0.5 rounded bg-stone-100 text-stone-700">
+          <code className="px-1 py-0.5 rounded bg-slate-100 text-stone-700">
             name, finish_time, overall_rank, gender, location, race_category
           </code>
           {', optionally followed by '}
-          <code className="px-1 py-0.5 rounded bg-stone-100 text-stone-700">
+          <code className="px-1 py-0.5 rounded bg-slate-100 text-stone-700">
             bib
           </code>{' '}
           and{' '}
-          <code className="px-1 py-0.5 rounded bg-stone-100 text-stone-700">
+          <code className="px-1 py-0.5 rounded bg-slate-100 text-stone-700">
             event_country
           </code>
           . Finish time as <code>H:MM:SS</code> or <code>MM:SS</code>.
@@ -157,7 +157,7 @@ function PreviewStep({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-stone-100 p-6 space-y-4">
+      <div className="rounded-2xl border border-slate-100 p-6 space-y-4">
         <div>
           <div className="text-xs text-stone-400 mb-0.5">Event</div>
           <div className="text-base font-medium text-stone-900">
@@ -189,7 +189,7 @@ function PreviewStep({
               {preview.categories.map((cat) => (
                 <span
                   key={cat.label}
-                  className="text-xs rounded-full bg-stone-50 border border-stone-100 px-3 py-1 text-stone-700"
+                  className="text-xs rounded-full bg-slate-50 border border-slate-100 px-3 py-1 text-stone-700"
                 >
                   <span className="font-medium">{cat.label}</span>
                   <span className="text-stone-400"> · </span>
@@ -206,7 +206,7 @@ function PreviewStep({
       </div>
 
       {preview.matches.length > 0 && (
-        <div className="rounded-2xl border border-stone-100 p-6">
+        <div className="rounded-2xl border border-slate-100 p-6">
           <h2 className="text-sm font-semibold text-stone-900 mb-1">
             Will attach to existing athletes
           </h2>
@@ -231,7 +231,7 @@ function PreviewStep({
         </div>
       )}
 
-      <div className="rounded-2xl border border-stone-100 p-6">
+      <div className="rounded-2xl border border-slate-100 p-6">
         <h2 className="text-sm font-semibold text-stone-900 mb-1">
           Sample rows
         </h2>
@@ -254,7 +254,7 @@ function PreviewStep({
             </thead>
             <tbody className="text-stone-700">
               {sampleRows.map((row) => (
-                <tr key={row.lineNumber} className="border-t border-stone-50">
+                <tr key={row.lineNumber} className="border-t border-slate-50">
                   <td className="py-1 pr-4">{row.name}</td>
                   <td className="py-1 pr-4 tabular-nums">
                     {formatTime(row.finishTimeSeconds)}

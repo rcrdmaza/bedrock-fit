@@ -11,7 +11,7 @@ export default async function AdminLoginPage() {
   if (await isAdmin()) redirect('/admin');
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
       <section className="max-w-sm mx-auto px-8 pt-24 pb-24">

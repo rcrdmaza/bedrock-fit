@@ -105,7 +105,7 @@ export default async function EventDetailPage({
   const summary = detail.metadata?.summary?.trim() ?? '';
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
@@ -119,7 +119,7 @@ export default async function EventDetailPage({
           <h1 className="text-3xl font-semibold text-stone-900">
             {detail.eventName}
           </h1>
-          <span className="inline-block text-xs font-medium text-stone-700 bg-stone-100 rounded-full px-3 py-1.5 mt-2 shrink-0">
+          <span className="inline-block text-xs font-medium text-stone-700 bg-slate-100 rounded-full px-3 py-1.5 mt-2 shrink-0">
             {detail.raceCategory}
           </span>
         </div>

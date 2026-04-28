@@ -39,7 +39,7 @@ export default function ResultsBrowser({
           instant (no navigation, no refetch). The child components
           keep their own filter state while hidden, so flipping back
           and forth doesn't lose what the user typed. */}
-      <div className="inline-flex items-center rounded-lg bg-stone-100 p-1 mb-6 text-xs font-medium">
+      <div className="inline-flex items-center rounded-lg bg-slate-100 p-1 mb-6 text-xs font-medium">
         <button
           type="button"
           onClick={() => setView('results')}

@@ -3,7 +3,7 @@ import SiteHeader from '@/app/site-header';
 
 export default function AthleteNotFound() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
       <section className="max-w-xl mx-auto px-8 pt-24 pb-24 text-center">

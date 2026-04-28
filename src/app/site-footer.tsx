@@ -72,7 +72,7 @@ export default function SiteFooter() {
   return (
     <footer
       aria-label="Site"
-      className="mt-auto border-t border-stone-200 bg-stone-50"
+      className="mt-auto border-t border-slate-200 bg-slate-50"
     >
       <div className="max-w-6xl mx-auto px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
@@ -97,7 +97,7 @@ export default function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-12 pt-6 border-t border-stone-200 flex items-center justify-between text-xs text-stone-500">
+        <div className="mt-12 pt-6 border-t border-slate-200 flex items-center justify-between text-xs text-stone-500">
           <span className="font-semibold text-stone-700">Bedrock.fit</span>
           <span>© {year} Bedrock.fit</span>
         </div>

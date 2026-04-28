@@ -5,7 +5,7 @@ import SiteHeader from '@/app/site-header';
 // invisible.
 export default function Loading() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
@@ -18,7 +18,7 @@ export default function Loading() {
 
         {/* Skeleton search input */}
         <div
-          className="h-[46px] w-full rounded-lg bg-stone-100 animate-pulse mb-10"
+          className="h-[46px] w-full rounded-lg bg-slate-100 animate-pulse mb-10"
           aria-hidden="true"
         />
 
@@ -27,20 +27,20 @@ export default function Loading() {
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="border border-stone-100 rounded-2xl p-5"
+              className="border border-slate-100 rounded-2xl p-5"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="w-1/2 space-y-2">
-                  <div className="h-4 bg-stone-100 rounded animate-pulse" />
-                  <div className="h-3 w-2/3 bg-stone-100 rounded animate-pulse" />
+                  <div className="h-4 bg-slate-100 rounded animate-pulse" />
+                  <div className="h-3 w-2/3 bg-slate-100 rounded animate-pulse" />
                 </div>
-                <div className="h-5 w-20 bg-stone-100 rounded-full animate-pulse" />
+                <div className="h-5 w-20 bg-slate-100 rounded-full animate-pulse" />
               </div>
               <div className="grid grid-cols-4 gap-4">
                 {[0, 1, 2, 3].map((j) => (
                   <div key={j} className="space-y-2">
-                    <div className="h-3 w-16 bg-stone-100 rounded animate-pulse" />
-                    <div className="h-4 w-12 bg-stone-100 rounded animate-pulse" />
+                    <div className="h-3 w-16 bg-slate-100 rounded animate-pulse" />
+                    <div className="h-4 w-12 bg-slate-100 rounded animate-pulse" />
                   </div>
                 ))}
               </div>

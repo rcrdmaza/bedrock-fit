@@ -23,7 +23,7 @@ export default async function SettingsPage() {
   // than blowing up.
   if (!user.athleteId) {
     return (
-      <main className="min-h-screen bg-white">
+      <main className="min-h-screen bg-slate-50">
         <SiteHeader />
         <section className="max-w-2xl mx-auto px-8 pt-16 pb-24">
           <h1 className="text-2xl font-semibold text-stone-900 mb-2">
@@ -51,7 +51,7 @@ export default async function SettingsPage() {
   if (!athlete) {
     // Same posture — admin nuked the athlete row, we don't 500.
     return (
-      <main className="min-h-screen bg-white">
+      <main className="min-h-screen bg-slate-50">
         <SiteHeader />
         <section className="max-w-2xl mx-auto px-8 pt-16 pb-24">
           <h1 className="text-2xl font-semibold text-stone-900 mb-2">
@@ -83,7 +83,7 @@ export default async function SettingsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
       <section className="max-w-2xl mx-auto px-8 pt-16 pb-24">
         <div className="mb-8">

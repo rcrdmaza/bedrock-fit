@@ -32,7 +32,7 @@ export default function EventParticipants({
 
   if (participants.length === 0) {
     return (
-      <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-stone-200 rounded-2xl">
+      <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-slate-200 rounded-2xl">
         No finishers on file for this event.
       </div>
     );
@@ -46,7 +46,7 @@ export default function EventParticipants({
         return (
           <div
             key={p.id}
-            className="group border border-stone-100 rounded-2xl p-5 hover:border-stone-300 hover:shadow-sm transition-all"
+            className="group border border-slate-100 rounded-2xl p-5 hover:border-slate-300 hover:shadow-sm transition-all"
           >
             <div className="flex items-start gap-4">
               <div className="tabular-nums text-stone-400 w-8 shrink-0 text-sm pt-0.5">

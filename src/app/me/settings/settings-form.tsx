@@ -116,7 +116,7 @@ export default function SettingsForm({
         </legend>
         <div className="flex items-center gap-5">
           <div
-            className="overflow-hidden rounded-full w-24 h-24 ring-4 ring-stone-200 flex items-center justify-center"
+            className="overflow-hidden rounded-full w-24 h-24 ring-4 ring-slate-200 flex items-center justify-center"
             aria-hidden="true"
           >
             {previewUrl ? (
@@ -199,7 +199,7 @@ export default function SettingsForm({
             required
             defaultValue={initial.name}
             maxLength={120}
-            className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <p className="text-xs text-stone-500 mt-1">
             Used for matching imported results to your profile. Always
@@ -223,7 +223,7 @@ export default function SettingsForm({
             onChange={(e) => setNickname(e.target.value)}
             maxLength={40}
             placeholder="e.g. Champ"
-            className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <p className="text-xs text-stone-500 mt-1">
             Shown to other users when you pick &ldquo;Use my
@@ -240,7 +240,7 @@ export default function SettingsForm({
           Which name should other users see?
         </legend>
 
-        <label className="flex items-start gap-3 cursor-pointer rounded-lg p-3 border border-stone-200 hover:border-stone-300 transition-colors">
+        <label className="flex items-start gap-3 cursor-pointer rounded-lg p-3 border border-slate-200 hover:border-slate-300 transition-colors">
           <input
             type="radio"
             name="displayPreference"
@@ -261,8 +261,8 @@ export default function SettingsForm({
         <label
           className={`flex items-start gap-3 rounded-lg p-3 border transition-colors ${
             canUseNickname
-              ? 'cursor-pointer border-stone-200 hover:border-stone-300'
-              : 'cursor-not-allowed border-stone-100 bg-stone-50/60'
+              ? 'cursor-pointer border-slate-200 hover:border-slate-300'
+              : 'cursor-not-allowed border-slate-100 bg-slate-50/60'
           }`}
         >
           <input
@@ -306,7 +306,7 @@ export default function SettingsForm({
         <div
           role="radiogroup"
           aria-label="Distance unit"
-          className="inline-flex rounded-lg border border-stone-200 bg-white overflow-hidden"
+          className="inline-flex rounded-lg border border-slate-200 bg-white overflow-hidden"
         >
           {DISTANCE_UNITS.map((u) => (
             <label
@@ -314,7 +314,7 @@ export default function SettingsForm({
               className={`px-4 py-2 text-sm cursor-pointer transition-colors ${
                 distancePreference === u
                   ? 'bg-stone-900 text-white'
-                  : 'text-stone-600 hover:bg-stone-100'
+                  : 'text-stone-600 hover:bg-slate-100'
               }`}
             >
               <input
@@ -342,7 +342,7 @@ export default function SettingsForm({
         <legend className="text-sm font-semibold text-stone-900 mb-2">
           Privacy
         </legend>
-        <label className="flex items-start gap-3 cursor-pointer rounded-lg p-3 border border-stone-200 hover:border-stone-300 transition-colors">
+        <label className="flex items-start gap-3 cursor-pointer rounded-lg p-3 border border-slate-200 hover:border-slate-300 transition-colors">
           <input
             type="checkbox"
             name="isPrivate"

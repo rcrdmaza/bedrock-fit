@@ -73,7 +73,7 @@ export default function EventsSearch({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by event name (e.g. Lima Marathon)"
-            className="w-full px-4 py-3 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
@@ -86,7 +86,7 @@ export default function EventsSearch({
             value={country}
             onChange={(e) => setCountry(e.target.value)}
             placeholder="Country (e.g. Peru)"
-            className="w-full px-4 py-3 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function EventsSearch({
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
             max={toDate || undefined}
-            className="px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -115,7 +115,7 @@ export default function EventsSearch({
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
             min={fromDate || undefined}
-            className="px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         {hasFilters && (
@@ -160,7 +160,7 @@ export default function EventsSearch({
               <Link
                 key={ev.key}
                 href={eventHref(ev)}
-                className="group block border border-stone-100 rounded-2xl p-5 hover:border-stone-300 hover:shadow-sm transition-all"
+                className="group block border border-slate-100 rounded-2xl p-5 hover:border-slate-300 hover:shadow-sm transition-all"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
@@ -179,7 +179,7 @@ export default function EventsSearch({
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="inline-block text-xs font-medium text-stone-700 bg-stone-100 rounded-full px-2.5 py-1">
+                    <span className="inline-block text-xs font-medium text-stone-700 bg-slate-100 rounded-full px-2.5 py-1">
                       {ev.raceCategory}
                     </span>
                     <div className="text-xs text-stone-400 mt-1">

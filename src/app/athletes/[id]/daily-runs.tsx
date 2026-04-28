@@ -115,7 +115,7 @@ export default async function DailyRunsSection({
     return (
       <section
         aria-label="Daily runs"
-        className="mt-12 pt-10 border-t border-stone-100"
+        className="mt-12 pt-10 border-t border-slate-100"
       >
         <Header isOwner={isOwner} count={0} defaultUnit={defaultUnit} />
         <p className="text-sm text-stone-500 mt-3">
@@ -178,7 +178,7 @@ export default async function DailyRunsSection({
   return (
     <section
       aria-label="Daily runs"
-      className="mt-12 pt-10 border-t border-stone-100"
+      className="mt-12 pt-10 border-t border-slate-100"
     >
       <Header
         isOwner={isOwner}
@@ -314,7 +314,7 @@ export default async function DailyRunsSection({
           return (
             <li
               key={run.id}
-              className="rounded-2xl border border-stone-200 bg-white p-4"
+              className="rounded-2xl border border-slate-200 bg-white p-4"
             >
               {editInitial ? (
                 <EditDailyRunRow initial={editInitial}>{cardBody}</EditDailyRunRow>

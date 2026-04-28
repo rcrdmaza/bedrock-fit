@@ -111,7 +111,7 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
       </div>
 
       {rows.length === 0 ? (
-        <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-stone-200 rounded-2xl">
+        <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-slate-200 rounded-2xl">
           No results on file for this athlete yet.
         </div>
       ) : (
@@ -128,8 +128,8 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
                   canClaim
                     ? checked
                       ? 'border-blue-400 bg-blue-50/40 cursor-pointer'
-                      : 'border-stone-100 hover:border-stone-300 cursor-pointer'
-                    : 'border-stone-100 cursor-default'
+                      : 'border-slate-100 hover:border-slate-300 cursor-pointer'
+                    : 'border-slate-100 cursor-default'
                 }`}
               >
                 <div className="flex items-start gap-4">
@@ -141,7 +141,7 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggle(r.id)}
-                        className="h-4 w-4 rounded border-stone-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                         aria-label={`Select ${r.eventName} for claim`}
                       />
                     )}
@@ -215,7 +215,7 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
       {anyUnclaimed && (
         <form
           action={formAction}
-          className="mt-8 rounded-2xl border border-stone-100 p-6 bg-white"
+          className="mt-8 rounded-2xl border border-slate-100 p-6 bg-white"
         >
           {/* Hidden inputs — one per selected id so FormData carries an
               array-shaped "resultIds" field the server action can read. */}
@@ -248,7 +248,7 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
                 type="email"
                 required
                 placeholder="you@example.com"
-                className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -267,7 +267,7 @@ export default function RaceHistory({ rows }: { rows: RaceHistoryRow[] }) {
                 name="note"
                 maxLength={500}
                 rows={2}
-                className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 

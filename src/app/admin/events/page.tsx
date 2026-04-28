@@ -115,12 +115,12 @@ export default async function AdminEventsPage() {
         );
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
       <nav
         aria-label="Admin"
-        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-stone-100 bg-stone-50"
+        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-slate-100 bg-slate-50"
       >
         <Link
           href="/admin"
@@ -164,9 +164,9 @@ export default async function AdminEventsPage() {
         </div>
 
         {events.length === 0 ? null : (
-          <div className="border border-stone-100 rounded-2xl overflow-hidden">
+          <div className="border border-slate-100 rounded-2xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-stone-500">
                 <tr>
                   <th className="text-left font-medium px-5 py-3">Event</th>
                   <th className="text-left font-medium px-5 py-3">Category</th>
@@ -190,7 +190,7 @@ export default async function AdminEventsPage() {
                   return (
                     <tr
                       key={ev.key}
-                      className="border-t border-stone-100 hover:bg-stone-50/60 transition-colors"
+                      className="border-t border-slate-100 hover:bg-slate-50/60 transition-colors"
                     >
                       <td className="px-5 py-3 text-stone-900">
                         {ev.eventName}
@@ -233,7 +233,7 @@ export default async function AdminEventsPage() {
 function StatusBadges({ status }: { status: MetadataStatus | null }) {
   if (!status) {
     return (
-      <span className="text-xs px-2 py-1 rounded-full bg-stone-100 text-stone-500 font-medium">
+      <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-stone-500 font-medium">
         Empty
       </span>
     );
@@ -254,7 +254,7 @@ function StatusBadges({ status }: { status: MetadataStatus | null }) {
           className={`text-[11px] px-2 py-1 rounded-full font-medium ${
             c.on
               ? 'bg-emerald-50 text-emerald-700'
-              : 'bg-stone-100 text-stone-500'
+              : 'bg-slate-100 text-stone-500'
           }`}
         >
           {c.label}

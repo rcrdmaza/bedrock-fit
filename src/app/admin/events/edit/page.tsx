@@ -83,12 +83,12 @@ export default async function EditEventMetadataPage({
   }).toString()}`;
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
       <nav
         aria-label="Admin"
-        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-stone-100 bg-stone-50"
+        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-slate-100 bg-slate-50"
       >
         <Link
           href="/admin"
@@ -136,7 +136,7 @@ export default async function EditEventMetadataPage({
           <h1 className="text-3xl font-semibold text-stone-900">
             {detail.eventName}
           </h1>
-          <span className="inline-block text-xs font-medium text-stone-700 bg-stone-100 rounded-full px-3 py-1.5 mt-2 shrink-0">
+          <span className="inline-block text-xs font-medium text-stone-700 bg-slate-100 rounded-full px-3 py-1.5 mt-2 shrink-0">
             {detail.raceCategory}
           </span>
         </div>
@@ -173,7 +173,7 @@ export default async function EditEventMetadataPage({
           upsertAction={upsertEventMetadata}
         />
 
-        <div className="mt-12 border-t border-stone-100 pt-10">
+        <div className="mt-12 border-t border-slate-100 pt-10">
           <h2 className="text-xl font-semibold text-stone-900 mb-1">
             Photos
           </h2>

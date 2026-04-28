@@ -17,7 +17,7 @@ export default async function SignInPage({
   if (user) redirect(next && next.startsWith('/') ? next : '/me');
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
       <section className="max-w-sm mx-auto px-8 pt-24 pb-24">

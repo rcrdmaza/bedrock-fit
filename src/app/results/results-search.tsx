@@ -97,7 +97,7 @@ export default function ResultsSearch({
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-3 mb-4">
-        <div className="flex items-stretch rounded-lg border border-stone-200 focus-within:ring-2 focus-within:ring-blue-500 overflow-hidden">
+        <div className="flex items-stretch rounded-lg border border-slate-200 focus-within:ring-2 focus-within:ring-blue-500 overflow-hidden">
           <label htmlFor="searchField" className="sr-only">
             Search by
           </label>
@@ -107,7 +107,7 @@ export default function ResultsSearch({
             onChange={(e) =>
               setSearchField(e.target.value as ResultSearchField)
             }
-            className="px-3 py-3 text-sm text-stone-700 bg-stone-50 border-r border-stone-200 focus:outline-none"
+            className="px-3 py-3 text-sm text-stone-700 bg-slate-50 border-r border-slate-200 focus:outline-none"
           >
             {RESULT_SEARCH_FIELDS.map((f) => (
               <option key={f} value={f}>
@@ -142,7 +142,7 @@ export default function ResultsSearch({
             // Independent from the primary "country" search field so a
             // deep link "name=Carlos + country=Peru" works without
             // burning the single primary slot.
-            className="px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+            className="px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -158,7 +158,7 @@ export default function ResultsSearch({
             // filter logic tolerates inverted ranges (returns []), but
             // nudging the picker prevents that state in practice.
             max={toDate || undefined}
-            className="px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -171,7 +171,7 @@ export default function ResultsSearch({
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
             min={fromDate || undefined}
-            className="px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         {hasFilters && (
@@ -218,7 +218,7 @@ export default function ResultsSearch({
               return (
                 <div
                   key={result.id}
-                  className="group border border-stone-100 rounded-2xl p-5 hover:border-stone-300 hover:shadow-sm transition-all"
+                  className="group border border-slate-100 rounded-2xl p-5 hover:border-slate-300 hover:shadow-sm transition-all"
                 >
                   {/* Clickable area → athlete profile. The claim form lives
                       outside this link so its inputs don't trigger nav. */}

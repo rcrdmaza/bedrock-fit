@@ -143,7 +143,7 @@ export default async function AdminPage() {
   const groups = groupPending(pending);
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
       {/* Admin-only secondary toolbar. Right-aligned under the site
@@ -153,7 +153,7 @@ export default async function AdminPage() {
           "you are here". */}
       <nav
         aria-label="Admin"
-        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-stone-100 bg-stone-50"
+        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-slate-100 bg-slate-50"
       >
         <span className="text-sm text-stone-900 font-medium">Claims</span>
         <Link
@@ -197,7 +197,7 @@ export default async function AdminPage() {
         </div>
 
         {groups.length === 0 ? (
-          <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-stone-200 rounded-2xl">
+          <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-slate-200 rounded-2xl">
             You&apos;re all caught up.
           </div>
         ) : (
@@ -216,7 +216,7 @@ function ClaimGroupCard({ group }: { group: ClaimGroup }) {
   const isBatch = group.rows.length > 1;
 
   return (
-    <div className="border border-stone-100 rounded-2xl p-5 hover:border-stone-300 transition-colors">
+    <div className="border border-slate-100 rounded-2xl p-5 hover:border-slate-300 transition-colors">
       {/* Header: athlete + submission meta */}
       <div className="flex items-start justify-between mb-3">
         <div>
@@ -253,7 +253,7 @@ function ClaimGroupCard({ group }: { group: ClaimGroup }) {
       </div>
 
       {/* Shared email + note — one per batch, not repeated per row */}
-      <div className="rounded-lg bg-stone-50 px-4 py-3 text-xs text-stone-700 mb-4 space-y-1">
+      <div className="rounded-lg bg-slate-50 px-4 py-3 text-xs text-stone-700 mb-4 space-y-1">
         <div>
           <span className="text-stone-400">Email: </span>
           <span className="font-medium">{group.email ?? '—'}</span>
@@ -271,9 +271,9 @@ function ClaimGroupCard({ group }: { group: ClaimGroup }) {
       </div>
 
       {/* Per-row mini-table — shows what's in the batch */}
-      <div className="border border-stone-100 rounded-xl overflow-hidden mb-4">
+      <div className="border border-slate-100 rounded-xl overflow-hidden mb-4">
         <table className="w-full text-xs">
-          <thead className="bg-stone-50">
+          <thead className="bg-slate-50">
             <tr className="text-stone-500 text-left uppercase tracking-wide">
               <th className="px-3 py-2 font-medium">Event</th>
               <th className="px-3 py-2 font-medium">Category</th>
@@ -286,7 +286,7 @@ function ClaimGroupCard({ group }: { group: ClaimGroup }) {
           </thead>
           <tbody className="text-stone-700">
             {group.rows.map((r) => (
-              <tr key={r.id} className="border-t border-stone-100">
+              <tr key={r.id} className="border-t border-slate-100">
                 <td className="px-3 py-2">
                   <div className="text-stone-900">{r.eventName}</div>
                   <div className="text-[11px] text-stone-400">

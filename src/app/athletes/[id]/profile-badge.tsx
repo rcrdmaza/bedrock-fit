@@ -56,7 +56,7 @@ export default function ProfileBadge({ name, tier, avatarUrl }: Props) {
       <div className="flex flex-col items-center gap-3">
         <div
           aria-hidden="true"
-          className="overflow-hidden flex items-center justify-center w-24 h-24 rounded-full ring-4 ring-stone-200"
+          className="overflow-hidden flex items-center justify-center w-24 h-24 rounded-full ring-4 ring-slate-200"
         >
           <AvatarBody name={name} avatarUrl={avatarUrl} />
         </div>

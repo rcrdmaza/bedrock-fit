@@ -122,7 +122,7 @@ export default async function DailyRunStats({ athleteId, preferredUnit }: Props)
     : '—';
 
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-6 mb-10 pb-10 border-b border-stone-100">
+    <div className="grid grid-cols-2 gap-x-4 gap-y-6 mb-10 pb-10 border-b border-slate-100">
       <div>
         <div className="text-xs text-stone-400 mb-1">{monthLabel(now)} mileage</div>
         <div className="text-2xl font-semibold text-stone-900">

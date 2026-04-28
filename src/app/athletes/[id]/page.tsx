@@ -154,8 +154,8 @@ export default async function AthleteProfilePage({
   // header and a tier-colored divider under the stats row. Every tier
   // class string is enumerated in tiers.ts so Tailwind's JIT picks
   // them up — see TIERS.theme.
-  const bannerBg = tier?.theme.bannerBg ?? 'bg-stone-50';
-  const dividerBorder = tier?.theme.divider ?? 'border-stone-100';
+  const bannerBg = tier?.theme.bannerBg ?? 'bg-slate-50';
+  const dividerBorder = tier?.theme.divider ?? 'border-slate-100';
 
   // Suggested claims. Only computed when this athlete has *no* results
   // on file yet — otherwise the race-history card is the right surface.
@@ -177,7 +177,7 @@ export default async function AthleteProfilePage({
       : [];
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
       {/* Tinted banner — fills the full width but the inner content
@@ -234,7 +234,7 @@ export default async function AthleteProfilePage({
             entirely (they shouldn't even know the profile is private —
             just that there's nothing to see). */}
         {athlete.isPrivate && isOwner ? (
-          <div className="mb-8 rounded-2xl border border-stone-200 bg-stone-50 px-5 py-3 flex items-center justify-between gap-3">
+          <div className="mb-8 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3 flex items-center justify-between gap-3">
             <p className="text-xs text-stone-600">
               <span className="font-medium text-stone-800">Private:</span>{' '}
               other users see your name redacted and the rest of this
@@ -255,7 +255,7 @@ export default async function AthleteProfilePage({
             badge + redacted name so the page doesn't look broken. */}
         {showRedacted ? (
           <div
-            className="rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50/60 px-6 py-12 text-center"
+            className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-6 py-12 text-center"
             aria-label="Private profile — content hidden"
           >
             <p className="text-sm font-medium text-stone-800 mb-1">

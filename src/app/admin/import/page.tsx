@@ -14,12 +14,12 @@ export default async function AdminImportPage() {
   const ctx = await requireOrgOrAdmin();
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
       <nav
         aria-label="Admin"
-        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-stone-100 bg-stone-50"
+        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-slate-100 bg-slate-50"
       >
         <Link
           href="/admin"

@@ -46,7 +46,7 @@ export default async function SiteHeader() {
   return (
     <nav
       aria-label="Primary"
-      className="grid grid-cols-3 items-center px-8 py-5 border-b border-stone-200 bg-stone-50"
+      className="grid grid-cols-3 items-center px-8 py-5 border-b border-slate-200 bg-slate-50"
     >
       <Link
         href="/"
@@ -93,11 +93,11 @@ export default async function SiteHeader() {
         <div className="justify-self-end flex items-center gap-3">
           <Link
             href="/me"
-            className="group inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white pl-1 pr-3 py-1 text-sm text-stone-700 hover:border-stone-300 hover:text-stone-900 transition-colors"
+            className="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white pl-1 pr-3 py-1 text-sm text-stone-700 hover:border-slate-300 hover:text-stone-900 transition-colors"
             title={user.email}
             aria-label="Open my profile"
           >
-            <span className="overflow-hidden rounded-full w-7 h-7 flex items-center justify-center ring-1 ring-stone-200 group-hover:ring-stone-300 transition-colors">
+            <span className="overflow-hidden rounded-full w-7 h-7 flex items-center justify-center ring-1 ring-slate-200 group-hover:ring-slate-300 transition-colors">
               {athlete?.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img

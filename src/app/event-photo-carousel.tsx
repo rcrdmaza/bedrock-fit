@@ -57,7 +57,7 @@ export default function EventPhotoCarousel({
         </span>
       </div>
 
-      <div className="relative rounded-2xl overflow-hidden border border-stone-100 bg-stone-50">
+      <div className="relative rounded-2xl overflow-hidden border border-slate-100 bg-slate-50">
         <Link href={eventHref(current)} className="block group">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

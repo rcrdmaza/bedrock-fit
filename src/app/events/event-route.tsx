@@ -24,7 +24,7 @@ export default function EventRoute({ metadata }: { metadata: EventMetadata }) {
   return (
     <div className="space-y-6">
       {hasImage ? (
-        <div className="rounded-2xl overflow-hidden border border-stone-100 bg-stone-50">
+        <div className="rounded-2xl overflow-hidden border border-slate-100 bg-slate-50">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={metadata.routeImageUrl!}
