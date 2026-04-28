@@ -4,7 +4,13 @@
 // photo with preview + reorder + delete buttons. Each button is its
 // own <form> so the server action gets clean FormData with only the
 // inputs it needs.
+//
+// The add form takes either a file upload OR a pasted URL — file wins
+// when both are filled. The form is multipart because of the file
+// input; this is fine because the action's FormData reader already
+// handles multipart fields uniformly.
 
+import { EVENT_PHOTO_LIMITS } from '@/lib/event-photo';
 import type { EventPhoto } from '@/lib/events';
 
 interface Props {
@@ -28,16 +34,45 @@ export default function PhotosManager({
 }: Props) {
   return (
     <div className="space-y-6">
-      {/* Add form — URL required, caption optional. Submit clears the
-          form because the page re-renders after the server action's
-          redirect and the inputs' defaults are empty. */}
+      {/* Add form — file OR URL, caption optional. The form is
+          multipart so the file input streams as a real File rather
+          than a stringified path. Submit clears the form because
+          the page re-renders after the server action's redirect and
+          the inputs' defaults are empty. */}
       <form
         action={addAction}
+        encType="multipart/form-data"
         className="border border-slate-100 rounded-2xl p-5 space-y-3"
       >
         <input type="hidden" name="eventName" value={eventName} />
         <input type="hidden" name="eventDate" value={eventDate} />
         <input type="hidden" name="raceCategory" value={raceCategory} />
+        <div>
+          <label
+            htmlFor="photo"
+            className="block text-xs font-medium text-stone-500 uppercase tracking-wide mb-1.5"
+          >
+            Upload photo
+          </label>
+          <input
+            id="photo"
+            name="photo"
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            className="block w-full text-sm text-stone-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-stone-900 file:text-white hover:file:bg-stone-800 file:cursor-pointer"
+          />
+          <p className="text-[11px] text-stone-400 mt-1.5">
+            PNG, JPEG, WebP, or GIF up to {EVENT_PHOTO_LIMITS.maxMb} MB.
+          </p>
+        </div>
+        {/* The OR rule keeps the two paths visually distinct so an
+            admin doesn't fill both and then wonder which won
+            (the file does — see action). */}
+        <div className="flex items-center gap-3 text-xs text-stone-400">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span>or paste a URL</span>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
         <div>
           <label
             htmlFor="url"
@@ -49,7 +84,6 @@ export default function PhotosManager({
             id="url"
             name="url"
             type="url"
-            required
             placeholder="https://…/photo.jpg"
             className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-stone-900 focus:outline-none"
             maxLength={2000}

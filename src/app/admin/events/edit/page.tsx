@@ -210,6 +210,26 @@ function readFlash(
   if (params.photoMoved === '1')
     return { tone: 'ok', message: 'Photo moved.' };
   if (params.photoError === 'missingUrl')
+    // Legacy code path — kept so a stale form post that still uses
+    // the old query name renders a coherent message rather than
+    // falling through to a silent no-op.
     return { tone: 'warn', message: 'Photo URL is required.' };
+  if (params.photoError === 'missingPhoto')
+    return {
+      tone: 'warn',
+      message: 'Choose a file to upload or paste a photo URL.',
+    };
+  if (params.photoError === 'fileTooLarge')
+    return {
+      tone: 'warn',
+      message: 'That image is too large. Use one under 2 MB.',
+    };
+  if (params.photoError === 'fileWrongType')
+    return {
+      tone: 'warn',
+      message: 'Image must be a PNG, JPEG, WebP, or GIF.',
+    };
+  if (params.photoError === 'fileEmpty')
+    return { tone: 'warn', message: 'The selected file was empty.' };
   return null;
 }

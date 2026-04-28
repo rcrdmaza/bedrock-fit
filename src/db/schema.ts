@@ -209,8 +209,12 @@ export const eventMetadata = pgTable(
 );
 
 // Photos attached to an event, rendered as a gallery on the event's
-// Photos tab. URLs only — no uploads. Admin pastes links to images
-// hosted elsewhere (Cloudinary, S3, the race's site…).
+// Photos tab. The `url` column accepts either an `https://…` link to
+// an externally-hosted image OR a `data:image/...;base64,…` URL we
+// generate at upload time (see lib/event-photo.ts). The schema is
+// indifferent to which, so the column type stays plain TEXT; admins
+// can mix-and-match per photo. When/if we move to object storage,
+// this column flips back to short URLs without a migration.
 export const eventPhotos = pgTable('event_photos', {
   id: uuid('id').defaultRandom().primaryKey(),
   // Cascade delete — orphan photo rows are never what we want.

@@ -16,6 +16,7 @@ import {
   requireOrgOrAdmin,
   type AdminOrOrg,
 } from '@/lib/org';
+import { validateEventPhotoFile } from '@/lib/event-photo';
 
 // Reasonable upper bounds so a stray paste or an attacker poking the
 // form can't dump unbounded text into the DB. Summary is generous
@@ -261,11 +262,37 @@ export async function addEventPhoto(formData: FormData): Promise<void> {
   const ctx = await requireOrgOrAdmin();
   const key = readEventKey(formData);
   if (!key) return;
-  const url = str(formData, 'url', LIMITS.url);
+
+  // Two routes into the `url` we'll persist:
+  //   1. A real File upload — we validate + base64-encode it into a
+  //      data URL. This is the new path that powers "drag a photo in".
+  //   2. A pasted URL — same as before, the legacy path. Kept so the
+  //      admin can still link to a Cloudinary/CDN image without
+  //      pulling the bytes through our server.
+  // If both are supplied, the file wins because the user explicitly
+  // chose to upload — pasting plus dragging usually means they
+  // changed their mind mid-form and the file is the latest intent.
+  const photoRaw = formData.get('photo');
+  const photoFile =
+    photoRaw instanceof File && photoRaw.size > 0 ? photoRaw : null;
+
+  let url: string | null = null;
+  if (photoFile) {
+    const result = await validateEventPhotoFile(photoFile);
+    if (!result.ok) {
+      // The validator returns a stable error code; we round-trip it
+      // through the URL so /admin/events/edit can render a useful
+      // banner instead of a generic failure.
+      redirect(`${editHref(key)}&photoError=${result.error}`);
+    }
+    url = result.dataUrl;
+  } else {
+    url = str(formData, 'url', LIMITS.url);
+  }
+
   if (!url) {
-    // No URL → nothing to add. The form's required attribute should
-    // catch this client-side, but we still guard server-side.
-    redirect(`${editHref(key)}&photoError=missingUrl`);
+    // Neither a file nor a URL — nothing to add.
+    redirect(`${editHref(key)}&photoError=missingPhoto`);
   }
   const caption = str(formData, 'caption', LIMITS.caption);
 
