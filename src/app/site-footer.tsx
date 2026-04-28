@@ -1,12 +1,14 @@
 import Link from 'next/link';
+import CookiePrefsLink from './cookie-prefs-link';
 
 // Site-wide footer rendered by the root layout. Five link groups laid
 // out as columns on desktop (md+) and stacked on mobile. The hrefs are
 // placeholders for routes that don't exist yet — kept as `#` so they
 // won't 404 when clicked. Wire them up as the real pages ship.
 //
-// Server component on purpose: no interactivity, no client JS. The
-// only state-aware element on chrome is the header's sign-in slot.
+// Server component on purpose: the only client-island here is the
+// "Cookie preferences" link, which dispatches a custom event to
+// re-open the consent banner.
 
 interface FooterLink {
   label: string;
@@ -61,7 +63,7 @@ const groups: FooterGroup[] = [
       { label: 'Sign in', href: '/auth/sign-in' },
       { label: 'Create account', href: '/auth/sign-in' },
       { label: 'Your profile', href: '/me' },
-      { label: 'Privacy', href: '#' },
+      { label: 'Privacy', href: '/privacy' },
     ],
   },
 ];
@@ -92,6 +94,15 @@ export default function SiteFooter() {
                     </Link>
                   </li>
                 ))}
+                {/* The "Cookie preferences" link is a tiny client island
+                    that re-opens the consent banner. We anchor it under
+                    "Sign in" since that's where Privacy lives — keeps
+                    all the policy/preferences affordances in one column. */}
+                {group.title === 'Sign in' ? (
+                  <li>
+                    <CookiePrefsLink className="text-sm text-stone-500 hover:text-stone-900 transition-colors cursor-pointer" />
+                  </li>
+                ) : null}
               </ul>
             </div>
           ))}
