@@ -103,7 +103,8 @@ export default async function ResultsPage({
         </h1>
         <p className="text-stone-500 text-sm mb-8">
           Switch between individual results and the events they belong to.
-          Filter by name, bib, event, country, or date range — newest first.
+          Filter by name, bib, event, country, distance, or date range —
+          and click any column header to sort.
         </p>
 
         <ResultsBrowser

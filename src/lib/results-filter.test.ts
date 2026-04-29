@@ -224,3 +224,75 @@ describe('filterResults — date range', () => {
     expect(result.map((r) => r.id)).toEqual(['r1']);
   });
 });
+
+describe('filterResults — distance filter', () => {
+  it('passes through when distances is empty/undefined', () => {
+    const noKey = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+    });
+    const empty = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      distances: [],
+    });
+    expect(noKey.length).toBe(ROWS.length);
+    expect(empty.length).toBe(ROWS.length);
+  });
+
+  it('keeps only rows whose raceCategory is in the allow-list', () => {
+    const result = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      distances: ['21K'],
+    });
+    expect(result.map((r) => r.id)).toEqual(['r3']);
+  });
+
+  it('matches multiple distances with OR semantics inside the list', () => {
+    const result = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      distances: ['42K', '21K'],
+    });
+    // r1, r2, r5 are the seeded "Lima Marathon" rows (42K) plus r3
+    // (21K). r4 is the Berlin Half but its raceCategory is still
+    // '42K' from baseRow — the test fixture didn't override that —
+    // so it survives too. We assert containment, not strict order.
+    expect(result.map((r) => r.id).sort()).toEqual(
+      ['r1', 'r2', 'r3', 'r4', 'r5'].sort(),
+    );
+  });
+
+  it('drops rows with a null raceCategory when a distance filter is active', () => {
+    const withNull = [...ROWS, row({ id: 'rn', raceCategory: null })];
+    const result = filterResults(withNull, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      distances: ['42K'],
+    });
+    expect(result.find((r) => r.id === 'rn')).toBeUndefined();
+  });
+
+  it('ANDs with the existing primary search', () => {
+    const result = filterResults(ROWS, {
+      searchField: 'name',
+      query: 'carlos',
+      fromDate: '',
+      toDate: '',
+      distances: ['42K'],
+    });
+    // r1, r2, r5 are all "Carlos" + 42K; r3 is Maria.
+    expect(result.map((r) => r.id).sort()).toEqual(['r1', 'r2', 'r5']);
+  });
+});

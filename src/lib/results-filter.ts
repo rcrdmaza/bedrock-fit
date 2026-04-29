@@ -54,6 +54,12 @@ export interface ResultsFilter {
   // and the user combine "name = X + country = Peru" without
   // exhausting the single primary-field slot above.
   country?: string;
+  // Optional set of canonical race categories to keep. Empty / missing
+  // means "any distance". Set membership is exact-match against
+  // raceCategory; rows whose category isn't in the list (including
+  // those with a null category) are dropped. UI uses chips that toggle
+  // entries in/out of this set.
+  distances?: string[];
 }
 
 // Return the field we test `query` against for a given row. Isolating
@@ -91,8 +97,21 @@ export function filterResults(
   const toMs = filter.toDate
     ? Date.parse(`${filter.toDate}T00:00:00Z`) + 24 * 3600 * 1000 - 1
     : null;
+  // Materialize the distance allow-list as a Set for O(1) membership.
+  // Null / empty means no distance filter — skip the check entirely.
+  const distanceSet =
+    filter.distances && filter.distances.length > 0
+      ? new Set(filter.distances)
+      : null;
 
-  if (!q && !country && fromMs == null && toMs == null) return rows;
+  if (
+    !q &&
+    !country &&
+    fromMs == null &&
+    toMs == null &&
+    distanceSet == null
+  )
+    return rows;
 
   return rows.filter((row) => {
     if (q) {
@@ -104,6 +123,14 @@ export function filterResults(
       // non-empty country query (drop the row rather than swallow it).
       const ec = row.eventCountry?.toLowerCase() ?? '';
       if (!ec.includes(country)) return false;
+    }
+    if (distanceSet) {
+      // raceCategory is the row's stored canonical category. Rows with
+      // null/unknown categories are dropped when a distance filter is
+      // active — the user explicitly asked for "these distances" and
+      // "missing" isn't one of them.
+      if (row.raceCategory == null) return false;
+      if (!distanceSet.has(row.raceCategory)) return false;
     }
     if (fromMs != null || toMs != null) {
       const t = Date.parse(row.eventDate);
