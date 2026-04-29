@@ -3,9 +3,8 @@ import { and, desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { athletes, eventMetadata, results } from '@/db/schema';
 import { requireOrgOrAdmin, type AdminOrOrg } from '@/lib/org';
-import SiteHeader from '@/app/site-header';
+import AdminHeader from '@/app/admin/admin-header';
 import {
-  adminLogout,
   approveClaims,
   rejectClaims,
 } from '@/app/actions/admin';
@@ -144,45 +143,7 @@ export default async function AdminPage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <SiteHeader />
-
-      {/* Admin-only secondary toolbar. Right-aligned under the site
-          header so the admin can jump between the three admin views
-          (Claims / Events / Import) without scrolling back to a menu.
-          The current page's link is rendered in darker text to mark
-          "you are here". */}
-      <nav
-        aria-label="Admin"
-        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-slate-100 bg-slate-50"
-      >
-        <span className="text-sm text-stone-900 font-medium">Claims</span>
-        <Link
-          href="/admin/events"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Events
-        </Link>
-        <Link
-          href="/admin/import"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Import results
-        </Link>
-        <Link
-          href="/admin/org"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Org
-        </Link>
-        <form action={adminLogout}>
-          <button
-            type="submit"
-            className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-          >
-            Sign out
-          </button>
-        </form>
-      </nav>
+      <AdminHeader active="claims" />
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
         <div className="mb-10">

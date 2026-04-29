@@ -1,7 +1,5 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import SiteHeader from '@/app/site-header';
-import { adminLogout } from '@/app/actions/admin';
+import AdminHeader from '@/app/admin/admin-header';
 import { removeMember } from '@/app/actions/org';
 import { listOrgMembers, requireOrgOrAdmin } from '@/lib/org';
 import InviteForm from './invite-form';
@@ -38,8 +36,7 @@ export default async function AdminOrgPage({ searchParams }: PageProps) {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <SiteHeader />
-      <AdminSubnav />
+      <AdminHeader active="org" />
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24 space-y-12">
         <header>
@@ -168,46 +165,6 @@ function InviteFlash({ status }: { status?: string }) {
     <div className={`rounded-2xl border px-4 py-3 text-sm ${cfg.color}`}>
       {cfg.text}
     </div>
-  );
-}
-
-// Same shape as the other admin pages' subnav — keep it consistent
-// so users can flip between Claims / Events / Import / Org without
-// hunting.
-function AdminSubnav() {
-  return (
-    <nav
-      aria-label="Admin"
-      className="flex items-center justify-end gap-5 px-8 py-3 border-b border-slate-100 bg-slate-50"
-    >
-      <Link
-        href="/admin"
-        className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-      >
-        Claims
-      </Link>
-      <Link
-        href="/admin/events"
-        className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-      >
-        Events
-      </Link>
-      <Link
-        href="/admin/import"
-        className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-      >
-        Import results
-      </Link>
-      <span className="text-sm text-stone-900 font-medium">Org</span>
-      <form action={adminLogout}>
-        <button
-          type="submit"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Sign out
-        </button>
-      </form>
-    </nav>
   );
 }
 

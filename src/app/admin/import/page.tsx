@@ -1,6 +1,4 @@
-import Link from 'next/link';
-import SiteHeader from '@/app/site-header';
-import { adminLogout } from '@/app/actions/admin';
+import AdminHeader from '@/app/admin/admin-header';
 import { requireOrgOrAdmin } from '@/lib/org';
 import ImportForm from './import-form';
 
@@ -15,40 +13,7 @@ export default async function AdminImportPage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <SiteHeader />
-
-      <nav
-        aria-label="Admin"
-        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-slate-100 bg-slate-50"
-      >
-        <Link
-          href="/admin"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Claims
-        </Link>
-        <Link
-          href="/admin/events"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Events
-        </Link>
-        <span className="text-sm text-stone-900 font-medium">Import results</span>
-        <Link
-          href="/admin/org"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Org
-        </Link>
-        <form action={adminLogout}>
-          <button
-            type="submit"
-            className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-          >
-            Sign out
-          </button>
-        </form>
-      </nav>
+      <AdminHeader active="import" />
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
         <div className="mb-10">

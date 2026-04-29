@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import SiteHeader from '@/app/site-header';
-import { adminLogout } from '@/app/actions/admin';
+import AdminHeader from '@/app/admin/admin-header';
 import { getEventDetail, getEventMetadata } from '@/lib/events';
 import {
   addEventPhoto,
@@ -84,45 +83,8 @@ export default async function EditEventMetadataPage({
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <SiteHeader />
-
-      <nav
-        aria-label="Admin"
-        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-slate-100 bg-slate-50"
-      >
-        <Link
-          href="/admin"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Claims
-        </Link>
-        <Link
-          href="/admin/events"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Events
-        </Link>
-        <Link
-          href="/admin/import"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Import results
-        </Link>
-        <Link
-          href="/admin/org"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Org
-        </Link>
-        <form action={adminLogout}>
-          <button
-            type="submit"
-            className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-          >
-            Sign out
-          </button>
-        </form>
-      </nav>
+      {/* Edit lives under /admin/events/* — keep that nav slot lit. */}
+      <AdminHeader active="events" />
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
         <Link

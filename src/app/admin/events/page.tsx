@@ -2,8 +2,7 @@ import Link from 'next/link';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { eventMetadata, eventPhotos } from '@/db/schema';
-import SiteHeader from '@/app/site-header';
-import { adminLogout } from '@/app/actions/admin';
+import AdminHeader from '@/app/admin/admin-header';
 import { getEventSummaries } from '@/lib/events';
 import { requireOrgOrAdmin, type AdminOrOrg } from '@/lib/org';
 
@@ -116,40 +115,7 @@ export default async function AdminEventsPage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <SiteHeader />
-
-      <nav
-        aria-label="Admin"
-        className="flex items-center justify-end gap-5 px-8 py-3 border-b border-slate-100 bg-slate-50"
-      >
-        <Link
-          href="/admin"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Claims
-        </Link>
-        <span className="text-sm text-stone-900 font-medium">Events</span>
-        <Link
-          href="/admin/import"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Import results
-        </Link>
-        <Link
-          href="/admin/org"
-          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-        >
-          Org
-        </Link>
-        <form action={adminLogout}>
-          <button
-            type="submit"
-            className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-          >
-            Sign out
-          </button>
-        </form>
-      </nav>
+      <AdminHeader active="events" />
 
       <section className="max-w-4xl mx-auto px-8 pt-16 pb-24">
         <div className="mb-10">
