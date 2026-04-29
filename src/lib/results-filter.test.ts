@@ -296,3 +296,125 @@ describe('filterResults — distance filter', () => {
     expect(result.map((r) => r.id).sort()).toEqual(['r1', 'r2', 'r5']);
   });
 });
+
+describe('filterResults — per-column text filters', () => {
+  it('nameFilter narrows by athlete name (case-insensitive)', () => {
+    const result = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      nameFilter: 'maria',
+    });
+    expect(result.map((r) => r.id)).toEqual(['r3']);
+  });
+
+  it('bibFilter narrows by bib value', () => {
+    // All ROWS share bib 1042 (baseRow); a substring of "10" matches
+    // every row, "999" matches none.
+    const all = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      bibFilter: '10',
+    });
+    expect(all.length).toBe(ROWS.length);
+    const none = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      bibFilter: '999',
+    });
+    expect(none).toEqual([]);
+  });
+
+  it('eventFilter narrows by event name', () => {
+    const result = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      eventFilter: 'cusco',
+    });
+    expect(result.map((r) => r.id)).toEqual(['r3']);
+  });
+
+  it('AND-stacks per-column filters with each other and with country', () => {
+    // Carlos in Peru in the Lima Marathon — only r1.
+    const result = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      nameFilter: 'carlos',
+      eventFilter: 'lima',
+      country: 'Peru',
+    });
+    expect(result.map((r) => r.id)).toEqual(['r1']);
+  });
+
+  it('treats whitespace-only column filters as empty', () => {
+    const result = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      nameFilter: '   ',
+      eventFilter: '   ',
+      bibFilter: '   ',
+    });
+    expect(result).toBe(ROWS);
+  });
+});
+
+describe('filterResults — year range', () => {
+  it('applies an inclusive lower bound', () => {
+    const result = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      fromYear: 2025,
+    });
+    // r5 is 2024-10 — excluded.
+    expect(result.map((r) => r.id).sort()).toEqual(['r1', 'r2', 'r3', 'r4']);
+  });
+
+  it('applies an inclusive upper bound', () => {
+    const result = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      toYear: 2024,
+    });
+    // r1..r4 are 2025-04 — excluded; only r5 (2024-10) survives.
+    expect(result.map((r) => r.id)).toEqual(['r5']);
+  });
+
+  it('combines lower + upper bounds inclusively', () => {
+    const result = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      fromYear: 2024,
+      toYear: 2024,
+    });
+    expect(result.map((r) => r.id)).toEqual(['r5']);
+  });
+
+  it('treats NaN bounds as open-ended (UI sends NaN for empty inputs)', () => {
+    const result = filterResults(ROWS, {
+      searchField: 'name',
+      query: '',
+      fromDate: '',
+      toDate: '',
+      fromYear: Number.NaN,
+      toYear: Number.NaN,
+    });
+    expect(result).toBe(ROWS);
+  });
+});

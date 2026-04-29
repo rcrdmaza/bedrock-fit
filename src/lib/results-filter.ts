@@ -39,27 +39,42 @@ export const RESULT_SEARCH_FIELDS = [
 export type ResultSearchField = (typeof RESULT_SEARCH_FIELDS)[number];
 
 export interface ResultsFilter {
-  // Which column the `query` string targets. Always required — the UI
-  // defaults to "name" so the search box has a meaningful placeholder.
+  // Legacy single-field path — kept so deep links from athlete profiles
+  // ("?q=Carlos&field=name&country=Peru") and the existing test surface
+  // stay working. The new column-header dropdowns populate the
+  // per-column fields below instead, but everything ANDs together so
+  // mixing legacy + new is harmless.
   searchField: ResultSearchField;
   query: string;
   // ISO YYYY-MM-DD (the native shape of <input type="date">). Either
   // bound may be empty to mean "open-ended". Inclusive on both ends.
+  // Held for back-compat alongside the new fromYear/toYear fields,
+  // which are what the Year column header dropdown writes to.
   fromDate: string;
   toDate: string;
   // Optional case-insensitive substring constraint applied to the
-  // result's eventCountry, ANDed with whatever the primary search
-  // field already filtered. Empty / undefined means "any country".
-  // Lets the profile page deep-link "search my name in my country"
-  // and the user combine "name = X + country = Peru" without
-  // exhausting the single primary-field slot above.
+  // result's eventCountry. Doubles as the Country column header's
+  // text filter — the field name predates the per-column UI but the
+  // semantics are identical.
   country?: string;
   // Optional set of canonical race categories to keep. Empty / missing
   // means "any distance". Set membership is exact-match against
   // raceCategory; rows whose category isn't in the list (including
-  // those with a null category) are dropped. UI uses chips that toggle
-  // entries in/out of this set.
+  // those with a null category) are dropped.
   distances?: string[];
+  // --- per-column text filters (new, written by the column-header
+  // dropdowns). Each is a case-insensitive substring match on the
+  // column it names. All AND together with the legacy single-field
+  // path, so a deep link can seed `searchField='name' + query='Carlos'`
+  // and the user can layer an extra Event filter on top without the
+  // two paths cancelling each other. ---
+  nameFilter?: string;
+  bibFilter?: string;
+  eventFilter?: string;
+  // --- year range, written by the Year column dropdown. Inclusive on
+  // both ends. Either bound may be omitted to mean "open-ended". ---
+  fromYear?: number;
+  toYear?: number;
 }
 
 // Return the field we test `query` against for a given row. Isolating
@@ -103,13 +118,34 @@ export function filterResults(
     filter.distances && filter.distances.length > 0
       ? new Set(filter.distances)
       : null;
+  // Per-column text filters from the column-header dropdowns. Lowercase
+  // once so the row loop only does string includes. Empty / missing
+  // strings short-circuit so an unset filter is free.
+  const nameQ = filter.nameFilter?.trim().toLowerCase() ?? '';
+  const bibQ = filter.bibFilter?.trim().toLowerCase() ?? '';
+  const eventQ = filter.eventFilter?.trim().toLowerCase() ?? '';
+  // Year range. We accept undefined / non-finite as "open" — the UI
+  // sends NaN when an input is empty, and Number(undefined) is NaN.
+  const fromYear =
+    typeof filter.fromYear === 'number' && Number.isFinite(filter.fromYear)
+      ? filter.fromYear
+      : null;
+  const toYear =
+    typeof filter.toYear === 'number' && Number.isFinite(filter.toYear)
+      ? filter.toYear
+      : null;
 
   if (
     !q &&
     !country &&
     fromMs == null &&
     toMs == null &&
-    distanceSet == null
+    distanceSet == null &&
+    !nameQ &&
+    !bibQ &&
+    !eventQ &&
+    fromYear == null &&
+    toYear == null
   )
     return rows;
 
@@ -118,6 +154,9 @@ export function filterResults(
       const hay = searchHaystack(row, filter.searchField).toLowerCase();
       if (!hay.includes(q)) return false;
     }
+    if (nameQ && !row.athleteName.toLowerCase().includes(nameQ)) return false;
+    if (bibQ && !(row.bib ?? '').toLowerCase().includes(bibQ)) return false;
+    if (eventQ && !row.eventName.toLowerCase().includes(eventQ)) return false;
     if (country) {
       // Country sub-filter — null/empty eventCountry never matches a
       // non-empty country query (drop the row rather than swallow it).
@@ -137,6 +176,15 @@ export function filterResults(
       if (!Number.isFinite(t)) return false;
       if (fromMs != null && t < fromMs) return false;
       if (toMs != null && t > toMs) return false;
+    }
+    if (fromYear != null || toYear != null) {
+      // Year range uses the row's eventDate parsed as UTC year, so it
+      // matches what the table renders in the Year column.
+      const t = Date.parse(row.eventDate);
+      if (!Number.isFinite(t)) return false;
+      const y = new Date(t).getUTCFullYear();
+      if (fromYear != null && y < fromYear) return false;
+      if (toYear != null && y > toYear) return false;
     }
     return true;
   });

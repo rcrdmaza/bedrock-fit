@@ -86,7 +86,12 @@ export default async function ResultsPage({
     <main className="min-h-screen bg-slate-50">
       <SiteHeader />
 
-      <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
+      {/* max-w-7xl gives the 8-column table room to breathe and stops
+          the Year column from getting clipped on a 1280px viewport.
+          Narrow content (the page heading, flash banner) still feels
+          centered because everything below uses max-w-* of its own
+          choosing. */}
+      <section className="max-w-7xl mx-auto px-8 pt-16 pb-24">
         {flash && (
           <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
             Imported {flash.imported} result
@@ -103,8 +108,7 @@ export default async function ResultsPage({
         </h1>
         <p className="text-stone-500 text-sm mb-8">
           Switch between individual results and the events they belong to.
-          Filter by name, bib, event, country, distance, or date range —
-          and click any column header to sort.
+          Click any column header to sort or filter that column.
         </p>
 
         <ResultsBrowser

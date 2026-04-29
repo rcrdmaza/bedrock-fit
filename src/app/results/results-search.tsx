@@ -1,24 +1,32 @@
 'use client';
 
-// Sortable, filterable table view of every result on /results. Replaces
-// the previous card grid because the user-facing spec for this page now
-// asks for seven scannable columns (name, distance, pace, total time,
-// event, country, year) plus explicit sort controls — a table is the
-// shape that fits.
+// Sortable, filterable table view of every result on /results. Filter +
+// sort controls live in column-header dropdowns rather than a separate
+// toolbar — clicking a column header opens a popover with sort buttons
+// and (where it makes sense) a column-specific filter widget. A small
+// blue dot next to the column label signals "this column is filtering
+// the row set" so users can spot active filters at a glance.
 //
-// The claim flow survived the rewrite: the row's last column carries
-// either a status pill (claimed / pending) or a "Claim" button that
-// expands an inline ClaimForm in a colspan'd row beneath. Clicking the
-// athlete name takes you to their profile. Clicking the column header
-// toggles sort direction; clicking a different header switches sort
-// field and picks that field's natural default direction.
+// Columns:
+//   Name      sort + text filter
+//   Distance  sort + chip multi-select
+//   Pace /km  sort only
+//   Total     sort only
+//   Event     sort + text filter
+//   Country   sort + text filter
+//   Year      sort + integer year-range filter
+//
+// The claim flow survived the rewrite: each unclaimed row carries a
+// "Claim" button that expands an inline ClaimForm in a colSpan'd row
+// beneath the result. Existing deep links (?q=&field=&country=) seed
+// the matching column-filter on first render so the "claim your races"
+// CTA on athlete profiles still works.
 
 import Link from 'next/link';
 import { Fragment, useMemo, useState } from 'react';
 import { distanceKm, formatPace } from '@/lib/race';
 import {
   filterResults,
-  RESULT_SEARCH_FIELDS,
   type ResultRow,
   type ResultSearchField,
 } from '@/lib/results-filter';
@@ -30,25 +38,13 @@ import {
   type ResultsSort,
 } from '@/lib/results-sort';
 import { ClaimForm, statusClasses, statusLabel } from './claim-form';
+import ColumnMenu from './column-menu';
 
 export type { ResultRow };
 
-// Display metadata for each search field. Keeping label + placeholder
-// adjacent to the field key makes the <select> / <input> wiring obvious
-// and gives tests one obvious place to update if the UI copy changes.
-const SEARCH_FIELD_META: Record<
-  ResultSearchField,
-  { label: string; placeholder: string; inputMode?: 'numeric' | 'text' }
-> = {
-  name: { label: 'Name', placeholder: 'e.g. Carlos Mendez' },
-  bib: { label: 'BIB', placeholder: 'e.g. 1042', inputMode: 'numeric' },
-  event: { label: 'Event', placeholder: 'e.g. Lima Marathon' },
-  country: { label: 'Country', placeholder: 'e.g. Peru' },
-};
-
 // Distance filter chips. Ordered shortest → longest so the UI reads
-// the way runners think about distances; wired straight to the
-// filter's `distances` field as exact-match raceCategory strings.
+// the way runners think about distances; values are exact-match
+// raceCategory strings.
 const DISTANCE_CHIPS: { id: string; label: string }[] = [
   { id: '5K', label: '5K' },
   { id: '10K', label: '10K' },
@@ -56,33 +52,38 @@ const DISTANCE_CHIPS: { id: string; label: string }[] = [
   { id: 'Marathon', label: 'Marathon' },
 ];
 
-// Per-column sort metadata. `defaultDirection` decides which way a
-// fresh click on the column header sorts: dates default newest-first,
-// times/pace default fastest-first, names/events alphabetical. A
-// second click on the same header flips direction.
-const COLUMN_DEFS: {
+// Per-column metadata: which sort field, default direction (matters for
+// the Asc/Desc buttons in the popover so the active state matches what
+// "ascending" means for that column), and visual alignment.
+interface ColumnDef {
   id: ResultSortField;
   label: string;
-  defaultDirection: 'asc' | 'desc';
   align?: 'left' | 'right';
-}[] = [
-  { id: 'name', label: 'Name', defaultDirection: 'asc' },
-  { id: 'distance', label: 'Distance', defaultDirection: 'asc' },
-  { id: 'pace', label: 'Pace /km', defaultDirection: 'asc', align: 'right' },
-  { id: 'time', label: 'Total time', defaultDirection: 'asc', align: 'right' },
-  { id: 'event', label: 'Event', defaultDirection: 'asc' },
-  { id: 'country', label: 'Country', defaultDirection: 'asc' },
-  { id: 'date', label: 'Year', defaultDirection: 'desc', align: 'right' },
+  // Header column min-width nudges the cells wider so the table looks
+  // intentional rather than crammed. We pick widths column-by-column
+  // because Name and Event need more room than Pace or Year.
+  minWidth: string;
+}
+
+const COLUMN_DEFS: ColumnDef[] = [
+  { id: 'name', label: 'Name', minWidth: '14rem' },
+  { id: 'distance', label: 'Distance', minWidth: '8rem' },
+  { id: 'pace', label: 'Pace /km', align: 'right', minWidth: '7rem' },
+  { id: 'time', label: 'Total time', align: 'right', minWidth: '7rem' },
+  { id: 'event', label: 'Event', minWidth: '14rem' },
+  { id: 'country', label: 'Country', minWidth: '8rem' },
+  { id: 'date', label: 'Year', align: 'right', minWidth: '5rem' },
 ];
 
-// Max results painted into the DOM at once. Beyond this we tell the
-// user to narrow the query rather than rendering 5k rows.
 const MAX_VISIBLE = 200;
 
 // Optional URL-sourced initial filter values. The /results page reads
 // `?q=`, `?field=`, and `?country=` from searchParams and forwards
 // them so deep links (notably the "claim your races" CTA on athlete
-// profiles with no claimed results) seed the form.
+// profiles with no claimed results) seed the form. We translate the
+// legacy single-field shape onto the matching column filter on first
+// render — the Name column dropdown shows the seeded query, the
+// Country column dropdown shows the seeded country, etc.
 export interface ResultsSearchInitial {
   searchField?: ResultSearchField;
   query?: string;
@@ -100,10 +101,6 @@ function formatTime(seconds: number | null): string {
 }
 
 function formatDistance(row: ResultRow): string {
-  // Prefer the canonical category as it's stored — admins import with
-  // a known label. Fall back to a "NK" parsed out of the name for
-  // trail/non-canonical events. If neither resolves, render an em-dash
-  // so the column never goes blank.
   if (row.raceCategory) return row.raceCategory;
   const km = distanceKm(row.raceCategory, row.eventName);
   if (km != null) return `${km} km`;
@@ -116,6 +113,33 @@ function formatYear(iso: string): string {
   return String(new Date(t).getUTCFullYear());
 }
 
+// Translate the legacy initial state (single text field + country) into
+// the column-filter slots that the new UI surfaces. The deep link only
+// supplies one of name/bib/event/country, so at most one of the text
+// filters seeds; country always seeds independently.
+function seedColumnFilters(initial?: ResultsSearchInitial): {
+  nameFilter: string;
+  bibFilter: string;
+  eventFilter: string;
+  countryFilter: string;
+} {
+  if (!initial) {
+    return { nameFilter: '', bibFilter: '', eventFilter: '', countryFilter: '' };
+  }
+  const q = initial.query ?? '';
+  const country = initial.country ?? '';
+  const field = initial.searchField ?? 'name';
+  return {
+    nameFilter: field === 'name' ? q : '',
+    bibFilter: field === 'bib' ? q : '',
+    eventFilter: field === 'event' ? q : '',
+    // The legacy `country` slot AND the searchField='country' slot
+    // both point at eventCountry. Prefer the dedicated `country` if
+    // both are set; otherwise fall back to the primary query.
+    countryFilter: country || (field === 'country' ? q : ''),
+  };
+}
+
 export default function ResultsSearch({
   rows,
   initial,
@@ -123,20 +147,21 @@ export default function ResultsSearch({
   rows: ResultRow[];
   initial?: ResultsSearchInitial;
 }) {
-  // --- filter state ---------------------------------------------------
-  const [searchField, setSearchField] = useState<ResultSearchField>(
-    initial?.searchField ?? 'name',
-  );
-  const [query, setQuery] = useState(initial?.query ?? '');
-  const [country, setCountry] = useState(initial?.country ?? '');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [distances, setDistances] = useState<string[]>([]);
+  const seeded = seedColumnFilters(initial);
 
-  // --- sort state -----------------------------------------------------
+  // --- per-column filter state --------------------------------------
+  const [nameFilter, setNameFilter] = useState(seeded.nameFilter);
+  const [bibFilter, setBibFilter] = useState(seeded.bibFilter);
+  const [eventFilter, setEventFilter] = useState(seeded.eventFilter);
+  const [countryFilter, setCountryFilter] = useState(seeded.countryFilter);
+  const [distances, setDistances] = useState<string[]>([]);
+  const [fromYear, setFromYear] = useState<string>('');
+  const [toYear, setToYear] = useState<string>('');
+
+  // --- sort state ----------------------------------------------------
   const [sort, setSort] = useState<ResultsSort>(DEFAULT_SORT);
 
-  // --- claim state (inline expand) ------------------------------------
+  // --- claim state (inline expand) ----------------------------------
   const [claimingId, setClaimingId] = useState<string | null>(null);
 
   // Filter then sort. Two memos so a sort-only change doesn't replay
@@ -144,25 +169,45 @@ export default function ResultsSearch({
   const filtered = useMemo(
     () =>
       filterResults(rows, {
-        searchField,
-        query,
-        fromDate,
-        toDate,
-        country,
+        // Legacy fields kept neutral — the dropdowns drive the
+        // per-column filters below instead.
+        searchField: 'name',
+        query: '',
+        fromDate: '',
+        toDate: '',
+        country: countryFilter,
         distances,
+        nameFilter,
+        bibFilter,
+        eventFilter,
+        // Number('') is 0, which would silently filter out every row.
+        // parseInt('', 10) gives NaN, which the filter treats as
+        // "open-ended". That's the intent here.
+        fromYear: fromYear === '' ? Number.NaN : Number(fromYear),
+        toYear: toYear === '' ? Number.NaN : Number(toYear),
       }),
-    [rows, searchField, query, fromDate, toDate, country, distances],
+    [
+      rows,
+      nameFilter,
+      bibFilter,
+      eventFilter,
+      countryFilter,
+      distances,
+      fromYear,
+      toYear,
+    ],
   );
   const sorted = useMemo(() => sortResults(filtered, sort), [filtered, sort]);
   const visible = sorted.slice(0, MAX_VISIBLE);
 
-  const meta = SEARCH_FIELD_META[searchField];
   const hasFilters = Boolean(
-    query.trim() ||
-      country.trim() ||
-      fromDate ||
-      toDate ||
-      distances.length > 0,
+    nameFilter.trim() ||
+      bibFilter.trim() ||
+      eventFilter.trim() ||
+      countryFilter.trim() ||
+      distances.length > 0 ||
+      fromYear ||
+      toYear,
   );
 
   function toggleDistance(id: string) {
@@ -171,129 +216,38 @@ export default function ResultsSearch({
     );
   }
 
-  function onHeaderClick(field: ResultSortField) {
-    setSort((prev) => {
-      if (prev.field === field) {
-        return { field, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
-      }
-      const def = COLUMN_DEFS.find((c) => c.id === field)!;
-      return { field, direction: def.defaultDirection };
-    });
+  function setSortFor(field: ResultSortField, direction: 'asc' | 'desc') {
+    setSort({ field, direction });
   }
 
   return (
     <>
-      {/* Primary search row — matches the field-selector + free text
-          shape from the previous design so users coming back find what
-          they expect. */}
-      <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-3 mb-4">
-        <div className="flex items-stretch rounded-lg border border-slate-200 focus-within:ring-2 focus-within:ring-blue-500 overflow-hidden">
-          <label htmlFor="searchField" className="sr-only">
-            Search by
-          </label>
-          <select
-            id="searchField"
-            value={searchField}
-            onChange={(e) =>
-              setSearchField(e.target.value as ResultSearchField)
-            }
-            className="px-3 py-3 text-sm text-stone-700 bg-slate-50 border-r border-slate-200 focus:outline-none"
-          >
-            {RESULT_SEARCH_FIELDS.map((f) => (
-              <option key={f} value={f}>
-                {SEARCH_FIELD_META[f].label}
-              </option>
-            ))}
-          </select>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            inputMode={meta.inputMode}
-            placeholder={meta.placeholder}
-            aria-label={`Search by ${meta.label}`}
-            className="flex-1 px-4 py-3 text-sm text-stone-900 placeholder-stone-400 focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Distance chips — toggle-style filter, ANDs with the rest. We
-          keep it on its own row above country/date because distance
-          is now a top-level column the user might want to slice on
-          first. */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        <span className="text-xs text-stone-500 mr-1">Distance</span>
-        {DISTANCE_CHIPS.map((c) => {
-          const active = distances.includes(c.id);
-          return (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => toggleDistance(c.id)}
-              aria-pressed={active}
-              className={`text-xs rounded-full px-3 py-1 border transition-colors ${
-                active
-                  ? 'bg-stone-900 text-white border-stone-900'
-                  : 'bg-white text-stone-700 border-slate-200 hover:border-slate-400'
-              }`}
-            >
-              {c.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3 mb-8">
-        <div className="flex items-center gap-2">
-          <label htmlFor="filterCountry" className="text-xs text-stone-500">
-            Country
-          </label>
-          <input
-            id="filterCountry"
-            type="text"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            placeholder="e.g. Peru"
-            className="px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <label htmlFor="fromDate" className="text-xs text-stone-500">
-            From
-          </label>
-          <input
-            id="fromDate"
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            max={toDate || undefined}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <label htmlFor="toDate" className="text-xs text-stone-500">
-            To
-          </label>
-          <input
-            id="toDate"
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            min={fromDate || undefined}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+      {/* Lightweight summary + reset row above the table. Everything
+          else (sort + filter) lives in the column headers now. */}
+      <div className="flex items-baseline justify-between gap-3 mb-3">
+        <p className="text-xs text-stone-400">
+          {rows.length === 0
+            ? null
+            : sorted.length === rows.length
+              ? `Showing all ${rows.length.toLocaleString()} result${rows.length !== 1 ? 's' : ''}.`
+              : `${sorted.length.toLocaleString()} of ${rows.length.toLocaleString()} match${sorted.length === 1 ? '' : 'es'}.`}
+          {sorted.length > MAX_VISIBLE
+            ? ` Showing the first ${MAX_VISIBLE} — narrow your filters to see more.`
+            : ''}
+        </p>
         {hasFilters && (
           <button
             type="button"
             onClick={() => {
-              setQuery('');
-              setCountry('');
-              setFromDate('');
-              setToDate('');
+              setNameFilter('');
+              setBibFilter('');
+              setEventFilter('');
+              setCountryFilter('');
               setDistances([]);
+              setFromYear('');
+              setToYear('');
             }}
-            className="text-xs text-stone-500 hover:text-stone-900 transition-colors ml-auto"
+            className="text-xs text-stone-500 hover:text-stone-900 transition-colors"
           >
             Clear filters
           </button>
@@ -314,164 +268,329 @@ export default function ResultsSearch({
           No results match your filters.
         </div>
       ) : (
-        <>
-          <p className="text-xs text-stone-400 mb-3">
-            {sorted.length === rows.length
-              ? `Showing all ${rows.length.toLocaleString()} result${rows.length !== 1 ? 's' : ''}.`
-              : `${sorted.length.toLocaleString()} of ${rows.length.toLocaleString()} match${sorted.length === 1 ? '' : 'es'}.`}
-            {sorted.length > MAX_VISIBLE
-              ? ` Showing the first ${MAX_VISIBLE} — narrow your search to see more.`
-              : ''}
-          </p>
-
-          {/* overflow-x-auto so the 8-column grid stays usable on
-              narrow viewports without us re-implementing a card stack
-              for mobile. */}
-          <div className="border border-slate-100 rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-stone-500">
-                  <tr>
-                    {COLUMN_DEFS.map((col) => (
-                      <SortableHeader
-                        key={col.id}
-                        col={col}
-                        sort={sort}
-                        onClick={() => onHeaderClick(col.id)}
-                      />
-                    ))}
-                    {/* Action column — not sortable, no label. */}
-                    <th
-                      scope="col"
-                      className="text-right font-medium px-4 py-3 whitespace-nowrap"
+        // overflow-visible on the wrapper so the column-header
+        // popovers can escape the rounded card border on narrow
+        // viewports. The inner div re-applies overflow-x-auto only
+        // for horizontal scrolling, not vertical.
+        <div className="border border-slate-100 rounded-2xl">
+          <div className="overflow-x-auto overflow-y-visible">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide">
+                <tr>
+                  <th
+                    scope="col"
+                    style={{ minWidth: COLUMN_DEFS[0].minWidth }}
+                    className="font-medium px-4 py-3"
+                  >
+                    <ColumnMenu
+                      label="Name"
+                      field="name"
+                      sort={sort}
+                      hasFilter={Boolean(
+                        nameFilter.trim() || bibFilter.trim(),
+                      )}
+                      onSortAsc={() => setSortFor('name', 'asc')}
+                      onSortDesc={() => setSortFor('name', 'desc')}
                     >
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((result) => {
-                    const claiming = claimingId === result.id;
-                    const canClaim = result.status === 'unclaimed';
-                    const pace = paceSecondsPerKm(result);
-                    return (
-                      <Fragment key={result.id}>
-                        <tr className="border-t border-slate-100 hover:bg-slate-50/60 transition-colors">
-                          <td className="px-4 py-3">
-                            <Link
-                              href={`/athletes/${result.athleteId}`}
-                              className="font-medium text-stone-900 hover:text-blue-600 transition-colors"
-                            >
-                              {result.athleteName}
-                            </Link>
-                            {result.bib ? (
-                              <div className="text-[11px] text-stone-400 mt-0.5">
-                                bib {result.bib}
-                              </div>
-                            ) : null}
-                          </td>
-                          <td className="px-4 py-3 text-stone-700 whitespace-nowrap">
-                            {formatDistance(result)}
-                          </td>
-                          <td className="px-4 py-3 text-right tabular-nums text-stone-700 whitespace-nowrap">
-                            {formatPace(pace)}
-                          </td>
-                          <td className="px-4 py-3 text-right tabular-nums font-medium text-stone-900 whitespace-nowrap">
-                            {formatTime(result.finishTime)}
-                          </td>
-                          <td className="px-4 py-3 text-stone-700">
-                            {result.eventName}
-                          </td>
-                          <td className="px-4 py-3 text-stone-700 whitespace-nowrap">
-                            {result.eventCountry ?? '—'}
-                          </td>
-                          <td className="px-4 py-3 text-right tabular-nums text-stone-700">
-                            {formatYear(result.eventDate)}
-                          </td>
-                          <td className="px-4 py-3 text-right whitespace-nowrap">
-                            {canClaim ? (
+                      <FilterTextInput
+                        id="filter-name"
+                        label="Name contains"
+                        value={nameFilter}
+                        onChange={setNameFilter}
+                        placeholder="Carlos"
+                      />
+                      <FilterTextInput
+                        id="filter-bib"
+                        label="Bib contains"
+                        value={bibFilter}
+                        onChange={setBibFilter}
+                        placeholder="1042"
+                        inputMode="numeric"
+                      />
+                    </ColumnMenu>
+                  </th>
+                  <th
+                    scope="col"
+                    style={{ minWidth: COLUMN_DEFS[1].minWidth }}
+                    className="font-medium px-4 py-3"
+                  >
+                    <ColumnMenu
+                      label="Distance"
+                      field="distance"
+                      sort={sort}
+                      hasFilter={distances.length > 0}
+                      onSortAsc={() => setSortFor('distance', 'asc')}
+                      onSortDesc={() => setSortFor('distance', 'desc')}
+                    >
+                      <fieldset className="space-y-1.5">
+                        <legend className="text-[11px] text-stone-500 mb-1">
+                          Show distances
+                        </legend>
+                        <div className="flex flex-wrap gap-1.5">
+                          {DISTANCE_CHIPS.map((c) => {
+                            const active = distances.includes(c.id);
+                            return (
                               <button
+                                key={c.id}
                                 type="button"
-                                onClick={() =>
-                                  setClaimingId(claiming ? null : result.id)
-                                }
-                                className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                                onClick={() => toggleDistance(c.id)}
+                                aria-pressed={active}
+                                className={`text-xs rounded-full px-3 py-1 border transition-colors ${
+                                  active
+                                    ? 'bg-stone-900 text-white border-stone-900'
+                                    : 'bg-white text-stone-700 border-slate-200 hover:border-slate-400'
+                                }`}
                               >
-                                {claiming ? 'Cancel' : 'Claim'}
+                                {c.label}
                               </button>
-                            ) : (
-                              <span
-                                className={`inline-block text-[11px] px-2 py-1 rounded-full font-medium ${statusClasses(result.status)}`}
-                              >
-                                {statusLabel(result.status)}
-                              </span>
-                            )}
+                            );
+                          })}
+                        </div>
+                      </fieldset>
+                    </ColumnMenu>
+                  </th>
+                  <th
+                    scope="col"
+                    style={{ minWidth: COLUMN_DEFS[2].minWidth }}
+                    className="font-medium px-4 py-3"
+                  >
+                    <ColumnMenu
+                      label="Pace /km"
+                      field="pace"
+                      sort={sort}
+                      align="right"
+                      onSortAsc={() => setSortFor('pace', 'asc')}
+                      onSortDesc={() => setSortFor('pace', 'desc')}
+                    />
+                  </th>
+                  <th
+                    scope="col"
+                    style={{ minWidth: COLUMN_DEFS[3].minWidth }}
+                    className="font-medium px-4 py-3"
+                  >
+                    <ColumnMenu
+                      label="Total time"
+                      field="time"
+                      sort={sort}
+                      align="right"
+                      onSortAsc={() => setSortFor('time', 'asc')}
+                      onSortDesc={() => setSortFor('time', 'desc')}
+                    />
+                  </th>
+                  <th
+                    scope="col"
+                    style={{ minWidth: COLUMN_DEFS[4].minWidth }}
+                    className="font-medium px-4 py-3"
+                  >
+                    <ColumnMenu
+                      label="Event"
+                      field="event"
+                      sort={sort}
+                      hasFilter={Boolean(eventFilter.trim())}
+                      onSortAsc={() => setSortFor('event', 'asc')}
+                      onSortDesc={() => setSortFor('event', 'desc')}
+                    >
+                      <FilterTextInput
+                        id="filter-event"
+                        label="Event contains"
+                        value={eventFilter}
+                        onChange={setEventFilter}
+                        placeholder="Lima Marathon"
+                      />
+                    </ColumnMenu>
+                  </th>
+                  <th
+                    scope="col"
+                    style={{ minWidth: COLUMN_DEFS[5].minWidth }}
+                    className="font-medium px-4 py-3"
+                  >
+                    <ColumnMenu
+                      label="Country"
+                      field="country"
+                      sort={sort}
+                      hasFilter={Boolean(countryFilter.trim())}
+                      onSortAsc={() => setSortFor('country', 'asc')}
+                      onSortDesc={() => setSortFor('country', 'desc')}
+                    >
+                      <FilterTextInput
+                        id="filter-country"
+                        label="Country contains"
+                        value={countryFilter}
+                        onChange={setCountryFilter}
+                        placeholder="Peru"
+                      />
+                    </ColumnMenu>
+                  </th>
+                  <th
+                    scope="col"
+                    style={{ minWidth: COLUMN_DEFS[6].minWidth }}
+                    className="font-medium px-4 py-3"
+                  >
+                    <ColumnMenu
+                      label="Year"
+                      field="date"
+                      sort={sort}
+                      align="right"
+                      hasFilter={Boolean(fromYear || toYear)}
+                      onSortAsc={() => setSortFor('date', 'asc')}
+                      onSortDesc={() => setSortFor('date', 'desc')}
+                    >
+                      <fieldset className="space-y-2">
+                        <legend className="text-[11px] text-stone-500">
+                          Year range
+                        </legend>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={fromYear}
+                            onChange={(e) => setFromYear(e.target.value)}
+                            placeholder="2020"
+                            min={1900}
+                            max={2100}
+                            aria-label="From year"
+                            className="w-20 px-2 py-1.5 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <span className="text-xs text-stone-400">to</span>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={toYear}
+                            onChange={(e) => setToYear(e.target.value)}
+                            placeholder="2026"
+                            min={1900}
+                            max={2100}
+                            aria-label="To year"
+                            className="w-20 px-2 py-1.5 rounded-lg border border-slate-200 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </fieldset>
+                    </ColumnMenu>
+                  </th>
+                  <th
+                    scope="col"
+                    className="text-right font-medium px-4 py-3 whitespace-nowrap"
+                  >
+                    <span className="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((result) => {
+                  const claiming = claimingId === result.id;
+                  const canClaim = result.status === 'unclaimed';
+                  const pace = paceSecondsPerKm(result);
+                  return (
+                    <Fragment key={result.id}>
+                      <tr className="border-t border-slate-100 hover:bg-slate-50/60 transition-colors">
+                        <td className="px-4 py-3">
+                          <Link
+                            href={`/athletes/${result.athleteId}`}
+                            className="font-medium text-stone-900 hover:text-blue-600 transition-colors"
+                          >
+                            {result.athleteName}
+                          </Link>
+                          {result.bib ? (
+                            <div className="text-[11px] text-stone-400 mt-0.5">
+                              bib {result.bib}
+                            </div>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-3 text-stone-700 whitespace-nowrap">
+                          {formatDistance(result)}
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums text-stone-700 whitespace-nowrap">
+                          {formatPace(pace)}
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums font-medium text-stone-900 whitespace-nowrap">
+                          {formatTime(result.finishTime)}
+                        </td>
+                        <td className="px-4 py-3 text-stone-700">
+                          {result.eventName}
+                        </td>
+                        <td className="px-4 py-3 text-stone-700 whitespace-nowrap">
+                          {result.eventCountry ?? '—'}
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums text-stone-700">
+                          {formatYear(result.eventDate)}
+                        </td>
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                          {canClaim ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setClaimingId(claiming ? null : result.id)
+                              }
+                              className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                            >
+                              {claiming ? 'Cancel' : 'Claim'}
+                            </button>
+                          ) : (
+                            <span
+                              className={`inline-block text-[11px] px-2 py-1 rounded-full font-medium ${statusClasses(result.status)}`}
+                            >
+                              {statusLabel(result.status)}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                      {claiming && (
+                        <tr className="bg-slate-50/80 border-t border-slate-100">
+                          <td
+                            colSpan={COLUMN_DEFS.length + 1}
+                            className="px-4 py-4"
+                          >
+                            <ClaimForm
+                              resultId={result.id}
+                              onCancel={() => setClaimingId(null)}
+                            />
                           </td>
                         </tr>
-                        {claiming && (
-                          // Inline claim form. The colSpan covers every
-                          // column so the form occupies the row's full
-                          // width; the muted background separates it
-                          // visually from sibling result rows.
-                          <tr className="bg-slate-50/80 border-t border-slate-100">
-                            <td colSpan={COLUMN_DEFS.length + 1} className="px-4 py-4">
-                              <ClaimForm
-                                resultId={result.id}
-                                onCancel={() => setClaimingId(null)}
-                              />
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        </>
+        </div>
       )}
     </>
   );
 }
 
-// Column header that doubles as a sort toggle. Visual indicator is a
-// small arrow that points up when the column is the active asc sort,
-// down when desc; absent on inactive columns. We keep the cell padding
-// identical to inactive headers so the arrow doesn't shift the row.
-function SortableHeader({
-  col,
-  sort,
-  onClick,
+// Tiny helper for the text-input filters that show up in the Name,
+// Event, and Country dropdowns. Standardizes spacing + label so each
+// column doesn't grow its own variation.
+function FilterTextInput({
+  id,
+  label,
+  value,
+  onChange,
+  placeholder,
+  inputMode,
 }: {
-  col: { id: ResultSortField; label: string; align?: 'left' | 'right' };
-  sort: ResultsSort;
-  onClick: () => void;
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  inputMode?: 'numeric' | 'text';
 }) {
-  const active = sort.field === col.id;
-  const arrow = !active ? '' : sort.direction === 'asc' ? ' ↑' : ' ↓';
-  const align = col.align === 'right' ? 'text-right' : 'text-left';
   return (
-    <th
-      scope="col"
-      aria-sort={
-        active ? (sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'
-      }
-      className={`${align} font-medium px-4 py-3 whitespace-nowrap`}
-    >
-      <button
-        type="button"
-        onClick={onClick}
-        className={`inline-flex items-center gap-0.5 transition-colors ${
-          active ? 'text-stone-900' : 'text-stone-500 hover:text-stone-900'
-        }`}
-      >
-        {col.label}
-        <span aria-hidden="true" className="tabular-nums w-3 inline-block">
-          {arrow.trim()}
-        </span>
-      </button>
-    </th>
+    <div className="space-y-1">
+      <label htmlFor={id} className="block text-[11px] text-stone-500">
+        {label}
+      </label>
+      <input
+        id={id}
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        inputMode={inputMode}
+        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
   );
 }
-
