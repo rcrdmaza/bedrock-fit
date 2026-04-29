@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Cold storage for the org/multi-tenant slice; it imports paths
+    // and types we no longer keep in src/, so linting it would just
+    // produce noise. See archiv3ed/README.md for revival steps.
+    "archiv3ed/**",
   ]),
 ]);
 

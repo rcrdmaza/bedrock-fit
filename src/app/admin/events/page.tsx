@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { eq, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { eventMetadata, eventPhotos } from '@/db/schema';
 import AdminHeader from '@/app/admin/admin-header';
 import { getEventSummaries } from '@/lib/events';
-import { requireOrgOrAdmin, type AdminOrOrg } from '@/lib/org';
+import { requireAdmin } from '@/lib/auth';
 
 // Admin list of every event with "is metadata filled?" and "how many
 // photos?" badges. Behind requireAdmin() — no soft-open for unauth.
@@ -25,17 +25,12 @@ interface MetadataStatus {
   photoCount: number;
 }
 
-async function getMetadataStatus(
-  ctx: AdminOrOrg,
-): Promise<MetadataStatus[]> {
+async function getMetadataStatus(): Promise<MetadataStatus[]> {
   // LEFT JOIN + count(photos) in a single roundtrip keeps us from doing
   // N+1 lookups per event. NULL-safe comparisons on text fields use
   // `is not null AND length(trim(...)) > 0` so whitespace-only values
   // don't count as "filled".
-  //
-  // Org-scoping: when the caller is a non-admin org member, narrow to
-  // metadata rows owned by their org. Legacy admin (god-mode) sees all.
-  const baseQuery = db
+  const rows = await db
     .select({
       eventName: eventMetadata.eventName,
       eventDate: eventMetadata.eventDate,
@@ -56,19 +51,13 @@ async function getMetadataStatus(
     .leftJoin(
       eventPhotos,
       sql`${eventPhotos.eventMetadataId} = ${eventMetadata.id}`,
+    )
+    .groupBy(
+      eventMetadata.id,
+      eventMetadata.eventName,
+      eventMetadata.eventDate,
+      eventMetadata.raceCategory,
     );
-
-  const filtered =
-    ctx.kind === 'org'
-      ? baseQuery.where(eq(eventMetadata.ownerOrgId, ctx.membership.org.id))
-      : baseQuery;
-
-  const rows = await filtered.groupBy(
-    eventMetadata.id,
-    eventMetadata.eventName,
-    eventMetadata.eventDate,
-    eventMetadata.raceCategory,
-  );
 
   return rows.map((r) => ({
     eventName: r.eventName,
@@ -90,28 +79,17 @@ function statusKey(
 }
 
 export default async function AdminEventsPage() {
-  const ctx = await requireOrgOrAdmin();
+  await requireAdmin();
 
-  const [allEvents, status] = await Promise.all([
+  const [events, status] = await Promise.all([
     getEventSummaries(),
-    getMetadataStatus(ctx),
+    getMetadataStatus(),
   ]);
 
   const statusMap = new Map<string, MetadataStatus>();
   for (const s of status) {
     statusMap.set(statusKey(s.eventName, s.eventDate, s.raceCategory), s);
   }
-
-  // Legacy admin sees every event from getEventSummaries(). Org members
-  // only see events whose metadata-keyed status row exists in scope —
-  // i.e. events their org has curated or imported. Filter here so the
-  // table doesn't show events the caller can't act on anyway.
-  const events =
-    ctx.kind === 'admin'
-      ? allEvents
-      : allEvents.filter((ev) =>
-          statusMap.has(statusKey(ev.eventName, ev.eventDate, ev.raceCategory)),
-        );
 
   return (
     <main className="min-h-screen bg-slate-50">

@@ -26,7 +26,6 @@ const NAV_ITEMS = [
   { id: 'claims', label: 'Claims', href: '/admin' },
   { id: 'events', label: 'Events', href: '/admin/events' },
   { id: 'import', label: 'Import results', href: '/admin/import' },
-  { id: 'org', label: 'Org', href: '/admin/org' },
 ] as const;
 
 export type AdminNavId = (typeof NAV_ITEMS)[number]['id'];

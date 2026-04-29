@@ -1,15 +1,12 @@
 import AdminHeader from '@/app/admin/admin-header';
-import { requireOrgOrAdmin } from '@/lib/org';
+import { requireAdmin } from '@/lib/auth';
 import ImportForm from './import-form';
 
 // The form talks to the DB and the admin cookie — no prerender.
 export const dynamic = 'force-dynamic';
 
 export default async function AdminImportPage() {
-  // Any admin or org member can import. The commit action stamps the
-  // resulting event_metadata row with the caller's org so future edits
-  // are scoped correctly.
-  const ctx = await requireOrgOrAdmin();
+  await requireAdmin();
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -24,15 +21,6 @@ export default async function AdminImportPage() {
             Upload a finisher CSV and attach it to an event. Every row becomes
             one result; new athletes are created as needed.
           </p>
-          {ctx.kind === 'org' && (
-            <p className="text-xs text-stone-500 mt-2">
-              Importing as{' '}
-              <span className="font-medium text-stone-700">
-                {ctx.membership.org.name}
-              </span>
-              . The event will be owned by your organization.
-            </p>
-          )}
         </div>
 
         <ImportForm />

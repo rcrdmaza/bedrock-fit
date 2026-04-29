@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { inArray, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { athletes, eventMetadata, results } from '@/db/schema';
-import { requireOrgOrAdmin, type AdminOrOrg } from '@/lib/org';
+import { requireAdmin } from '@/lib/auth';
 import {
   computePercentile,
   normalizeName,
@@ -204,19 +204,11 @@ async function findExistingAthletes(
   return map;
 }
 
-// Caller's owning org id for the lazy event_metadata stamp on commit.
-// Legacy admin sessions don't belong to an org — they keep ownerOrgId
-// null, which the scoping rules treat as "god-mode-only" (matching the
-// behaviour of pre-multi-tenancy rows that never got backfilled).
-function ownerOrgIdForCreate(ctx: AdminOrOrg): string | null {
-  return ctx.kind === 'org' ? ctx.membership.org.id : null;
-}
-
 export async function previewImport(
   _prev: PreviewState,
   formData: FormData,
 ): Promise<PreviewState> {
-  await requireOrgOrAdmin();
+  await requireAdmin();
 
   const metaResult = readEventMeta(formData);
   if (metaResult.error) {
@@ -315,8 +307,7 @@ export async function commitImport(
   _prev: CommitState,
   formData: FormData,
 ): Promise<CommitState> {
-  const ctx = await requireOrgOrAdmin();
-  const ownerOrgId = ownerOrgIdForCreate(ctx);
+  await requireAdmin();
 
   // Metadata comes back as plain strings from hidden inputs. Re-validate
   // rather than trust the preview's output — the admin could have edited
@@ -442,21 +433,22 @@ export async function commitImport(
         rowsInserted += insertedResults.length;
       }
 
-      // Lazily stamp event_metadata so the import's caller takes
-      // ownership of every (name, date, category) triple we just
-      // wrote — that's what gates editing from /admin/events later.
-      // ON CONFLICT DO NOTHING keeps "first writer wins": if a row
-      // already exists (curated earlier, or imported by another org)
-      // we don't change its owner. The metadata table requires a
-      // non-null eventDate and raceCategory, so we skip rows missing
-      // either — the admin can hand-author metadata later if needed.
+      // Lazily stamp event_metadata so /admin/events lists this event
+      // immediately even before anyone curates its summary/photos. ON
+      // CONFLICT DO NOTHING keeps existing curated rows untouched. The
+      // metadata table requires a non-null eventDate and raceCategory,
+      // so we skip rows missing either — the admin can hand-author
+      // metadata later if needed.
+      //
+      // owner_org_id is left NULL here. The column is preserved for a
+      // future revival of multi-tenancy (see archiv3ed/README.md) but
+      // plays no role today.
       if (meta.eventDate) {
         const stamped = new Set<string>();
         const metadataRows: {
           eventName: string;
           eventDate: Date;
           raceCategory: string;
-          ownerOrgId: string | null;
         }[] = [];
         for (const cat of totalByCategory.keys()) {
           if (cat === null) continue;
@@ -466,7 +458,6 @@ export async function commitImport(
             eventName: meta.eventName,
             eventDate: meta.eventDate,
             raceCategory: cat,
-            ownerOrgId,
           });
         }
         if (metadataRows.length > 0) {
