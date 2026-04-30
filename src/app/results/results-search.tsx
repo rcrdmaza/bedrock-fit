@@ -24,6 +24,7 @@
 
 import Link from 'next/link';
 import { Fragment, useMemo, useState } from 'react';
+import { distanceOutline } from '@/lib/distance-color';
 import { distanceKm, formatPace } from '@/lib/race';
 import {
   filterResults,
@@ -480,10 +481,15 @@ export default function ResultsSearch({
                   const claiming = claimingId === result.id;
                   const canClaim = result.status === 'unclaimed';
                   const pace = paceSecondsPerKm(result);
+                  // Distance-based outline: 10K → light blue, Half →
+                  // blue, Marathon → dark blue, others (5K/Trail/null)
+                  // → no outline. Applied per-cell because <tr>
+                  // doesn't accept a real CSS border in any browser.
+                  const outline = distanceOutline(result.raceCategory);
                   return (
                     <Fragment key={result.id}>
-                      <tr className="border-t border-slate-100 hover:bg-slate-50/60 transition-colors">
-                        <td className="px-4 py-3">
+                      <tr className="hover:bg-slate-50/60 transition-colors">
+                        <td className={`px-4 py-3 ${outline.cellLeading || 'border-t border-slate-100'}`}>
                           <Link
                             href={`/athletes/${result.athleteId}`}
                             className="font-medium text-stone-900 hover:text-blue-600 transition-colors"
@@ -496,25 +502,25 @@ export default function ResultsSearch({
                             </div>
                           ) : null}
                         </td>
-                        <td className="px-4 py-3 text-stone-700 whitespace-nowrap">
+                        <td className={`px-4 py-3 text-stone-700 whitespace-nowrap ${outline.cell || 'border-t border-slate-100'}`}>
                           {formatDistance(result)}
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums text-stone-700 whitespace-nowrap">
+                        <td className={`px-4 py-3 text-right tabular-nums text-stone-700 whitespace-nowrap ${outline.cell || 'border-t border-slate-100'}`}>
                           {formatPace(pace)}
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums font-medium text-stone-900 whitespace-nowrap">
+                        <td className={`px-4 py-3 text-right tabular-nums font-medium text-stone-900 whitespace-nowrap ${outline.cell || 'border-t border-slate-100'}`}>
                           {formatTime(result.finishTime)}
                         </td>
-                        <td className="px-4 py-3 text-stone-700">
+                        <td className={`px-4 py-3 text-stone-700 ${outline.cell || 'border-t border-slate-100'}`}>
                           {result.eventName}
                         </td>
-                        <td className="px-4 py-3 text-stone-700 whitespace-nowrap">
+                        <td className={`px-4 py-3 text-stone-700 whitespace-nowrap ${outline.cell || 'border-t border-slate-100'}`}>
                           {result.eventCountry ?? '—'}
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums text-stone-700">
+                        <td className={`px-4 py-3 text-right tabular-nums text-stone-700 ${outline.cell || 'border-t border-slate-100'}`}>
                           {formatYear(result.eventDate)}
                         </td>
-                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <td className={`px-4 py-3 text-right whitespace-nowrap ${outline.cellTrailing || 'border-t border-slate-100'}`}>
                           {canClaim ? (
                             <button
                               type="button"

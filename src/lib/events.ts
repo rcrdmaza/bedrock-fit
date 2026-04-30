@@ -29,15 +29,35 @@ import { eventKey, type EventSummary } from '@/lib/events-filter';
 // legitimately disagree (shouldn't, but), we still get a deterministic
 // answer instead of duplicate groups in the UI.
 export async function getEventSummaries(): Promise<EventSummary[]> {
+  // LEFT JOIN to event_metadata so curated city/country can ride along
+  // for the events tab without a second roundtrip. The triple matches
+  // upsertEventMetadata's unique index, so the join is exact — and
+  // LEFT keeps events without a metadata row from disappearing.
+  //
+  // eventCountry: prefer the curated metadata value, fall back to the
+  // per-row imported value. eventCity: only available on metadata.
+  // MAX() in both places picks a single deterministic value across
+  // any join fan-out.
   const rows = await db
     .select({
       eventName: results.eventName,
       eventDate: results.eventDate,
       raceCategory: results.raceCategory,
-      eventCountry: sql<string | null>`max(${results.eventCountry})`,
+      eventCountry: sql<
+        string | null
+      >`coalesce(max(${eventMetadata.country}), max(${results.eventCountry}))`,
+      eventCity: sql<string | null>`max(${eventMetadata.city})`,
       participantCount: sql<number>`count(*)::int`,
     })
     .from(results)
+    .leftJoin(
+      eventMetadata,
+      and(
+        eq(eventMetadata.eventName, results.eventName),
+        eq(eventMetadata.eventDate, results.eventDate),
+        eq(eventMetadata.raceCategory, results.raceCategory),
+      ),
+    )
     .where(
       and(isNotNull(results.finishTime), isNotNull(results.raceCategory)),
     )
@@ -59,6 +79,7 @@ export async function getEventSummaries(): Promise<EventSummary[]> {
       eventDate: iso,
       raceCategory: category,
       eventCountry: r.eventCountry,
+      eventCity: r.eventCity,
       participantCount: r.participantCount,
     };
   });

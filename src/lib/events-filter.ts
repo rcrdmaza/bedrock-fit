@@ -18,6 +18,12 @@ export type EventSummary = {
   // Picked via MAX() at query time, so if rows disagree we still get
   // one deterministic value rather than duplicate groups.
   eventCountry: string | null;
+  // Curated city from event_metadata, joined via the (name, date,
+  // category) triple. Null when no metadata row exists yet, when the
+  // city field was left blank, or when an admin imported results
+  // before the metadata table existed. The events tab renders this
+  // alongside the country in a "City - Country" column.
+  eventCity: string | null;
   // Only rows with a finish time count — DNF/DSQ aren't "participants"
   // for ranking purposes.
   participantCount: number;
