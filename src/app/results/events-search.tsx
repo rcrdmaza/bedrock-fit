@@ -111,56 +111,43 @@ function groupByEvent(rows: EventSummary[]): EventGroup[] {
 
 export default function EventsSearch({
   events,
+  nameQuery,
+  setNameQuery,
+  countryQuery,
+  setCountryQuery,
 }: {
   events: EventSummary[];
+  // Shared with the parent's global search bar (and with the Results
+  // tab when the user toggles back). On this tab the name slot
+  // searches event names; the country slot is the same notion as
+  // /results — substring against eventCountry.
+  nameQuery: string;
+  setNameQuery: (v: string) => void;
+  countryQuery: string;
+  setCountryQuery: (v: string) => void;
 }) {
-  const [query, setQuery] = useState('');
-  const [country, setCountry] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
 
   const filtered = useMemo(
-    () => filterEvents(events, { query, country, fromDate, toDate }),
-    [events, query, country, fromDate, toDate],
+    () =>
+      filterEvents(events, {
+        query: nameQuery,
+        country: countryQuery,
+        fromDate,
+        toDate,
+      }),
+    [events, nameQuery, countryQuery, fromDate, toDate],
   );
 
   const grouped = useMemo(() => groupByEvent(filtered), [filtered]);
   const visible = grouped.slice(0, MAX_VISIBLE);
   const hasFilters = Boolean(
-    query.trim() || country.trim() || fromDate || toDate,
+    nameQuery.trim() || countryQuery.trim() || fromDate || toDate,
   );
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-        <div>
-          <label htmlFor="eventQuery" className="sr-only">
-            Search events
-          </label>
-          <input
-            id="eventQuery"
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by event name (e.g. Lima Marathon)"
-            className="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="eventCountry" className="sr-only">
-            Country
-          </label>
-          <input
-            id="eventCountry"
-            type="text"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            placeholder="Country (e.g. Peru)"
-            className="w-full px-4 py-3 rounded-lg border border-slate-200 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
       <div className="flex flex-wrap items-center gap-3 mb-8">
         <div className="flex items-center gap-2">
           <label htmlFor="evFromDate" className="text-xs text-stone-500">
@@ -192,8 +179,8 @@ export default function EventsSearch({
           <button
             type="button"
             onClick={() => {
-              setQuery('');
-              setCountry('');
+              setNameQuery('');
+              setCountryQuery('');
               setFromDate('');
               setToDate('');
             }}

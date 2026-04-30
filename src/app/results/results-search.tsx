@@ -78,13 +78,12 @@ const COLUMN_DEFS: ColumnDef[] = [
 
 const MAX_VISIBLE = 200;
 
-// Optional URL-sourced initial filter values. The /results page reads
+// Optional URL-sourced initial filter values. /results/page.tsx reads
 // `?q=`, `?field=`, and `?country=` from searchParams and forwards
-// them so deep links (notably the "claim your races" CTA on athlete
-// profiles with no claimed results) seed the form. We translate the
-// legacy single-field shape onto the matching column filter on first
-// render — the Name column dropdown shows the seeded query, the
-// Country column dropdown shows the seeded country, etc.
+// these into ResultsBrowser, which seeds the SHARED name + country
+// state from them — the deep-link "claim your races" CTA on athlete
+// profiles still works, the seeded values just live in the parent now
+// rather than in this component's local state.
 export interface ResultsSearchInitial {
   searchField?: ResultSearchField;
   query?: string;
@@ -114,47 +113,27 @@ function formatYear(iso: string): string {
   return String(new Date(t).getUTCFullYear());
 }
 
-// Translate the legacy initial state (single text field + country) into
-// the column-filter slots that the new UI surfaces. The deep link only
-// supplies one of name/bib/event/country, so at most one of the text
-// filters seeds; country always seeds independently.
-function seedColumnFilters(initial?: ResultsSearchInitial): {
-  nameFilter: string;
-  bibFilter: string;
-  eventFilter: string;
-  countryFilter: string;
-} {
-  if (!initial) {
-    return { nameFilter: '', bibFilter: '', eventFilter: '', countryFilter: '' };
-  }
-  const q = initial.query ?? '';
-  const country = initial.country ?? '';
-  const field = initial.searchField ?? 'name';
-  return {
-    nameFilter: field === 'name' ? q : '',
-    bibFilter: field === 'bib' ? q : '',
-    eventFilter: field === 'event' ? q : '',
-    // The legacy `country` slot AND the searchField='country' slot
-    // both point at eventCountry. Prefer the dedicated `country` if
-    // both are set; otherwise fall back to the primary query.
-    countryFilter: country || (field === 'country' ? q : ''),
-  };
-}
-
 export default function ResultsSearch({
   rows,
-  initial,
+  nameQuery,
+  setNameQuery,
+  countryQuery,
+  setCountryQuery,
 }: {
   rows: ResultRow[];
-  initial?: ResultsSearchInitial;
+  // Shared with the parent's global search bar AND with the Name +
+  // Country column dropdowns inside this table — they're all writing
+  // to the same state, so typing in any of them keeps the others in
+  // sync. Tab-local filters (bib / event / distance / year) stay
+  // local because they don't have a counterpart in the global bar.
+  nameQuery: string;
+  setNameQuery: (v: string) => void;
+  countryQuery: string;
+  setCountryQuery: (v: string) => void;
 }) {
-  const seeded = seedColumnFilters(initial);
-
-  // --- per-column filter state --------------------------------------
-  const [nameFilter, setNameFilter] = useState(seeded.nameFilter);
-  const [bibFilter, setBibFilter] = useState(seeded.bibFilter);
-  const [eventFilter, setEventFilter] = useState(seeded.eventFilter);
-  const [countryFilter, setCountryFilter] = useState(seeded.countryFilter);
+  // --- tab-local filter state ---------------------------------------
+  const [bibFilter, setBibFilter] = useState('');
+  const [eventFilter, setEventFilter] = useState('');
   const [distances, setDistances] = useState<string[]>([]);
   const [fromYear, setFromYear] = useState<string>('');
   const [toYear, setToYear] = useState<string>('');
@@ -170,15 +149,15 @@ export default function ResultsSearch({
   const filtered = useMemo(
     () =>
       filterResults(rows, {
-        // Legacy fields kept neutral — the dropdowns drive the
-        // per-column filters below instead.
+        // Legacy fields kept neutral — every filter rides on the
+        // per-column / shared-bar fields below.
         searchField: 'name',
         query: '',
         fromDate: '',
         toDate: '',
-        country: countryFilter,
+        country: countryQuery,
         distances,
-        nameFilter,
+        nameFilter: nameQuery,
         bibFilter,
         eventFilter,
         // Number('') is 0, which would silently filter out every row.
@@ -189,10 +168,10 @@ export default function ResultsSearch({
       }),
     [
       rows,
-      nameFilter,
+      nameQuery,
       bibFilter,
       eventFilter,
-      countryFilter,
+      countryQuery,
       distances,
       fromYear,
       toYear,
@@ -202,10 +181,10 @@ export default function ResultsSearch({
   const visible = sorted.slice(0, MAX_VISIBLE);
 
   const hasFilters = Boolean(
-    nameFilter.trim() ||
+    nameQuery.trim() ||
       bibFilter.trim() ||
       eventFilter.trim() ||
-      countryFilter.trim() ||
+      countryQuery.trim() ||
       distances.length > 0 ||
       fromYear ||
       toYear,
@@ -224,7 +203,8 @@ export default function ResultsSearch({
   return (
     <>
       {/* Lightweight summary + reset row above the table. Everything
-          else (sort + filter) lives in the column headers now. */}
+          else (sort + filter) lives in the shared bar above and the
+          column-header dropdowns below. */}
       <div className="flex items-baseline justify-between gap-3 mb-3">
         <p className="text-xs text-stone-400">
           {rows.length === 0
@@ -240,10 +220,10 @@ export default function ResultsSearch({
           <button
             type="button"
             onClick={() => {
-              setNameFilter('');
+              setNameQuery('');
               setBibFilter('');
               setEventFilter('');
-              setCountryFilter('');
+              setCountryQuery('');
               setDistances([]);
               setFromYear('');
               setToYear('');
@@ -288,7 +268,7 @@ export default function ResultsSearch({
                       field="name"
                       sort={sort}
                       hasFilter={Boolean(
-                        nameFilter.trim() || bibFilter.trim(),
+                        nameQuery.trim() || bibFilter.trim(),
                       )}
                       onSortAsc={() => setSortFor('name', 'asc')}
                       onSortDesc={() => setSortFor('name', 'desc')}
@@ -296,8 +276,8 @@ export default function ResultsSearch({
                       <FilterTextInput
                         id="filter-name"
                         label="Name contains"
-                        value={nameFilter}
-                        onChange={setNameFilter}
+                        value={nameQuery}
+                        onChange={setNameQuery}
                         placeholder="Carlos"
                       />
                       <FilterTextInput
@@ -409,15 +389,15 @@ export default function ResultsSearch({
                       label="Country"
                       field="country"
                       sort={sort}
-                      hasFilter={Boolean(countryFilter.trim())}
+                      hasFilter={Boolean(countryQuery.trim())}
                       onSortAsc={() => setSortFor('country', 'asc')}
                       onSortDesc={() => setSortFor('country', 'desc')}
                     >
                       <FilterTextInput
                         id="filter-country"
                         label="Country contains"
-                        value={countryFilter}
-                        onChange={setCountryFilter}
+                        value={countryQuery}
+                        onChange={setCountryQuery}
                         placeholder="Peru"
                       />
                     </ColumnMenu>
