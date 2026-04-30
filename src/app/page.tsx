@@ -176,12 +176,21 @@ export default async function HomePage({
           </>
         )}
 
-        {/* --- Race results search (below leaderboards) --- */}
-        <div className="mt-16">
-          {recentResults.length > 0 && (
+        {/* Minimal divider between the leaderboard and the race-
+            results search. A thin slate-200 rule with comfortable
+            vertical room on either side makes the section break feel
+            intentional rather than just whitespace. We render the
+            divider only when the search section will render — no
+            point in a trailing rule on an install with no results. */}
+        {recentResults.length > 0 && (
+          <>
+            <hr
+              aria-hidden="true"
+              className="my-16 border-0 border-t border-slate-200"
+            />
             <HomeResultsSearch rows={recentResults} countries={countries} />
-          )}
-        </div>
+          </>
+        )}
       </section>
     </main>
   );

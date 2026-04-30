@@ -94,21 +94,26 @@ export default function HomeResultsSearch({
 
   return (
     <section aria-label="Search race results" className="mb-12">
-      {/* Header bar mirrors the leaderboard's "label + small link"
-          shape. The link sits on the right regardless of whether
-          there are matches below — the user might want to jump to
-          /results from the empty state too. */}
-      <div className="flex items-baseline justify-between mb-3">
-        <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wide">
+      {/* Header row matches the Leaderboards heading on the same page
+          (h2 + text-3xl + font-semibold) so the two sections read as
+          siblings of equal weight. The "See all results →" anchor
+          sits on the right at the heading's baseline — small enough
+          to feel like a "by the way…" affordance rather than a
+          competing CTA. */}
+      <div className="flex items-baseline justify-between gap-3 mb-2">
+        <h2 className="text-3xl font-semibold text-stone-900">
           Race results
         </h2>
         <Link
           href={seeAllHref}
-          className="text-xs text-stone-500 hover:text-stone-900 transition-colors"
+          className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
         >
           See all results →
         </Link>
       </div>
+      <p className="text-stone-500 text-sm mb-6">
+        Search by athlete name or country.
+      </p>
 
       {/* Centered search bar. max-w + mx-auto keeps the bar a
           comfortable scanning width even when the parent section
