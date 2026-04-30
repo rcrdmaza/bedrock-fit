@@ -76,7 +76,12 @@ const COLUMN_DEFS: ColumnDef[] = [
   { id: 'date', label: 'Year', align: 'right', minWidth: '5rem' },
 ];
 
-const MAX_VISIBLE = 200;
+// Cap visible rows aggressively. Without a filter this page shows
+// nothing (see the `hasFilters` branch below); once the user starts
+// narrowing we still only paint the top 20 so the table stays a
+// scannable shortlist rather than a wall of finishers. Users who want
+// the full feed can keep narrowing until ≤ 20 rows match.
+const MAX_VISIBLE = 20;
 
 // Optional URL-sourced initial filter values. /results/page.tsx reads
 // `?q=`, `?field=`, and `?country=` from searchParams and forwards
@@ -204,17 +209,19 @@ export default function ResultsSearch({
     <>
       {/* Lightweight summary + reset row above the table. Everything
           else (sort + filter) lives in the shared bar above and the
-          column-header dropdowns below. */}
+          column-header dropdowns below. The summary is intentionally
+          empty when no filter is active — at that point the table
+          itself isn't rendered, and a "Showing all 5,432" line would
+          be a lie about a list the user can't see. */}
       <div className="flex items-baseline justify-between gap-3 mb-3">
         <p className="text-xs text-stone-400">
-          {rows.length === 0
+          {rows.length === 0 || !hasFilters
             ? null
-            : sorted.length === rows.length
-              ? `Showing all ${rows.length.toLocaleString()} result${rows.length !== 1 ? 's' : ''}.`
-              : `${sorted.length.toLocaleString()} of ${rows.length.toLocaleString()} match${sorted.length === 1 ? '' : 'es'}.`}
-          {sorted.length > MAX_VISIBLE
-            ? ` Showing the first ${MAX_VISIBLE} — narrow your filters to see more.`
-            : ''}
+            : sorted.length === 0
+              ? null
+              : sorted.length > MAX_VISIBLE
+                ? `${sorted.length.toLocaleString()} match${sorted.length === 1 ? '' : 'es'} — showing the top ${MAX_VISIBLE}. Narrow your filters to see more.`
+                : `${sorted.length.toLocaleString()} match${sorted.length === 1 ? '' : 'es'}.`}
         </p>
         {hasFilters && (
           <button
@@ -242,6 +249,21 @@ export default function ResultsSearch({
           </p>
           <p className="text-stone-300 text-xs mt-1">
             Check back once race data has been ingested.
+          </p>
+        </div>
+      ) : !hasFilters ? (
+        // Pre-filter placeholder. Showing 5k+ rows by default is noise;
+        // we wait for the user to type a name, pick a country, or
+        // tweak any column filter before painting the table. Copy
+        // points at the shared search bar above and the column
+        // headers below so users know where to start.
+        <div className="text-center py-16 border border-dashed border-slate-200 rounded-2xl">
+          <p className="text-stone-500 text-sm">
+            Search by name or pick a country to see results.
+          </p>
+          <p className="text-stone-400 text-xs mt-1">
+            You can also click a column header to filter by distance,
+            event, year, or bib.
           </p>
         </div>
       ) : sorted.length === 0 ? (
