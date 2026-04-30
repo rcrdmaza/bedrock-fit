@@ -215,6 +215,10 @@ export async function getLeaderboardPage(
   category: LeaderboardCategory,
   page = 1,
   pageSize = 50,
+  // Optional country filter — drives the home-page leaderboard
+  // country switcher. Case-insensitive exact match against
+  // results.eventCountry. Empty / undefined means "all countries".
+  country?: string,
 ): Promise<LeaderboardPage> {
   const safePageSize = Math.min(
     Math.max(1, Math.floor(pageSize)),
@@ -227,9 +231,16 @@ export async function getLeaderboardPage(
 
   // Run count and page fetch in parallel — they're two independent
   // queries against the same table and one round-trip beats two.
+  const trimmedCountry = country?.trim();
   const whereClause = and(
     eq(results.raceCategory, category),
     isNotNull(results.finishTime),
+    // Use lower(eventCountry) = lower($country) so "Peru" matches a
+    // row imported as "peru" without us having to canonicalize on
+    // write. Skipped entirely when no country is requested.
+    trimmedCountry
+      ? sql`lower(${results.eventCountry}) = lower(${trimmedCountry})`
+      : undefined,
   );
 
   const [countRows, dataRows] = await Promise.all([
@@ -271,4 +282,29 @@ export async function getLeaderboardPage(
     pageSize: safePageSize,
     totalPages,
   };
+}
+
+// Distinct country values seen in the results table. Powers the
+// home-page leaderboard country switcher. We dedupe in SQL (cheap +
+// avoids dragging the whole column into Node) and trim/normalize on
+// the way out so display order is predictable. Null / blank values
+// are skipped — they're not selectable.
+export async function getLeaderboardCountries(): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ country: results.eventCountry })
+    .from(results)
+    .where(
+      and(isNotNull(results.eventCountry), isNotNull(results.finishTime)),
+    );
+  // Server-side sort is fine here — typical row count is < 100. We
+  // case-insensitive-sort but keep the first-seen casing.
+  const seen = new Map<string, string>();
+  for (const r of rows) {
+    if (!r.country) continue;
+    const trimmed = r.country.trim();
+    if (!trimmed) continue;
+    const key = trimmed.toLowerCase();
+    if (!seen.has(key)) seen.set(key, trimmed);
+  }
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
 }
