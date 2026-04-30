@@ -56,6 +56,51 @@ export async function getResults(): Promise<ResultRow[]> {
   }));
 }
 
+// Same shape as getResults() but capped server-side. Used by the home
+// page's race-results teaser, which only paints a handful of rows; we
+// add a LIMIT here so the home page isn't pulling 26k+ finisher rows
+// from a Boston-sized import just to slice the first 5 on the client.
+export async function getRecentResults(limit: number): Promise<ResultRow[]> {
+  const rows = await db
+    .select({
+      id: results.id,
+      athleteId: athletes.id,
+      athleteName: athletes.name,
+      eventName: results.eventName,
+      eventDate: results.eventDate,
+      raceCategory: results.raceCategory,
+      finishTime: results.finishTime,
+      overallRank: results.overallRank,
+      totalFinishers: results.totalFinishers,
+      percentile: results.percentile,
+      status: results.status,
+      bib: results.bib,
+      eventCountry: results.eventCountry,
+    })
+    .from(results)
+    .innerJoin(athletes, eq(results.athleteId, athletes.id))
+    // Newest event first. Ties on eventDate fall back to id so the
+    // five rows we surface stay deterministic across renders.
+    .orderBy(desc(results.eventDate), asc(results.id))
+    .limit(limit);
+
+  return rows.map((r) => ({
+    id: r.id,
+    athleteId: r.athleteId,
+    athleteName: r.athleteName,
+    eventName: r.eventName,
+    eventDate: (r.eventDate ?? new Date()).toISOString(),
+    raceCategory: r.raceCategory,
+    finishTime: r.finishTime,
+    overallRank: r.overallRank,
+    totalFinishers: r.totalFinishers,
+    percentile: r.percentile != null ? Number(r.percentile) : null,
+    status: r.status ?? 'unclaimed',
+    bib: r.bib,
+    eventCountry: r.eventCountry,
+  }));
+}
+
 // Ordered list of the categories we render filter chips for. Kept in a
 // deliberate order (shortest → longest) rather than alphabetical, so the
 // chips scan naturally. Mirrors CANONICAL_CATEGORIES for type purposes.

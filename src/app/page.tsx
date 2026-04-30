@@ -3,14 +3,17 @@ import Link from 'next/link';
 import SiteHeader from '@/app/site-header';
 import EventPhotoCarousel from '@/app/event-photo-carousel';
 import { getLatestEventPhotos } from '@/lib/events';
+import { distanceKm } from '@/lib/race';
 import {
   categorySlug,
   getLeaderboardPage,
+  getRecentResults,
   isLeaderboardCategory,
   LEADERBOARD_CATEGORIES,
   type LeaderboardCategory,
   type LeaderboardRow,
 } from '@/lib/results';
+import type { ResultRow } from '@/lib/results-filter';
 
 // Leaderboard is a live view — a new import can change the order of the
 // top 25. No static caching here.
@@ -31,9 +34,16 @@ const DEFAULT_CATEGORY: LeaderboardCategory = '10K';
 // but we don't drag in ancient events.
 const CAROUSEL_EVENT_LIMIT = 8;
 
+// How many recent results the home-page teaser shows. Five is the
+// number the user asked for, and pretty much the right size: enough
+// to suggest "there's stuff here" without crowding the leaderboard
+// below. The full feed lives at /results.
+const RECENT_RESULTS_LIMIT = 5;
+
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
-function formatTime(seconds: number): string {
+function formatTime(seconds: number | null): string {
+  if (seconds == null) return '—';
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
@@ -65,9 +75,10 @@ export default async function HomePage({
   // total count comes back for the "See all N finishers" link without
   // a second round-trip. The carousel photos fetch runs in parallel
   // since it hits a different table and has nothing to share.
-  const [{ rows, total }, carouselPhotos] = await Promise.all([
+  const [{ rows, total }, carouselPhotos, recentResults] = await Promise.all([
     getLeaderboardPage(category, 1, PAGE_SIZE),
     getLatestEventPhotos(CAROUSEL_EVENT_LIMIT),
+    getRecentResults(RECENT_RESULTS_LIMIT),
   ]);
 
   return (
@@ -96,6 +107,14 @@ export default async function HomePage({
         {/* Carousel hides itself when there are no photos, so first-
             run installs still drop straight into the leaderboard. */}
         <EventPhotoCarousel photos={carouselPhotos} />
+
+        {/* Recent race-results teaser. Renders nothing on a brand-
+            new install with no imported results — same hide-on-empty
+            pattern the carousel uses, so the page doesn't carry an
+            empty section header. */}
+        {recentResults.length > 0 && (
+          <RecentResultsSection rows={recentResults} />
+        )}
 
         <h1 className="text-3xl font-semibold text-stone-900 mb-2">
           Leaderboards
@@ -161,6 +180,86 @@ function CategoryChips({ active }: { active: LeaderboardCategory }) {
         );
       })}
     </nav>
+  );
+}
+
+// Compact teaser of the most recent results. Mirrors the leaderboard
+// table's visual weight (same border, same hover, same font sizing)
+// so the two sections feel like sibling cards rather than competing
+// for attention. Click an athlete name to land on their profile;
+// click "See all results" to jump to the full /results browser.
+function RecentResultsSection({ rows }: { rows: ResultRow[] }) {
+  return (
+    <section aria-label="Recent race results" className="mb-12">
+      {/* Header bar: label on the left, small "see all" anchor on
+          the right. Baseline-aligned so the link reads as part of
+          the same row rather than a separate caption. */}
+      <div className="flex items-baseline justify-between mb-3">
+        <h2 className="text-sm font-medium text-stone-700 uppercase tracking-wide">
+          Race results
+        </h2>
+        <Link
+          href="/results"
+          className="text-xs text-stone-500 hover:text-stone-900 transition-colors"
+        >
+          See all results →
+        </Link>
+      </div>
+      <div className="border border-slate-100 rounded-2xl overflow-hidden bg-white/70">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50">
+            <tr className="text-stone-500 text-left text-xs uppercase tracking-wide">
+              <th className="px-5 py-3 font-medium">Athlete</th>
+              <th className="px-5 py-3 font-medium">Event</th>
+              <th className="px-5 py-3 font-medium">Distance</th>
+              <th className="px-5 py-3 font-medium text-right">Finish</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              // Reuse the same Distance fallback as /results: prefer
+              // the canonical category, fall back to "NK" parsed out
+              // of the event name. An em-dash beats a blank cell.
+              const km = distanceKm(r.raceCategory, r.eventName);
+              const distanceLabel =
+                r.raceCategory ?? (km != null ? `${km} km` : '—');
+              return (
+                <tr
+                  key={r.id}
+                  className="border-t border-slate-100 hover:bg-slate-50/60 transition-colors"
+                >
+                  <td className="px-5 py-3">
+                    <Link
+                      href={`/athletes/${r.athleteId}`}
+                      className="font-medium text-stone-900 hover:text-blue-600 transition-colors"
+                    >
+                      {r.athleteName}
+                    </Link>
+                  </td>
+                  <td className="px-5 py-3 text-stone-600">
+                    <div>{r.eventName}</div>
+                    <div className="text-xs text-stone-400 mt-0.5">
+                      {new Date(r.eventDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                      {r.eventCountry ? ` · ${r.eventCountry}` : ''}
+                    </div>
+                  </td>
+                  <td className="px-5 py-3 text-stone-700">
+                    {distanceLabel}
+                  </td>
+                  <td className="px-5 py-3 text-right tabular-nums font-medium text-stone-900">
+                    {formatTime(r.finishTime)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
