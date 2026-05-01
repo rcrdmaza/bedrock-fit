@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { athletes, results } from '@/db/schema';
 import { requireAdmin } from '@/lib/auth';
 import AdminHeader from '@/app/admin/admin-header';
+import AdminSidebar from '@/app/admin/admin-sidebar';
 import {
   approveClaims,
   rejectClaims,
@@ -108,7 +109,9 @@ export default async function AdminPage() {
     <main className="min-h-screen bg-slate-50">
       <AdminHeader active="claims" />
 
-      <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
+      <div className="flex">
+        <AdminSidebar />
+        <section className="flex-1 max-w-3xl mx-auto px-8 pt-16 pb-24">
         <div className="mb-10">
           <h1 className="text-3xl font-semibold text-stone-900 mb-1">
             Pending claims
@@ -131,7 +134,8 @@ export default async function AdminPage() {
             ))}
           </div>
         )}
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

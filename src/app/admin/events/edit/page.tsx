@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AdminHeader from '@/app/admin/admin-header';
+import AdminSidebar from '@/app/admin/admin-sidebar';
 import { requireAdmin } from '@/lib/auth';
 import { getEventDetail, getEventMetadata } from '@/lib/events';
 import {
@@ -68,7 +69,9 @@ export default async function EditEventMetadataPage({
       {/* Edit lives under /admin/events/* — keep that nav slot lit. */}
       <AdminHeader active="events" />
 
-      <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
+      <div className="flex">
+        <AdminSidebar />
+        <section className="flex-1 max-w-3xl mx-auto px-8 pt-16 pb-24">
         <Link
           href="/admin/events"
           className="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-900 transition-colors mb-4"
@@ -135,7 +138,8 @@ export default async function EditEventMetadataPage({
             reorderAction={reorderEventPhoto}
           />
         </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

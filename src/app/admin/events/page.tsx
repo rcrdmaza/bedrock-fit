@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { eventMetadata, eventPhotos } from '@/db/schema';
 import AdminHeader from '@/app/admin/admin-header';
+import AdminSidebar from '@/app/admin/admin-sidebar';
 import { getEventSummaries } from '@/lib/events';
 import { requireAdmin } from '@/lib/auth';
 
@@ -95,7 +96,9 @@ export default async function AdminEventsPage() {
     <main className="min-h-screen bg-slate-50">
       <AdminHeader active="events" />
 
-      <section className="max-w-4xl mx-auto px-8 pt-16 pb-24">
+      <div className="flex">
+        <AdminSidebar />
+        <section className="flex-1 max-w-4xl mx-auto px-8 pt-16 pb-24">
         <div className="mb-10">
           <h1 className="text-3xl font-semibold text-stone-900 mb-1">
             Event metadata
@@ -167,7 +170,8 @@ export default async function AdminEventsPage() {
             </table>
           </div>
         )}
-      </section>
+        </section>
+      </div>
     </main>
   );
 }
