@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { athletes } from '@/db/schema';
 import { getCurrentUser } from '@/lib/auth';
 import { getDisplayName } from '@/lib/athlete-display';
+import HeaderNav from '@/app/header-nav';
 import RunningHeroAvatar from '@/app/components/running-hero-avatar';
 
 // Top-level site chrome rendered by every page, public and admin alike.
@@ -55,31 +56,12 @@ export default async function SiteHeader() {
         Bedrock.fit
       </Link>
 
-      {/* Centered nav group. Flex inside the middle grid column so the
-          links cluster in the center rather than stretching across the
-          whole column. */}
-      <div className="justify-self-center flex items-center gap-8">
-        <Link
-          href="/"
-          className="text-sm text-stone-600 hover:text-stone-900 transition-colors"
-        >
-          Home
-        </Link>
-        <Link
-          href="/results"
-          className="text-sm text-stone-600 hover:text-stone-900 transition-colors"
-        >
-          Race Results
-        </Link>
-        {/* Blog isn't built yet. Keep the button so the header locks
-            in its final shape; wire the href when the route exists. */}
-        <Link
-          href="#"
-          className="text-sm text-stone-600 hover:text-stone-900 transition-colors"
-        >
-          Blog
-        </Link>
-      </div>
+      {/* Centered nav: HeaderNav is a client island that renders the
+          three primary destinations as icon + label cards with a
+          sliding pill that follows hover/focus and rests on the
+          current route. Replaces the previous trio of plain text
+          links. */}
+      <HeaderNav />
 
       {/* Right slot: sign-in CTA when logged out, profile button +
           sign-out when logged in. The profile button is now a chip
