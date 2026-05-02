@@ -43,3 +43,6 @@ next-env.d.ts
 
 # sample race-result CSVs for manual import testing
 /samples
+
+# Sentry Config File
+.env.sentry-build-plugin

@@ -26,18 +26,42 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Sentry webpack/turbopack plugin wrapper. It inserts source-map upload and
-// bundler integrations at build time. With no SENTRY_AUTH_TOKEN / org / project
-// set, the build-time steps are skipped and we only get the runtime SDK — which
-// is exactly what we want locally and on deploys without a DSN.
+// Sentry webpack/turbopack plugin wrapper. Inserts source-map upload and
+// bundler integrations at build time. With no SENTRY_AUTH_TOKEN set, the
+// build-time upload step is skipped and we only get the runtime SDK —
+// exactly what we want locally and on deploys without ingest credentials.
+//
+// org + project are hardcoded because they identify the destination Sentry
+// project (not secrets) and rarely change. SENTRY_AUTH_TOKEN must come
+// from .env.sentry-build-plugin (gitignored) or the build environment for
+// source-map upload to actually run.
 export default withSentryConfig(nextConfig, {
-  // Keep build output clean unless we're actively debugging the plugin.
+  org: 'bedrock-uf',
+  project: 'javascript-nextjs',
+
+  // Only print upload logs in CI — keeps local builds quiet.
   silent: !process.env.CI,
-  // Uploading source maps requires these three + SENTRY_AUTH_TOKEN. When they
-  // aren't set, the plugin no-ops the upload step.
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  // Route Sentry's ingest through a Next rewrite so ad-blockers don't drop
-  // client events. Safe default.
+
+  // Upload a wider source-map set for prettier client stack traces. Slower
+  // CI build, but worth it when triaging an obfuscated production error.
+  widenClientFileUpload: true,
+
+  // Route browser ingest through a Next rewrite at /monitoring so
+  // ad-blockers don't drop client events. Verify any new middleware
+  // doesn't shadow this route or client-side reporting will silently
+  // break.
   tunnelRoute: '/monitoring',
+
+  webpack: {
+    // Vercel Cron Monitors auto-instrumentation — harmless on Railway
+    // (we don't run Vercel cron jobs). The plugin no-ops if the env
+    // doesn't expose the relevant signals.
+    automaticVercelMonitors: true,
+    treeshake: {
+      // Drop Sentry.logger.* debug calls from the production bundle.
+      // We still emit info+ from the example page; this only strips
+      // debug-level statements behind the SDK's compile-time flag.
+      removeDebugLogging: true,
+    },
+  },
 });
