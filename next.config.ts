@@ -26,24 +26,33 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Sentry webpack/turbopack plugin wrapper. Inserts source-map upload and
-// bundler integrations at build time. With no SENTRY_AUTH_TOKEN set, the
-// build-time upload step is skipped and we only get the runtime SDK —
-// exactly what we want locally and on deploys without ingest credentials.
+// Sentry webpack/turbopack plugin wrapper. Inserts source-map upload at
+// build time and registers the /monitoring tunnel route at runtime.
+// org + project are hardcoded because they identify the destination
+// Sentry project (not secrets) and rarely change. authToken is read
+// from the env: locally from .env.sentry-build-plugin (gitignored), in
+// CI / on Railway from a SENTRY_AUTH_TOKEN env var.
 //
-// org + project are hardcoded because they identify the destination Sentry
-// project (not secrets) and rarely change. SENTRY_AUTH_TOKEN must come
-// from .env.sentry-build-plugin (gitignored) or the build environment for
-// source-map upload to actually run.
+// Webpack-specific options that used to live here (treeshake,
+// automaticVercelMonitors) were removed because Next 16 builds with
+// Turbopack and the Sentry skill explicitly flags webpack.treeshake as
+// Turbopack-incompatible. Source-map upload still happens; just via
+// the plugin's Turbopack path now.
 export default withSentryConfig(nextConfig, {
   org: 'bedrock-uf',
   project: 'javascript-nextjs',
 
+  // Wired explicitly per the canonical skill recipe so missing-token
+  // produces a clear plugin warning at build time rather than silently
+  // skipping the upload step.
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
   // Only print upload logs in CI — keeps local builds quiet.
   silent: !process.env.CI,
 
-  // Upload a wider source-map set for prettier client stack traces. Slower
-  // CI build, but worth it when triaging an obfuscated production error.
+  // Upload a wider source-map set for prettier client stack traces.
+  // Slightly slower CI build, but worth it when triaging an obfuscated
+  // production error.
   widenClientFileUpload: true,
 
   // Route browser ingest through a Next rewrite at /monitoring so
@@ -51,17 +60,4 @@ export default withSentryConfig(nextConfig, {
   // doesn't shadow this route or client-side reporting will silently
   // break.
   tunnelRoute: '/monitoring',
-
-  webpack: {
-    // Vercel Cron Monitors auto-instrumentation — harmless on Railway
-    // (we don't run Vercel cron jobs). The plugin no-ops if the env
-    // doesn't expose the relevant signals.
-    automaticVercelMonitors: true,
-    treeshake: {
-      // Drop Sentry.logger.* debug calls from the production bundle.
-      // We still emit info+ from the example page; this only strips
-      // debug-level statements behind the SDK's compile-time flag.
-      removeDebugLogging: true,
-    },
-  },
 });
