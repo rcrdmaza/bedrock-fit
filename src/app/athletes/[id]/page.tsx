@@ -9,6 +9,8 @@ import { getResults } from '@/lib/results';
 import { rankSimilarResults } from '@/lib/name-match';
 import { getDisplayName } from '@/lib/athlete-display';
 import { getCurrentUser } from '@/lib/auth';
+import { getAppUrl } from '@/lib/env';
+import { personLd, serializeJsonLd } from '@/lib/json-ld';
 import SiteHeader from '@/app/site-header';
 import ProfileBadge from './profile-badge';
 import SuggestedClaims from './suggested-claims';
@@ -176,8 +178,33 @@ export default async function AthleteProfilePage({
         )
       : [];
 
+  // Person JSON-LD for Google rich-result eligibility. Skipped on
+  // redacted profiles (private + non-owner viewer) so we don't
+  // publish a meaningless "Anonymous Athlete" entity for an opted-out
+  // user. The helper filters out data: URL avatars automatically —
+  // search engines can't fetch those, so they're not useful @image
+  // values.
+  const personLdJson = showRedacted
+    ? null
+    : serializeJsonLd(
+        personLd(
+          {
+            id: athlete.id,
+            displayName,
+            avatarUrl: athlete.avatarUrl ?? null,
+          },
+          getAppUrl(),
+        ),
+      );
+
   return (
     <main className="min-h-screen bg-slate-50">
+      {personLdJson ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: personLdJson }}
+        />
+      ) : null}
       <SiteHeader />
 
       {/* Tinted banner — fills the full width but the inner content

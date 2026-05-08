@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getEventDetail } from '@/lib/events';
+import { getAppUrl } from '@/lib/env';
+import { serializeJsonLd, sportsEventLd } from '@/lib/json-ld';
 import SiteHeader from '@/app/site-header';
 import EventParticipants from './event-participants';
 import EventTabs, { type EventTab } from './event-tabs';
@@ -104,8 +106,38 @@ export default async function EventDetailPage({
 
   const summary = detail.metadata?.summary?.trim() ?? '';
 
+  // SportsEvent JSON-LD for Google rich-result eligibility. Picks the
+  // first event photo as @image when one exists; the helper filters
+  // out data: URLs (which search engines can't fetch) automatically.
+  const firstHttpPhoto = detail.photos.find((p) =>
+    p.url.startsWith('http://') || p.url.startsWith('https://'),
+  );
+  const eventLdJson = serializeJsonLd(
+    sportsEventLd(
+      {
+        eventName: detail.eventName,
+        eventDate: detail.eventDate,
+        raceCategory: detail.raceCategory,
+        city: detail.metadata?.city ?? null,
+        district: detail.metadata?.district ?? null,
+        country: detail.metadata?.country ?? detail.eventCountry,
+        summary: detail.metadata?.summary ?? null,
+        imageUrl: firstHttpPhoto?.url ?? null,
+      },
+      getAppUrl(),
+    ),
+  );
+
   return (
     <main className="min-h-screen bg-slate-50">
+      {/* SportsEvent JSON-LD. Sits at the top of <main> so crawlers see
+          it early in the document. dangerouslySetInnerHTML is the
+          standard pattern for ld+json — the helper escapes </ to
+          prevent script-tag breakouts. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: eventLdJson }}
+      />
       <SiteHeader />
 
       <section className="max-w-3xl mx-auto px-8 pt-16 pb-24">
