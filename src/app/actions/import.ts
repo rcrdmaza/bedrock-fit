@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { inArray, sql } from 'drizzle-orm';
 import { db } from '@/db';
@@ -482,6 +482,12 @@ export async function commitImport(
   }
 
   // Fresh rows land everywhere results are listed.
+  // Tag-based busts the unstable_cache wrappers in lib/{results,events}.ts
+  // — covers /, /results, /events, /leaderboards/* in one shot.
+  // revalidatePath calls below are belt-and-suspenders for any cached
+  // RSC payloads keyed by route path rather than data tag.
+  updateTag('results');
+  updateTag('events');
   revalidatePath('/');
   revalidatePath('/results');
   revalidatePath('/admin');

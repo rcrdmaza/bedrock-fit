@@ -6,7 +6,7 @@
 // for the event detail page so a fresh read shows the change on next
 // navigation.
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
@@ -90,9 +90,20 @@ function editHref(key: EventKey): string {
 // admin list. Keep this tight — over-invalidation here is cheap but
 // worth paying attention to.
 function bustEventCaches() {
+  // Tag bust covers the unstable_cache'd lib/events.ts fetchers
+  // (getEventSummaries, getEventDetail, getLatestEventPhotos) so a
+  // metadata or photo edit shows up everywhere on the next request.
+  // Also include the home page's carousel + race-results pool — those
+  // live under the `results` tag because the import action is the
+  // common writer.
+  updateTag('events');
   revalidatePath('/events');
   revalidatePath('/admin/events');
   revalidatePath('/admin/events/edit');
+  // Home page carousel sources from getLatestEventPhotos which is
+  // tagged `events` and already revalidated above; the explicit path
+  // bust here is for the rendered RSC payload.
+  revalidatePath('/');
 }
 
 // Look up the existing metadata row's id (if any). Pre-org-removal we

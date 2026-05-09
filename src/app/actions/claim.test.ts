@@ -22,6 +22,11 @@ vi.mock('@/db', () => {
 
 vi.mock('next/cache', () => ({
   revalidatePath: (...args: [string, string?]) => mockRevalidatePath(...args),
+  // updateTag is the read-your-own-writes counterpart we use to bust
+  // the unstable_cache'd lib/results.ts fetchers. The action calls it;
+  // tests don't assert on it, so a no-op stub is enough to satisfy the
+  // import.
+  updateTag: () => undefined,
 }));
 
 // Import AFTER the mocks are registered so claim.ts picks them up.

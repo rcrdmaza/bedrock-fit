@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
 import { results } from '@/db/schema';
@@ -64,7 +64,12 @@ export async function claimResult(
     };
   }
 
-  // Bust the cache on every page that renders result cards.
+  // Tag bust covers the unstable_cache'd lib/results.ts fetchers
+  // (getResults, getRecentResults, getLeaderboardPage, etc.) so the
+  // claimed result's `pending` status reflects everywhere it shows
+  // up. revalidatePath additionally clears any cached RSC payloads
+  // keyed by route path.
+  updateTag('results');
   revalidatePath('/');
   revalidatePath('/results');
   return { status: 'success' };
@@ -131,6 +136,7 @@ export async function claimResults(
 
   // Same cache busts as the single-claim path, plus the athlete page
   // where the bulk flow lives.
+  updateTag('results');
   revalidatePath('/');
   revalidatePath('/results');
   revalidatePath('/athletes/[id]', 'page');

@@ -1,7 +1,23 @@
+import { unstable_cache } from 'next/cache';
 import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { athletes, results } from '@/db/schema';
 import { CANONICAL_CATEGORIES } from '@/lib/import';
+
+// Cached DB fetches for the public-facing pages. Each wrapped function
+// is keyed by its arguments + the base key string we pass — Next stores
+// the result in its in-memory cache for `revalidate` seconds, then the
+// next request does one DB roundtrip and refreshes. Mutations call
+// `revalidateTag('results')` to bust this group on demand (see
+// src/app/actions/{import,claim,admin}.ts).
+//
+// 60 seconds is a deliberate floor: short enough that admin imports
+// land within a minute even without an explicit revalidate, long enough
+// that ad-driven traffic spikes don't overload Postgres. The tag-based
+// invalidation handles the cases where stale-by-60s would feel wrong
+// (a freshly imported event, an approved claim).
+const CACHE_REVALIDATE_SECONDS = 60;
+const CACHE_TAGS = ['results'] as const;
 
 // Re-export the client-safe symbols so server code has one import point.
 // The client component imports from @/lib/results-filter directly to
@@ -18,7 +34,7 @@ import type { ResultRow } from '@/lib/results-filter';
 // Shared between /results and the home page. Postgres `numeric` columns
 // come back as strings, so we coerce; dates are serialized to ISO so the
 // client can hand them to the Date constructor without re-hydrating.
-export async function getResults(): Promise<ResultRow[]> {
+async function fetchResults(): Promise<ResultRow[]> {
   const rows = await db
     .select({
       id: results.id,
@@ -56,11 +72,19 @@ export async function getResults(): Promise<ResultRow[]> {
   }));
 }
 
+// Public export — cached. The 'results-all' base key plus the
+// (zero-arg) signature mean we get one cache entry for the whole
+// table. Pulled fresh on /results' first hit each minute.
+export const getResults = unstable_cache(fetchResults, ['results-all'], {
+  revalidate: CACHE_REVALIDATE_SECONDS,
+  tags: [...CACHE_TAGS],
+});
+
 // Same shape as getResults() but capped server-side. Used by the home
 // page's race-results teaser, which only paints a handful of rows; we
 // add a LIMIT here so the home page isn't pulling 26k+ finisher rows
 // from a Boston-sized import just to slice the first 5 on the client.
-export async function getRecentResults(limit: number): Promise<ResultRow[]> {
+async function fetchRecentResults(limit: number): Promise<ResultRow[]> {
   const rows = await db
     .select({
       id: results.id,
@@ -100,6 +124,15 @@ export async function getRecentResults(limit: number): Promise<ResultRow[]> {
     eventCountry: r.eventCountry,
   }));
 }
+
+// Public export — cached per-limit. A request for `getRecentResults(5)`
+// and `getRecentResults(200)` get separate cache entries because the
+// limit is part of the args.
+export const getRecentResults = unstable_cache(
+  fetchRecentResults,
+  ['results-recent'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: [...CACHE_TAGS] },
+);
 
 // Ordered list of the categories we render filter chips for. Kept in a
 // deliberate order (shortest → longest) rather than alphabetical, so the
@@ -211,7 +244,7 @@ export interface LeaderboardPage {
   totalPages: number;
 }
 
-export async function getLeaderboardPage(
+async function fetchLeaderboardPage(
   category: LeaderboardCategory,
   page = 1,
   pageSize = 50,
@@ -284,12 +317,22 @@ export async function getLeaderboardPage(
   };
 }
 
+// Public export — cached per (category, page, pageSize, country)
+// tuple. Each leaderboard slice is its own cache entry so the home
+// page's "10K · all countries" doesn't fight with /leaderboards/10k's
+// page-2 query.
+export const getLeaderboardPage = unstable_cache(
+  fetchLeaderboardPage,
+  ['leaderboard-page'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: [...CACHE_TAGS] },
+);
+
 // Distinct country values seen in the results table. Powers the
 // home-page leaderboard country switcher. We dedupe in SQL (cheap +
 // avoids dragging the whole column into Node) and trim/normalize on
 // the way out so display order is predictable. Null / blank values
 // are skipped — they're not selectable.
-export async function getLeaderboardCountries(): Promise<string[]> {
+async function fetchLeaderboardCountries(): Promise<string[]> {
   const rows = await db
     .selectDistinct({ country: results.eventCountry })
     .from(results)
@@ -308,3 +351,12 @@ export async function getLeaderboardCountries(): Promise<string[]> {
   }
   return [...seen.values()].sort((a, b) => a.localeCompare(b));
 }
+
+// Public export — cached. Country list barely changes; we still tie
+// it to the same `results` tag so a freshly imported event in a new
+// country gets reflected when the import action revalidates.
+export const getLeaderboardCountries = unstable_cache(
+  fetchLeaderboardCountries,
+  ['leaderboard-countries'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: [...CACHE_TAGS] },
+);

@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
@@ -65,11 +65,14 @@ async function updatePendingBatch(
 }
 
 function bustClaimCaches() {
+  // Tag bust covers the unstable_cache'd lib/results.ts fetchers
+  // (getResults, getRecentResults, getLeaderboardPage, etc.) in one
+  // call. revalidatePath additionally clears any cached RSC payloads
+  // keyed by route segment.
+  updateTag('results');
   revalidatePath('/admin');
   revalidatePath('/');
   revalidatePath('/results');
-  // Athlete profiles render the status badge too; revalidate the
-  // dynamic segment so any open profile refetches.
   revalidatePath('/athletes/[id]', 'page');
 }
 

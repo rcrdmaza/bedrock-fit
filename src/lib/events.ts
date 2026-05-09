@@ -8,6 +8,7 @@
 // because they're ranked independently. See events-filter.ts for the
 // client-safe EventSummary type we re-export here.
 
+import { unstable_cache } from 'next/cache';
 import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import {
@@ -20,6 +21,13 @@ import {
 export { eventKey, filterEvents, type EventSummary, type EventsFilter } from '@/lib/events-filter';
 import { eventKey, type EventSummary } from '@/lib/events-filter';
 
+// Cached DB fetches for the public-facing event surfaces. Tied to the
+// `events` tag — mutations on event_metadata, event_photos, or imports
+// (which can create new event triples) call revalidateTag('events') to
+// bust this group. See src/app/actions/{events,import}.ts.
+const CACHE_REVALIDATE_SECONDS = 60;
+const CACHE_TAGS = ['events'] as const;
+
 // One aggregated row per (name, date, category). Only counts rows
 // with a finish time — DNF/DSQ shouldn't inflate the participant
 // count on the events list.
@@ -28,7 +36,7 @@ import { eventKey, type EventSummary } from '@/lib/events-filter';
 // import left some rows null: `max('Peru', null) = 'Peru'`. If rows
 // legitimately disagree (shouldn't, but), we still get a deterministic
 // answer instead of duplicate groups in the UI.
-export async function getEventSummaries(): Promise<EventSummary[]> {
+async function fetchEventSummaries(): Promise<EventSummary[]> {
   // LEFT JOIN to event_metadata so curated city/country can ride along
   // for the events tab without a second roundtrip. The triple matches
   // upsertEventMetadata's unique index, so the join is exact — and
@@ -84,6 +92,15 @@ export async function getEventSummaries(): Promise<EventSummary[]> {
     };
   });
 }
+
+// Public export — cached. The events list is the same for everyone
+// and changes only on import or metadata edit, so we get a lot of
+// reuse out of a 60s TTL.
+export const getEventSummaries = unstable_cache(
+  fetchEventSummaries,
+  ['event-summaries'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: [...CACHE_TAGS] },
+);
 
 // One participant card on the event detail page. Trimmed vs. ResultRow —
 // no claim status column, no percentile math, because those live in the
@@ -149,7 +166,7 @@ const MAX_PARTICIPANTS = 500;
 // Resolve the URL triple → full participant list. We validate the
 // event exists (at least one row with a finish time) before returning,
 // so the page handler can 404 on bad params.
-export async function getEventDetail(
+async function fetchEventDetail(
   eventName: string,
   eventDateIso: string,
   raceCategory: string,
@@ -275,6 +292,15 @@ export async function getEventDetail(
   };
 }
 
+// Public export — cached per (name, date, category) triple. Each
+// event detail page is its own cache entry, so a popular event
+// dominating the cache doesn't push lesser ones out.
+export const getEventDetail = unstable_cache(
+  fetchEventDetail,
+  ['event-detail'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: [...CACHE_TAGS] },
+);
+
 // One cover photo per recent event, used by the home page carousel.
 // "Cover" = the lowest-sortOrder photo (then earliest createdAt as
 // tiebreaker) of each event, to match what the admin sees at the top
@@ -291,7 +317,7 @@ export type LatestEventPhoto = {
 // Events with no photos are skipped implicitly (the inner join drops
 // them). Safe to render when empty — the carousel component hides
 // itself.
-export async function getLatestEventPhotos(
+async function fetchLatestEventPhotos(
   limit: number,
 ): Promise<LatestEventPhoto[]> {
   // Fetch every (event, photo) pair ordered so the row we want per
@@ -336,6 +362,14 @@ export async function getLatestEventPhotos(
   }
   return out;
 }
+
+// Public export — cached per limit. Powers the home-page carousel,
+// which calls with limit 8.
+export const getLatestEventPhotos = unstable_cache(
+  fetchLatestEventPhotos,
+  ['event-photos-latest'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: [...CACHE_TAGS] },
+);
 
 // Fetch just the metadata + photos for a single event, keyed by the
 // identity triple. Returns null if no metadata row exists yet — the
