@@ -64,6 +64,7 @@ const groups: FooterGroup[] = [
       { label: 'Create account', href: '/auth/sign-in' },
       { label: 'Your profile', href: '/me' },
       { label: 'Privacy', href: '/privacy' },
+      { label: 'Terms', href: '/terms' },
     ],
   },
 ];
