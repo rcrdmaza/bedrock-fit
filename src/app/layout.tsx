@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { getAppUrl } from "@/lib/env";
 import CookieBanner from "./cookie-banner";
 import SiteFooter from "./site-footer";
+
+// Google AdSense publisher ID. The loader script below is what
+// AdSense's verification crawler looks for to approve the account;
+// ad units (`<ins class="adsbygoogle">`) get placed separately once
+// approved.
+const ADSENSE_CLIENT_ID = "ca-pub-4738526719801061";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,6 +64,19 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* Google AdSense loader. next/script injects it into the
+            document head with `afterInteractive`, which is the
+            strategy AdSense's own Next.js guidance recommends —
+            early enough for the verification crawler to find it,
+            late enough that it doesn't block first paint.
+            crossOrigin mirrors the snippet Google hands you. */}
+        <Script
+          id="google-adsense"
+          async
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
+        />
         {children}
         <SiteFooter />
         <CookieBanner />
