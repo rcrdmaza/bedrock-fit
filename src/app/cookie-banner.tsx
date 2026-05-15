@@ -12,13 +12,17 @@
 // DOM event (OPEN_COOKIE_PREFS_EVENT) that we listen for; that's how a
 // user re-opens the banner after they've already chosen.
 //
-// We deliberately don't gate any third-party scripts here. The ad +
-// analytics loaders read the cookie themselves and respect the same
-// state. This file only handles the UI of recording the choice.
+// Beyond the UI, this component is the bridge to Google Consent Mode
+// v2: every accept/reject (and the mount-time read for a returning
+// visitor) pushes a `consent: update` so the AdSense loader knows
+// whether it may set ad cookies / personalize. The denied default is
+// set earlier by ConsentInit (beforeInteractive); this file only
+// ever *upgrades or confirms* that state.
 
 import { useEffect, useState } from 'react';
 import {
   acceptAll,
+  consentModeSignal,
   CONSENT_COOKIE_NAME,
   CONSENT_MAX_AGE_SECONDS,
   parseConsent,
@@ -27,6 +31,24 @@ import {
   OPEN_COOKIE_PREFS_EVENT,
   type ConsentState,
 } from '@/lib/consent';
+
+// gtag is defined globally by ConsentInit's beforeInteractive script.
+// Typed loosely here because the consent-mode call surface is the
+// only thing we touch and Google's own types aren't installed.
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
+// Push a Consent Mode v2 `update` reflecting the chosen state. Safe to
+// call before gtag exists (optional-chains to a no-op) — though in
+// practice ConsentInit runs beforeInteractive, well before this
+// client component hydrates.
+function pushConsentUpdate(state: ConsentState): void {
+  if (typeof window === 'undefined') return;
+  window.gtag?.('consent', 'update', consentModeSignal(state));
+}
 
 // Read the cookie out of `document.cookie`. We could pull a cookie
 // library, but the format is small enough to inline and keeps the
@@ -72,6 +94,12 @@ export default function CookieBanner() {
   useEffect(() => {
     const decideFromCookie = () => {
       const parsed = parseConsent(readConsentCookie());
+      // Returning visitor with a stored choice: replay it into
+      // Consent Mode so the AdSense loader honours their earlier
+      // decision instead of sitting on the denied default. The
+      // `wait_for_update` window in ConsentInit gives this push
+      // time to land before tags fall back.
+      if (parsed) pushConsentUpdate(parsed);
       setVisible(parsed === null);
     };
     decideFromCookie();
@@ -84,11 +112,15 @@ export default function CookieBanner() {
   if (!visible) return null;
 
   const handleAccept = () => {
-    writeConsentCookie(acceptAll());
+    const state = acceptAll();
+    writeConsentCookie(state);
+    pushConsentUpdate(state);
     setVisible(false);
   };
   const handleReject = () => {
-    writeConsentCookie(rejectAll());
+    const state = rejectAll();
+    writeConsentCookie(state);
+    pushConsentUpdate(state);
     setVisible(false);
   };
 

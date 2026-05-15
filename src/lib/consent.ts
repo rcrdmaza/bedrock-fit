@@ -104,3 +104,39 @@ export function serializeConsent(state: ConsentState): string {
 // to re-open the banner. Centralizing the name avoids two places typing
 // it differently and silently breaking the link.
 export const OPEN_COOKIE_PREFS_EVENT = 'bedrock:open-cookie-prefs';
+
+// --- Google Consent Mode v2 -----------------------------------------
+//
+// Google's tag infrastructure (AdSense, GA4) reads four consent
+// signals. We map our two-bucket model onto them: the `ads` bucket
+// drives all three ad-related signals — we don't split "store an ad
+// cookie" from "personalize the ad" in the banner UI, so they move
+// together — and `analytics` drives analytics_storage.
+//
+// A null state (visitor hasn't chosen yet) denies everything, which
+// is the GDPR-safe default and matches what the beforeInteractive
+// init script sets before the AdSense loader boots.
+
+export type ConsentSignalValue = 'granted' | 'denied';
+
+export interface ConsentModeSignal {
+  ad_storage: ConsentSignalValue;
+  ad_user_data: ConsentSignalValue;
+  ad_personalization: ConsentSignalValue;
+  analytics_storage: ConsentSignalValue;
+}
+
+export function consentModeSignal(
+  state: ConsentState | null,
+): ConsentModeSignal {
+  const ads: ConsentSignalValue = state?.ads ? 'granted' : 'denied';
+  const analytics: ConsentSignalValue = state?.analytics
+    ? 'granted'
+    : 'denied';
+  return {
+    ad_storage: ads,
+    ad_user_data: ads,
+    ad_personalization: ads,
+    analytics_storage: analytics,
+  };
+}

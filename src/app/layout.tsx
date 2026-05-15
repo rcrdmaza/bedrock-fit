@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { getAppUrl } from "@/lib/env";
+import ConsentInit from "./consent-init";
 import CookieBanner from "./cookie-banner";
 import SiteFooter from "./site-footer";
 
@@ -64,12 +65,21 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* Consent Mode v2 default state — must execute before the
+            AdSense loader. ConsentInit is `beforeInteractive` and
+            the AdSense loader is `afterInteractive`, so Next orders
+            them correctly regardless of JSX position; we keep
+            ConsentInit first here for readability. */}
+        <ConsentInit />
         {/* Google AdSense loader. next/script injects it into the
             document head with `afterInteractive`, which is the
             strategy AdSense's own Next.js guidance recommends —
             early enough for the verification crawler to find it,
             late enough that it doesn't block first paint.
-            crossOrigin mirrors the snippet Google hands you. */}
+            crossOrigin mirrors the snippet Google hands you.
+            Consent gating happens via Consent Mode (above + the
+            cookie banner's update push), not by withholding the
+            loader. */}
         <Script
           id="google-adsense"
           async

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   acceptAll,
+  consentModeSignal,
   parseConsent,
   rejectAll,
   serializeConsent,
@@ -55,5 +56,69 @@ describe('consent', () => {
     const parsed = parseConsent(partial);
     expect(parsed?.analytics).toBe(true);
     expect(parsed?.ads).toBe(false);
+  });
+});
+
+describe('consentModeSignal', () => {
+  it('denies every signal for a null state (no decision yet)', () => {
+    expect(consentModeSignal(null)).toEqual({
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+    });
+  });
+
+  it('grants every signal for accept-all', () => {
+    expect(consentModeSignal(acceptAll())).toEqual({
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+      analytics_storage: 'granted',
+    });
+  });
+
+  it('denies every signal for reject-all', () => {
+    expect(consentModeSignal(rejectAll())).toEqual({
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+    });
+  });
+
+  it('maps the ads bucket onto all three ad signals together', () => {
+    // analytics granted, ads denied — the three ad_* signals follow
+    // `ads`, analytics_storage follows `analytics`.
+    const state = {
+      essential: true as const,
+      analytics: true,
+      ads: false,
+      ts: '2026-04-28T00:00:00Z',
+      v: 1,
+    };
+    expect(consentModeSignal(state)).toEqual({
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'granted',
+    });
+  });
+
+  it('maps the analytics bucket independently of ads', () => {
+    // ads granted, analytics denied — the inverse split.
+    const state = {
+      essential: true as const,
+      analytics: false,
+      ads: true,
+      ts: '2026-04-28T00:00:00Z',
+      v: 1,
+    };
+    expect(consentModeSignal(state)).toEqual({
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+      analytics_storage: 'denied',
+    });
   });
 });
