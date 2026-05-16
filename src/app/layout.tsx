@@ -1,17 +1,31 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { getAppUrl } from "@/lib/env";
 import ConsentInit from "./consent-init";
 import CookieBanner from "./cookie-banner";
 import SiteFooter from "./site-footer";
 
-// Google AdSense publisher ID. The loader script below is what
+// Google AdSense publisher ID. The loader <script> below is what
 // AdSense's verification crawler looks for to approve the account;
 // ad units (`<ins class="adsbygoogle">`) get placed separately once
 // approved.
 const ADSENSE_CLIENT_ID = "ca-pub-4738526719801061";
+
+// AdSense loader URL, rendered as a raw <script async src> in <head>.
+// We deliberately do NOT use next/script: in Next 16 + React 19,
+// next/script — regardless of strategy — replaces the literal tag
+// with a runtime loader pattern (a <link rel="preload"> in head plus
+// a `self.__next_s.push([url, …])` queue entry in body). The AdSense
+// verification crawler greps raw HTML for a literal
+// `<script ... src="…adsbygoogle.js?client=…">` in <head>, and it
+// does not find that runtime form, which is why the AdSense "Verify"
+// step kept failing with "We couldn't verify your site. Make sure
+// the changes you made to your site are published and accessible by
+// the Google AdSense crawler." Rendering it as a plain JSX <script>
+// inside <head> emits it verbatim into the SSR HTML — exactly the
+// shape the verifier expects.
+const ADSENSE_LOADER_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -64,29 +78,28 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        {/* Consent Mode v2 default state — must execute before the
-            AdSense loader. ConsentInit is `beforeInteractive` and
-            the AdSense loader is `afterInteractive`, so Next orders
-            them correctly regardless of JSX position; we keep
-            ConsentInit first here for readability. */}
+      {/*
+        Explicit <head> so we can guarantee:
+          1. The Consent Mode v2 default runs *first* (synchronous inline
+             script, executes the moment the parser hits it).
+          2. The AdSense loader is a raw `<script async src>` element —
+             not a next/script — so the literal tag is present in the
+             server-rendered HTML for AdSense's verification crawler.
+        Order matters: adsbygoogle.js reads window.dataLayer / gtag
+        consent state on boot, so the default must be in place before
+        the async loader's download completes.
+        Next.js's metadata API still injects its tags into this <head>
+        — we're not replacing it, just adding to it.
+      */}
+      <head>
         <ConsentInit />
-        {/* Google AdSense loader. next/script injects it into the
-            document head with `afterInteractive`, which is the
-            strategy AdSense's own Next.js guidance recommends —
-            early enough for the verification crawler to find it,
-            late enough that it doesn't block first paint.
-            crossOrigin mirrors the snippet Google hands you.
-            Consent gating happens via Consent Mode (above + the
-            cookie banner's update push), not by withholding the
-            loader. */}
-        <Script
-          id="google-adsense"
+        <script
           async
-          strategy="afterInteractive"
+          src={ADSENSE_LOADER_SRC}
           crossOrigin="anonymous"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
         />
+      </head>
+      <body className="min-h-full flex flex-col">
         {children}
         <SiteFooter />
         <CookieBanner />
