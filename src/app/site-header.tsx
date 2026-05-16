@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { athletes } from '@/db/schema';
 import { getCurrentUser } from '@/lib/auth';
 import { getDisplayName } from '@/lib/athlete-display';
+import { getBranding } from '@/lib/site-branding';
 import HeaderNav from '@/app/header-nav';
 import RunningHeroAvatar from '@/app/components/running-hero-avatar';
 
@@ -21,7 +22,15 @@ import RunningHeroAvatar from '@/app/components/running-hero-avatar';
 // gets the right thing.
 
 export default async function SiteHeader() {
-  const user = await getCurrentUser();
+  // Two cached reads run concurrently: the signed-in user (which
+  // drives the right-hand profile slot) and the site-wide branding
+  // singleton (which drives the left-hand mark). getBranding() is
+  // cached + tag-busted, so this is effectively free across most
+  // public pages.
+  const [user, branding] = await Promise.all([
+    getCurrentUser(),
+    getBranding(),
+  ]);
   // Pull the athlete row alongside the user so the profile button can
   // show their picked display name + avatar. One extra select-by-PK
   // per request — cheap, and only when signed in. Falls through to
@@ -49,11 +58,27 @@ export default async function SiteHeader() {
       aria-label="Primary"
       className="grid grid-cols-3 items-center px-8 py-5 border-b border-slate-200 bg-slate-50"
     >
+      {/* Left slot. When an admin has uploaded a logo via /admin/branding,
+          we render the uploaded image (capped at ~32px tall so a wide
+          mark doesn't blow out the header height); otherwise we fall
+          back to the original "Bedrock.fit" wordmark. Both variants link
+          home and carry the same aria-label so screen-reader users get
+          identical navigation regardless of which form is showing. */}
       <Link
         href="/"
-        className="justify-self-start text-xl font-semibold tracking-tight text-stone-900"
+        className="justify-self-start inline-flex items-center text-xl font-semibold tracking-tight text-stone-900"
+        aria-label="Bedrock.fit home"
       >
-        Bedrock.fit
+        {branding.logoDataUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={branding.logoDataUrl}
+            alt="Bedrock.fit"
+            className="h-8 w-auto max-w-[200px] object-contain"
+          />
+        ) : (
+          'Bedrock.fit'
+        )}
       </Link>
 
       {/* Centered nav: HeaderNav is a client island that renders the

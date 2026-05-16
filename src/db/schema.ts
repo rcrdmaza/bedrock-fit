@@ -342,3 +342,28 @@ export const orgInvites = pgTable('org_invites', {
   invitedByUserId: uuid('invited_by_user_id').references(() => users.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+// Singleton table holding the operator-uploaded brand assets. One row,
+// keyed by id=1, enforced by a CHECK constraint in the migration. We
+// don't use a multi-row table because the rest of the app reads "the
+// current logo" / "the current favicon" — there's no version history
+// here, and upserting against a known PK keeps reads trivial (no
+// "find the latest row" query).
+//
+// Both columns store base64 `data:image/...;base64,…` URLs inline,
+// matching the avatar + event-photo pattern. Caps are enforced at
+// upload time by lib/branding.ts: 500 KB for the logo, 100 KB for
+// the favicon. Storing inline means we can ship the upload feature
+// without provisioning object storage; the data URLs are small
+// enough that even the worst-case row size stays well under a few
+// hundred KB.
+//
+// `updatedAt` doubles as a cache-buster and an audit hint: the
+// favicon's `<link rel="icon">` URL gets a `?v=<ts>` so browsers
+// pick up new uploads instead of holding their long-lived cache.
+export const siteBranding = pgTable('site_branding', {
+  id: integer('id').primaryKey(),
+  logoDataUrl: text('logo_data_url'),
+  faviconDataUrl: text('favicon_data_url'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});

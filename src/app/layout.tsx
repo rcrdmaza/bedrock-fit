@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getAppUrl } from "@/lib/env";
+import { getBranding } from "@/lib/site-branding";
 import ConsentInit from "./consent-init";
 import CookieBanner from "./cookie-banner";
 import SiteFooter from "./site-footer";
@@ -41,38 +42,55 @@ const geistMono = Geist_Mono({
 // URLs across all pages — without it, OG previews break on absolute
 // product surfaces. We pull it from the same env helper the magic-link
 // issuer uses so dev/preview/production all stay consistent.
-export const metadata: Metadata = {
-  metadataBase: new URL(getAppUrl()),
-  title: {
-    default: "Bedrock.fit — Race results & training log for runners",
-    template: "%s · Bedrock.fit",
-  },
-  description:
-    "Search race results, claim your finishes, follow leaderboards, and log your daily training runs.",
-  applicationName: "Bedrock.fit",
-  openGraph: {
-    type: "website",
-    siteName: "Bedrock.fit",
-    title: "Bedrock.fit — Race results & training log for runners",
+//
+// We use `generateMetadata` (not a static `metadata` export) because
+// the favicon is operator-uploadable from /admin/branding. The DB-
+// backed data URL gets wired into `icons.icon` per request; when no
+// upload exists, `icons` is omitted so Next.js's `app/favicon.ico`
+// file convention takes over as the fallback. `updatedAt` rides
+// along as a `?v=` cache-buster so a fresh upload doesn't sit
+// behind a browser's long-lived favicon cache.
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await getBranding();
+  return {
+    metadataBase: new URL(getAppUrl()),
+    title: {
+      default: "Bedrock.fit — Race results & training log for runners",
+      template: "%s · Bedrock.fit",
+    },
     description:
       "Search race results, claim your finishes, follow leaderboards, and log your daily training runs.",
-  },
-  // We let the cookie banner gate analytics/ads at runtime, but we
-  // proactively tell ad networks not to record impressions or build
-  // profiles before the user has had a chance to choose. They re-read
-  // the cookie themselves.
-  other: {
-    // Standardized Ad Choices opt-out hint; harmless if no ad network
-    // is loaded.
-    referrer: "strict-origin-when-cross-origin",
-    // Backup AdSense verification path. The `<script src=adsbygoogle.js>`
-    // tag in <head> is the primary method; this meta tag is the second
-    // method AdSense's verifier accepts. Publishing both means we're
-    // covered regardless of which method is selected in the AdSense UI
-    // and regardless of which the crawler happens to check first.
-    "google-adsense-account": ADSENSE_CLIENT_ID,
-  },
-};
+    applicationName: "Bedrock.fit",
+    openGraph: {
+      type: "website",
+      siteName: "Bedrock.fit",
+      title: "Bedrock.fit — Race results & training log for runners",
+      description:
+        "Search race results, claim your finishes, follow leaderboards, and log your daily training runs.",
+    },
+    icons: branding.faviconDataUrl
+      ? {
+          // Data URLs are valid icon hrefs in every modern browser
+          // (Chrome, Safari, Firefox). Bundling the favicon inline in
+          // <link rel=icon> trades a few KB of HTML per request for not
+          // needing a separate /api route or object storage — same
+          // trade-off the avatar + event-photo paths make.
+          icon: branding.faviconDataUrl,
+        }
+      : undefined,
+    other: {
+      // Standardized Ad Choices opt-out hint; harmless if no ad network
+      // is loaded.
+      referrer: "strict-origin-when-cross-origin",
+      // Backup AdSense verification path. The `<script src=adsbygoogle.js>`
+      // tag in <head> is the primary method; this meta tag is the second
+      // method AdSense's verifier accepts. Publishing both means we're
+      // covered regardless of which method is selected in the AdSense UI
+      // and regardless of which the crawler happens to check first.
+      "google-adsense-account": ADSENSE_CLIENT_ID,
+    },
+  };
+}
 
 export default function RootLayout({
   children,
