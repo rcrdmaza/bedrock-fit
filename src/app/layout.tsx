@@ -65,6 +65,12 @@ export const metadata: Metadata = {
     // Standardized Ad Choices opt-out hint; harmless if no ad network
     // is loaded.
     referrer: "strict-origin-when-cross-origin",
+    // Backup AdSense verification path. The `<script src=adsbygoogle.js>`
+    // tag in <head> is the primary method; this meta tag is the second
+    // method AdSense's verifier accepts. Publishing both means we're
+    // covered regardless of which method is selected in the AdSense UI
+    // and regardless of which the crawler happens to check first.
+    "google-adsense-account": ADSENSE_CLIENT_ID,
   },
 };
 
