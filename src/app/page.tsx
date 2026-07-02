@@ -1,300 +1,367 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import SiteHeader from '@/app/site-header';
-import EventPhotoCarousel from '@/app/event-photo-carousel';
-import HomeResultsSearch from '@/app/home-results-search';
-import LeaderboardCountrySelect from '@/app/leaderboard-country-select';
-import { getLatestEventPhotos } from '@/lib/events';
-import {
-  categorySlug,
-  getLeaderboardCountries,
-  getLeaderboardPage,
-  getRecentResults,
-  isLeaderboardCategory,
-  LEADERBOARD_CATEGORIES,
-  type LeaderboardCategory,
-  type LeaderboardRow,
-} from '@/lib/results';
+"use client";
 
-// Leaderboard is a live view — a new import can change the order of the
-// top 25. No static caching here.
-export const dynamic = 'force-dynamic';
+import { useState } from "react";
 
-// How many rows the home-page leaderboard shows. The full field lives
-// on /leaderboards/[category] — we keep this short on the home page so
-// the fold stays focused on the fastest times plus the category chips.
-const PAGE_SIZE = 25;
+/* ---------- blended strength standards: 1RM as multiple of bodyweight ----------
+   Tiers: [Beginner, Novice, Intermediate, Advanced, Elite]  (MALE baseline)
+   Blended/approximate from common published standards; tune later.        */
+const MALE: Record<string, number[]> = {
+  bench: [0.5, 0.75, 1.0, 1.5, 2.0],
+  squat: [0.75, 1.0, 1.5, 2.0, 2.5],
+  deadlift: [1.0, 1.25, 1.75, 2.25, 2.75],
+  ohp: [0.35, 0.5, 0.7, 0.9, 1.1],
+  curl: [0.2, 0.35, 0.5, 0.7, 0.9],
+  pushdown: [0.25, 0.4, 0.55, 0.72, 0.9],
+};
+const FEMALE_FACTOR = 0.68;
+const STANDARDS: Record<string, Record<string, number[]>> = {
+  male: MALE,
+  female: Object.fromEntries(
+    Object.entries(MALE).map(([k, v]) => [k, v.map((x) => +(x * FEMALE_FACTOR).toFixed(3))]),
+  ),
+};
+const LEVELS = ["Beginner", "Novice", "Intermediate", "Advanced", "Elite"];
+const EXERCISES: [string, string][] = [
+  ["bench", "Bench Press"],
+  ["squat", "Back Squat"],
+  ["deadlift", "Deadlift"],
+  ["ohp", "Overhead Press"],
+  ["curl", "Barbell Curl"],
+  ["pushdown", "Tricep Pushdown"],
+];
 
-// Default chip when the URL has no ?category= param. 10K is a broad
-// enough distance that most imports will have populated rows for it,
-// so the empty state is rarer than it would be with the marathon.
-const DEFAULT_CATEGORY: LeaderboardCategory = '10K';
+const LB_PER_KG = 0.45359237;
 
-// How many events to feature in the carousel. One photo per event, so
-// this is also the max number of slides. Tuned so the ↑/↓ stays useful
-// but we don't drag in ancient events.
-const CAROUSEL_EVENT_LIMIT = 8;
+type Unit = "kg" | "lb";
 
-// Pool size for the home-page race-results search bar. The search is
-// client-side filter over this slice, capped at five inline matches
-// inside HomeResultsSearch. 200 is large enough that "search by
-// athlete name" surfaces something useful from the recent past
-// without dragging the full 26k-finisher Boston import through the
-// home-page payload — for anything past 200, "See all results →"
-// funnels users to /results where the full dataset lives.
-const HOME_SEARCH_POOL = 200;
-
-type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
-
-function formatTime(seconds: number | null): string {
-  if (seconds == null) return '—';
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  if (h > 0)
-    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  return `${m}:${String(s).padStart(2, '0')}`;
+interface Results {
+  oneRM: string;
+  ratio: string;
+  levelName: string;
+  levelPct: number;
+  repRows: { label: string; reps: string }[];
+  zStr: string;
+  zHyp: string;
+  zEnd: string;
+  pullups: number;
+  fivek: string;
+  muscleup: string;
+  arch: { emoji: string; name: string; desc: string };
 }
 
-// Pulls the (possibly missing, possibly array) ?category= value out of
-// Next's searchParams object and narrows it to a canonical category or
-// falls back to the default. Array-valued params can happen if someone
-// crafts a URL like ?category=5K&category=10K — take the first.
-function readCategoryParam(
-  raw: string | string[] | undefined,
-): LeaderboardCategory {
-  const first = Array.isArray(raw) ? raw[0] : raw;
-  return isLeaderboardCategory(first) ? first : DEFAULT_CATEGORY;
+function levelOf(ratio: number, std: number[]) {
+  if (ratio < std[0]) return { name: "Untrained", idx: -1, pct: Math.max(4, (ratio / std[0]) * 10) };
+  let i = 0;
+  for (; i < std.length - 1; i++) if (ratio < std[i + 1]) break;
+  let seg: number, within: number;
+  if (ratio >= std[4]) {
+    seg = 4;
+    within = Math.min(1, (ratio - std[4]) / (std[4] - std[3]));
+  } else {
+    seg = i;
+    within = (ratio - std[seg]) / (std[seg + 1] - std[seg]);
+  }
+  const pct = Math.min(100, ((seg + within) / 4) * 100);
+  return { name: LEVELS[Math.min(4, seg)], idx: seg, pct };
 }
 
-function readCountryParam(raw: string | string[] | undefined): string {
-  const first = Array.isArray(raw) ? raw[0] : raw;
-  return typeof first === 'string' ? first.trim() : '';
-}
-
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
+function pickArchetype(a: {
+  ex: string;
+  lvName: string;
+  lvIdx: number;
+  maxPull: number;
+  bwAdj: number;
+  score: number;
 }) {
-  const params = await searchParams;
-  const category = readCategoryParam(params.category);
-  const country = readCountryParam(params.country);
-  // Four parallel fetches:
-  //   - leaderboard page (filtered by category + optional country)
-  //   - carousel photos
-  //   - recent results pool for the home-page search bar
-  //   - distinct countries for the leaderboard switcher + search
-  //     bar's country dropdown
-  const [{ rows, total }, carouselPhotos, recentResults, countries] =
-    await Promise.all([
-      getLeaderboardPage(category, 1, PAGE_SIZE, country || undefined),
-      getLatestEventPhotos(CAROUSEL_EVENT_LIMIT),
-      getRecentResults(HOME_SEARCH_POOL),
-      getLeaderboardCountries(),
-    ]);
+  if (a.lvName === "Untrained")
+    return { emoji: "💎", name: "Diamond in the Rough", desc: "Massive untapped upside. Your numbers only go up from here — time to get in the gym and shock yourself." };
+  if (a.lvIdx >= 3 && (a.ex === "squat" || a.ex === "deadlift" || a.ex === "bench"))
+    return { emoji: "🏋️", name: "Future Olympic Lifter", desc: "You're built for the barbell. Raw strength like this is rare — chase a big total and see how far it goes." };
+  if (a.maxPull >= 12)
+    return { emoji: "🤸", name: "Calisthenics Machine", desc: "Your strength-to-weight ratio is elite. Bars, rings, muscle-ups — the playground is yours." };
+  if (a.bwAdj >= 1.15 && a.score >= 35)
+    return { emoji: "🏃", name: "Marathoner in the Making", desc: "Light, efficient, and strong for your size — the perfect distance-runner build. Lace up." };
+  if (a.lvIdx >= 2)
+    return { emoji: "⚡", name: "The All-Rounder", desc: "Balanced power across the board. You'd hold your own in almost any sport you picked up." };
+  return { emoji: "🌱", name: "The Rising Athlete", desc: "Solid foundation with clear room to grow. Pick a goal and the gains will come fast." };
+}
+
+export default function Home() {
+  const [unit, setUnit] = useState<Unit>("kg");
+  const [sex, setSex] = useState("male");
+  const [height, setHeight] = useState("");
+  const [bw, setBw] = useState("");
+  const [exercise, setExercise] = useState("bench");
+  const [lift, setLift] = useState("");
+  const [reps, setReps] = useState("");
+  const [res, setRes] = useState<Results | null>(null);
+  const [err, setErr] = useState("");
+
+  const toKg = (w: number) => (unit === "kg" ? w : w * LB_PER_KG);
+  const fmtW = (kg: number) => Math.round(unit === "kg" ? kg : kg / LB_PER_KG) + (unit === "kg" ? " kg" : " lb");
+  const wl = unit === "kg" ? "(kg)" : "(lb)";
+
+  function compute() {
+    const bwKg = toKg(parseFloat(bw));
+    const liftKg = toKg(parseFloat(lift));
+    const r = parseFloat(reps);
+    if (!bwKg || !liftKg || !r) {
+      setErr("Fill in bodyweight, weight and reps.");
+      return;
+    }
+    setErr("");
+
+    const oneRM = liftKg * (1 + r / 30); // Epley
+    const ratio = oneRM / bwKg;
+    const std = STANDARDS[sex][exercise];
+    const lv = levelOf(ratio, std);
+
+    // rep table at plate loads (kg): 20kg bar + N 20kg plates/side
+    const loads = [20, 60, 100, 140, 180];
+    const labels = ["Empty bar", "1 plate / side", "2 plates / side", "3 plates / side", "4 plates / side"];
+    const repRows: { label: string; reps: string }[] = [];
+    loads.forEach((L, i) => {
+      const n = Math.floor(30 * (oneRM / L - 1));
+      if (L < oneRM * 0.98 && n >= 1) {
+        repRows.push({ label: `${labels[i]} (${fmtW(L)})`, reps: `${n > 30 ? "30+" : n} reps` });
+      }
+    });
+    if (!repRows.length) repRows.push({ label: "Your max is near an empty bar — keep building!", reps: "" });
+
+    const score = lv.pct;
+    const bwRef = sex === "male" ? 80 : 65;
+    const bwAdj = Math.max(0.6, Math.min(1.4, bwRef / bwKg));
+    const maxPull = Math.max(0, Math.round((score / 100) * (sex === "male" ? 24 : 16) * bwAdj));
+
+    const base5k = sex === "male" ? 34 : 37;
+    let t = base5k - score * 0.15 - (bwAdj - 1) * 8;
+    t = Math.max(sex === "male" ? 15 : 17, Math.min(45, t));
+    const mm = Math.floor(t);
+    const ss = Math.round((t - mm) * 60).toString().padStart(2, "0");
+
+    setRes({
+      oneRM: fmtW(oneRM),
+      ratio: ratio.toFixed(2) + "×",
+      levelName: lv.name,
+      levelPct: lv.pct,
+      repRows,
+      zStr: `${fmtW(oneRM * 0.88)} × 3–5`,
+      zHyp: `${fmtW(oneRM * 0.72)} × 8–12`,
+      zEnd: `${fmtW(oneRM * 0.58)} × 15–20`,
+      pullups: maxPull,
+      fivek: `${mm}:${ss}`,
+      muscleup: maxPull >= 12 ? "Likely 💪" : maxPull >= 7 ? "So close!" : "Not yet",
+      arch: pickArchetype({ ex: exercise, lvName: lv.name, lvIdx: lv.idx, maxPull, bwAdj, score }),
+    });
+  }
 
   return (
-    <main className="min-h-screen bg-slate-50 relative">
-      {/* Decorative sprinter — sits behind the content at 18% opacity so
-          it reads as a backdrop without fighting the leaderboard text.
-          aria-hidden + pointer-events-none keep it out of AT and click
-          targets. Fixed positioning keeps it in place during scroll. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 -z-10 flex items-center justify-center opacity-[0.18]"
-      >
-        <Image
-          src="/runner-bg.png"
-          alt=""
-          width={924}
-          height={576}
-          priority={false}
-          className="max-w-[80vw] h-auto"
-        />
-      </div>
-
-      <SiteHeader />
-
-      <section className="relative max-w-4xl mx-auto px-8 pt-16 pb-24">
-        {/* Carousel hides itself when there are no photos, so first-
-            run installs still drop straight into the leaderboard. */}
-        <EventPhotoCarousel photos={carouselPhotos} />
-
-        {/* --- Leaderboards (top of page) --- */}
-        <h1 className="text-3xl font-semibold text-stone-900 mb-2">
-          Leaderboards
+    <div className="wrap">
+      <header className="hero">
+        <div className="brand">Bedrock.fit</div>
+        <h1>
+          What&apos;s Your <span className="grad">Athletic Potential?</span>
         </h1>
-        <p className="text-stone-500 text-sm mb-6">
-          Top {PAGE_SIZE} finishers by distance. Sorted fastest to slowest.
+        <p className="sub">
+          Enter a few numbers and one lift you do often. We&apos;ll estimate your true strength ceiling — and reveal the
+          athlete you&apos;re built to become.
         </p>
+      </header>
 
-        {/* Distance chips on the left, country switcher on the right.
-            Both update the URL, so the leaderboard re-renders with the
-            new filter on click. */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <CategoryChips active={category} country={country} />
-          {countries.length > 0 && (
-            <LeaderboardCountrySelect
-              countries={countries}
-              active={country}
-              category={category}
-            />
-          )}
+      <div className="card">
+        <div className="grid cols-2">
+          <div>
+            <label>Sex</label>
+            <select value={sex} onChange={(e) => setSex(e.target.value)}>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div>
+            <label>Units</label>
+            <div className="seg">
+              <button type="button" className={unit === "kg" ? "on" : ""} onClick={() => setUnit("kg")}>
+                kg
+              </button>
+              <button type="button" className={unit === "lb" ? "on" : ""} onClick={() => setUnit("lb")}>
+                lb
+              </button>
+            </div>
+          </div>
         </div>
 
-        {rows.length === 0 ? (
-          <div className="text-center py-16 text-stone-400 text-sm border border-dashed border-slate-200 rounded-2xl">
-            {country
-              ? `No ${category} results in ${country} yet.`
-              : `No ${category} results on file yet.`}
+        <div className="grid cols-2" style={{ marginTop: 14 }}>
+          <div>
+            <label>
+              Height <small style={{ color: "var(--muted)" }}>{unit === "kg" ? "(cm)" : "(in)"}</small>
+            </label>
+            <input type="number" inputMode="decimal" placeholder="188" value={height} onChange={(e) => setHeight(e.target.value)} />
           </div>
-        ) : (
-          <>
-            <LeaderboardTable category={category} rows={rows} />
-            {/* Only show the "See all" affordance when there are more
-                rows than fit on the home page — otherwise the link
-                lands on an identical view. The country filter rides
-                along so the destination view matches what the user
-                was just looking at. */}
-            {total > rows.length && (
-              <div className="mt-4 flex justify-end">
-                <Link
-                  href={
-                    country
-                      ? `/leaderboards/${categorySlug(category)}?country=${encodeURIComponent(country)}`
-                      : `/leaderboards/${categorySlug(category)}`
-                  }
-                  className="text-sm text-stone-500 hover:text-stone-900 transition-colors"
-                >
-                  See all {total.toLocaleString()} {category}
-                  {country ? ` ${country}` : ''} finisher
-                  {total === 1 ? '' : 's'} →
-                </Link>
+          <div>
+            <label>
+              Bodyweight <small style={{ color: "var(--muted)" }}>{wl}</small>
+            </label>
+            <input type="number" inputMode="decimal" placeholder="91" value={bw} onChange={(e) => setBw(e.target.value)} />
+          </div>
+        </div>
+
+        <h3 className="sec">Your go-to lift</h3>
+        <div className="grid cols-3">
+          <div>
+            <label>Exercise</label>
+            <select value={exercise} onChange={(e) => setExercise(e.target.value)}>
+              {EXERCISES.map(([v, l]) => (
+                <option key={v} value={v}>
+                  {l}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label>
+              Weight <small style={{ color: "var(--muted)" }}>{wl}</small>
+            </label>
+            <input type="number" inputMode="decimal" placeholder="100" value={lift} onChange={(e) => setLift(e.target.value)} />
+          </div>
+          <div>
+            <label>Reps (best set)</label>
+            <input type="number" inputMode="numeric" placeholder="5" value={reps} onChange={(e) => setReps(e.target.value)} />
+          </div>
+        </div>
+
+        {err && <p style={{ color: "var(--accent)", fontSize: 13, marginTop: 12 }}>{err}</p>}
+        <button className="cta" onClick={compute}>
+          Reveal my potential →
+        </button>
+      </div>
+
+      {res && (
+        <div>
+          <div className="card archetype">
+            <div className="emoji">{res.arch.emoji}</div>
+            <div className="tag">Your athlete archetype</div>
+            <h2>{res.arch.name}</h2>
+            <p>{res.arch.desc}</p>
+          </div>
+
+          <div className="card">
+            <h3 className="sec">Estimated 1-rep max</h3>
+            <div className="grid cols-2">
+              <div className="stat">
+                <div className="big">{res.oneRM}</div>
+                <div className="lbl">Your max</div>
               </div>
-            )}
-          </>
-        )}
+              <div className="stat">
+                <div className="big">{res.ratio}</div>
+                <div className="lbl">× bodyweight</div>
+              </div>
+            </div>
+            <h3 className="sec">
+              Strength level <small style={{ textTransform: "none", letterSpacing: 0 }}>(vs blended global standards)</small>
+            </h3>
+            <div style={{ fontSize: 22, fontWeight: 800 }}>{res.levelName}</div>
+            <div className="rating-bar">
+              <i style={{ width: `${res.levelPct}%` }} />
+            </div>
+            <div className="levels">
+              <span>Beginner</span>
+              <span>Novice</span>
+              <span>Intermediate</span>
+              <span>Advanced</span>
+              <span>Elite</span>
+            </div>
+          </div>
 
-        {/* Minimal divider between the leaderboard and the race-
-            results search. A thin slate-200 rule with comfortable
-            vertical room on either side makes the section break feel
-            intentional rather than just whitespace. We render the
-            divider only when the search section will render — no
-            point in a trailing rule on an install with no results. */}
-        {recentResults.length > 0 && (
-          <>
-            <hr
-              aria-hidden="true"
-              className="my-16 border-0 border-t border-slate-200"
-            />
-            <HomeResultsSearch rows={recentResults} countries={countries} />
-          </>
-        )}
-      </section>
-    </main>
-  );
-}
+          <div className="card">
+            <h3 className="sec">How many reps you could hit</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Load on the bar</th>
+                  <th>Est. reps</th>
+                </tr>
+              </thead>
+              <tbody>
+                {res.repRows.map((row, i) => (
+                  <tr key={i}>
+                    <td>{row.label}</td>
+                    <td>
+                      <b>{row.reps}</b>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-function CategoryChips({
-  active,
-  country,
-}: {
-  active: LeaderboardCategory;
-  // Preserved across distance clicks so the user's country choice
-  // survives a category change. Empty string omits the param.
-  country: string;
-}) {
-  return (
-    <nav
-      aria-label="Filter leaderboard by distance"
-      className="flex flex-wrap gap-2"
-    >
-      {LEADERBOARD_CATEGORIES.map((c) => {
-        const isActive = c === active;
-        const params = new URLSearchParams();
-        params.set('category', c);
-        if (country) params.set('country', country);
-        return (
-          <Link
-            key={c}
-            href={`/?${params.toString()}`}
-            // `scroll: false` would be nice but we're a plain anchor — a
-            // refetch on category change is cheap and predictable. The
-            // page is server-rendered so there's no client store to reset.
-            className={`text-sm rounded-full px-4 py-1.5 border transition-colors ${
-              isActive
-                ? 'bg-stone-900 text-white border-stone-900'
-                : 'bg-white text-stone-700 border-slate-200 hover:border-slate-400'
-            }`}
-            aria-current={isActive ? 'page' : undefined}
-          >
-            {c}
-          </Link>
-        );
-      })}
-    </nav>
-  );
-}
+          <div className="card">
+            <h3 className="sec">Train here to build…</h3>
+            <div className="zone">
+              <div>
+                <b>Max Strength</b>
+                <small>heavy, low reps</small>
+              </div>
+              <div className="v">{res.zStr}</div>
+            </div>
+            <div className="zone">
+              <div>
+                <b>Muscle Size</b>
+                <small>moderate, medium reps</small>
+              </div>
+              <div className="v">{res.zHyp}</div>
+            </div>
+            <div className="zone">
+              <div>
+                <b>Endurance</b>
+                <small>light, high reps</small>
+              </div>
+              <div className="v">{res.zEnd}</div>
+            </div>
+          </div>
 
-function LeaderboardTable({
-  category,
-  rows,
-}: {
-  category: LeaderboardCategory;
-  rows: LeaderboardRow[];
-}) {
-  return (
-    <div className="border border-slate-100 rounded-2xl overflow-hidden">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-50">
-          <tr className="text-stone-500 text-left text-xs uppercase tracking-wide">
-            <th className="px-5 py-3 font-medium w-12">#</th>
-            <th className="px-5 py-3 font-medium">Athlete</th>
-            <th className="px-5 py-3 font-medium">Event</th>
-            <th className="px-5 py-3 font-medium text-right">Finish</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, idx) => {
-            const place = idx + 1;
-            return (
-              <tr
-                key={r.id}
-                className="border-t border-slate-100 hover:bg-slate-50/60 transition-colors"
-              >
-                <td className="px-5 py-3 tabular-nums text-stone-400">
-                  {place}
-                </td>
-                <td className="px-5 py-3">
-                  <Link
-                    href={`/athletes/${r.athleteId}`}
-                    className="font-medium text-stone-900 hover:text-blue-600 transition-colors"
-                  >
-                    {r.athleteName}
-                  </Link>
-                </td>
-                <td className="px-5 py-3 text-stone-600">
-                  <div>{r.eventName}</div>
-                  <div className="text-xs text-stone-400 mt-0.5">
-                    {new Date(r.eventDate).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                    {r.raceCategory && r.raceCategory !== category
-                      ? ` · ${r.raceCategory}`
-                      : ''}
-                  </div>
-                </td>
-                <td className="px-5 py-3 text-right tabular-nums font-medium text-stone-900">
-                  {formatTime(r.finishTime)}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+          <div className="card">
+            <h3 className="sec">Just for fun — your projected feats 🔮</h3>
+            <div className="grid cols-3">
+              <div className="stat">
+                <div className="big">{res.pullups}</div>
+                <div className="lbl">Max pull-ups</div>
+              </div>
+              <div className="stat">
+                <div className="big">{res.fivek}</div>
+                <div className="lbl">5K run time</div>
+              </div>
+              <div className="stat">
+                <div className="big" style={{ fontSize: 20 }}>
+                  {res.muscleup}
+                </div>
+                <div className="lbl">Muscle-up?</div>
+              </div>
+            </div>
+            <p style={{ color: "var(--muted)", fontSize: 12, margin: "12px 0 0" }}>
+              These are playful projections from your profile, not measured results — go test them!
+            </p>
+            <div className="aff">
+              <a href="#aff-shoes">
+                <b>Running shoes →</b>gear up for that 5K
+              </a>
+              <a href="#aff-protein">
+                <b>Protein &amp; creatine →</b>fuel the gains
+              </a>
+              <a href="#aff-program">
+                <b>Get the PDF plan →</b>$7 printable
+              </a>
+            </div>
+          </div>
+
+          <div className="adslot">AD SLOT — AdSense unit goes here</div>
+        </div>
+      )}
+
+      <p className="disclaimer">
+        Estimates use the Epley 1RM formula and a blended baseline of published strength standards (bodyweight-multiple
+        benchmarks). For entertainment and general fitness only — not medical, training, or nutrition advice. Warm up and
+        lift within your limits.
+      </p>
     </div>
   );
 }

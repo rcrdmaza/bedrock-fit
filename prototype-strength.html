@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bedrock.fit — What's Your Athletic Potential?</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c232d; --line:#2a333f;
+    --text:#e8edf2; --muted:#8b98a8; --accent:#ff5a3c; --accent2:#ffb02e;
+    --good:#3ddc84; --blue:#4aa8ff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:radial-gradient(1200px 600px at 50% -10%, #1a2230 0%, var(--bg) 55%);
+    color:var(--text); font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:820px; margin:0 auto; padding:28px 18px 60px}
+  header.hero{text-align:center; padding:22px 0 8px}
+  .brand{font-weight:800; letter-spacing:.5px; font-size:14px; color:var(--accent); text-transform:uppercase}
+  h1{font-size:clamp(26px,5vw,40px); margin:6px 0 6px; line-height:1.1}
+  h1 span{background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .sub{color:var(--muted); max-width:560px; margin:0 auto}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; margin-top:18px}
+  .grid{display:grid; gap:14px}
+  @media(min-width:620px){.cols-2{grid-template-columns:1fr 1fr}.cols-3{grid-template-columns:1fr 1fr 1fr}}
+  label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px; font-weight:600}
+  input,select{width:100%; padding:11px 12px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; color:var(--text); font-size:15px}
+  input:focus,select:focus{outline:none; border-color:var(--accent)}
+  .seg{display:inline-flex; background:var(--panel2); border:1px solid var(--line); border-radius:10px; overflow:hidden}
+  .seg button{background:transparent; border:0; color:var(--muted); padding:9px 16px; font-weight:700; cursor:pointer}
+  .seg button.on{background:var(--accent); color:#111}
+  .cta{width:100%; margin-top:18px; padding:15px; border:0; border-radius:12px; font-size:17px; font-weight:800; cursor:pointer;
+    background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#141414}
+  .cta:active{transform:translateY(1px)}
+  #results{display:none}
+  .archetype{background:linear-gradient(135deg,#241a2e,#15202b); border:1px solid #37405; text-align:center; padding:26px}
+  .archetype .emoji{font-size:52px}
+  .archetype h2{margin:6px 0 4px; font-size:26px}
+  .archetype .tag{color:var(--accent2); font-weight:700; text-transform:uppercase; letter-spacing:1px; font-size:12px}
+  .archetype p{color:var(--muted); margin:8px auto 0; max-width:460px}
+  .rating-bar{height:10px; border-radius:6px; background:var(--panel2); overflow:hidden; margin-top:10px}
+  .rating-bar > i{display:block; height:100%; background:linear-gradient(90deg,var(--blue),var(--good))}
+  .levels{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:6px}
+  .stat{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:16px; text-align:center}
+  .stat .big{font-size:30px; font-weight:800}
+  .stat .lbl{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px}
+  table{width:100%; border-collapse:collapse; margin-top:6px}
+  th,td{padding:9px 8px; text-align:left; border-bottom:1px solid var(--line); font-size:14px}
+  th{color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase}
+  .zone{display:flex; justify-content:space-between; padding:12px 14px; border-radius:10px; background:var(--panel2); border:1px solid var(--line); margin-top:8px}
+  .zone b{display:block; color:var(--accent2)}
+  .zone small{color:var(--muted)}
+  .zone .v{text-align:right; font-weight:700}
+  h3.sec{font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin:22px 0 4px}
+  .disclaimer{color:var(--muted); font-size:12px; margin-top:22px; text-align:center; line-height:1.5}
+  /* revenue slots (stubbed) */
+  .adslot{border:1px dashed #3a4655; border-radius:12px; padding:18px; text-align:center; color:#556; font-size:12px; margin-top:18px; background:repeating-linear-gradient(45deg,#141a22,#141a22 10px,#161d26 10px,#161d26 20px)}
+  .aff{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+  .aff a{flex:1; min-width:150px; text-decoration:none; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:12px; color:var(--text); font-size:13px; text-align:center}
+  .aff a b{color:var(--accent2); display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="brand">Bedrock.fit</div>
+    <h1>What's Your <span>Athletic Potential?</span></h1>
+    <p class="sub">Enter a few numbers and one lift you do often. We'll estimate your true strength ceiling — and reveal the athlete you're built to become.</p>
+  </header>
+
+  <!-- ============ INPUT CARD ============ -->
+  <div class="card">
+    <div class="grid cols-2">
+      <div>
+        <label>Sex</label>
+        <select id="sex">
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+      <div>
+        <label>Units</label>
+        <div class="seg" id="unitSeg">
+          <button type="button" data-u="kg" class="on">kg</button>
+          <button type="button" data-u="lb">lb</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid cols-2" style="margin-top:14px">
+      <div>
+        <label>Height <small id="hUnit" style="color:var(--muted)">(cm)</small></label>
+        <input id="height" type="number" placeholder="188" inputmode="decimal">
+      </div>
+      <div>
+        <label>Bodyweight <small id="bwUnit" style="color:var(--muted)">(kg)</small></label>
+        <input id="bw" type="number" placeholder="91" inputmode="decimal">
+      </div>
+    </div>
+
+    <h3 class="sec">Your go-to lift</h3>
+    <div class="grid cols-3">
+      <div>
+        <label>Exercise</label>
+        <select id="exercise">
+          <option value="bench">Bench Press</option>
+          <option value="squat">Back Squat</option>
+          <option value="deadlift">Deadlift</option>
+          <option value="ohp">Overhead Press</option>
+          <option value="curl">Barbell Curl</option>
+          <option value="pushdown">Tricep Pushdown</option>
+        </select>
+      </div>
+      <div>
+        <label>Weight <small id="wUnit" style="color:var(--muted)">(kg)</small></label>
+        <input id="lift" type="number" placeholder="100" inputmode="decimal">
+      </div>
+      <div>
+        <label>Reps (best set)</label>
+        <input id="reps" type="number" placeholder="5" inputmode="numeric">
+      </div>
+    </div>
+
+    <button class="cta" id="go">Reveal my potential →</button>
+  </div>
+
+  <!-- ============ RESULTS ============ -->
+  <div id="results">
+
+    <div class="card archetype">
+      <div class="emoji" id="archEmoji">🏋️</div>
+      <div class="tag" id="archTag">Your athlete archetype</div>
+      <h2 id="archName">—</h2>
+      <p id="archDesc">—</p>
+    </div>
+
+    <div class="card">
+      <h3 class="sec">Estimated 1-rep max</h3>
+      <div class="grid cols-2">
+        <div class="stat"><div class="big" id="oneRM">—</div><div class="lbl">Your max</div></div>
+        <div class="stat"><div class="big" id="ratio">—</div><div class="lbl" id="ratioLbl">× bodyweight</div></div>
+      </div>
+      <h3 class="sec">Strength level <small style="text-transform:none;letter-spacing:0">(vs blended global standards)</small></h3>
+      <div style="font-size:22px;font-weight:800" id="levelName">—</div>
+      <div class="rating-bar"><i id="levelFill" style="width:0%"></i></div>
+      <div class="levels"><span>Beginner</span><span>Novice</span><span>Intermediate</span><span>Advanced</span><span>Elite</span></div>
+    </div>
+
+    <div class="card">
+      <h3 class="sec">How many reps you could hit</h3>
+      <table><thead><tr><th>Load on the bar</th><th>Est. reps</th></tr></thead><tbody id="repTable"></tbody></table>
+    </div>
+
+    <div class="card">
+      <h3 class="sec">Train here to build…</h3>
+      <div class="zone"><div><b>Max Strength</b><small>heavy, low reps</small></div><div class="v" id="zStr">—</div></div>
+      <div class="zone"><div><b>Muscle Size</b><small>moderate, medium reps</small></div><div class="v" id="zHyp">—</div></div>
+      <div class="zone"><div><b>Endurance</b><small>light, high reps</small></div><div class="v" id="zEnd">—</div></div>
+    </div>
+
+    <div class="card">
+      <h3 class="sec">Just for fun — your projected feats 🔮</h3>
+      <div class="grid cols-3">
+        <div class="stat"><div class="big" id="pullups">—</div><div class="lbl">Max pull-ups</div></div>
+        <div class="stat"><div class="big" id="fivek">—</div><div class="lbl">5K run time</div></div>
+        <div class="stat"><div class="big" id="muscleup" style="font-size:20px">—</div><div class="lbl">Muscle-up?</div></div>
+      </div>
+      <p style="color:var(--muted);font-size:12px;margin:12px 0 0">These are playful projections from your profile, not measured results — go test them!</p>
+
+      <!-- ===== affiliate slot (stub) ===== -->
+      <div class="aff">
+        <a href="#aff-shoes"><b>Running shoes →</b>gear up for that 5K</a>
+        <a href="#aff-protein"><b>Protein & creatine →</b>fuel the gains</a>
+        <a href="#aff-program"><b>Get the PDF plan →</b>$7 printable</a>
+      </div>
+    </div>
+
+    <!-- ===== display-ad slot (stub) ===== -->
+    <div class="adslot">AD SLOT — AdSense / Mediavine unit goes here</div>
+
+  </div>
+
+  <p class="disclaimer">
+    Estimates use the Epley 1RM formula and a blended baseline of published strength standards
+    (bodyweight-multiple benchmarks). For entertainment and general fitness only — not medical,
+    training, or nutrition advice. Warm up and lift within your limits.
+  </p>
+
+</div>
+
+<script>
+/* ---------- blended strength standards: 1RM as multiple of bodyweight ----------
+   Tiers: [Beginner, Novice, Intermediate, Advanced, Elite]  (MALE baseline)
+   Blended/approximate from common published standards; tune later.        */
+const MALE = {
+  bench:    [0.50, 0.75, 1.00, 1.50, 2.00],
+  squat:    [0.75, 1.00, 1.50, 2.00, 2.50],
+  deadlift: [1.00, 1.25, 1.75, 2.25, 2.75],
+  ohp:      [0.35, 0.50, 0.70, 0.90, 1.10],
+  curl:     [0.20, 0.35, 0.50, 0.70, 0.90],
+  pushdown: [0.25, 0.40, 0.55, 0.72, 0.90]
+};
+const FEMALE_FACTOR = 0.68; // upper/compound blend approximation
+const STANDARDS = {male: MALE, female: Object.fromEntries(
+  Object.entries(MALE).map(([k,v]) => [k, v.map(x => +(x*FEMALE_FACTOR).toFixed(3))])
+)};
+const LEVELS = ["Beginner","Novice","Intermediate","Advanced","Elite"];
+
+let unit = "kg";
+const $ = id => document.getElementById(id);
+const toKg = w => unit==="kg" ? w : w*0.45359237;
+const fromKg = w => unit==="kg" ? w : w/0.45359237;
+const fmtW = kg => Math.round(fromKg(kg)) + (unit==="kg"?" kg":" lb");
+
+// unit toggle
+$("unitSeg").addEventListener("click", e => {
+  if(e.target.tagName!=="BUTTON") return;
+  unit = e.target.dataset.u;
+  [...$("unitSeg").children].forEach(b=>b.classList.toggle("on", b===e.target));
+  const wl = unit==="kg"?"(kg)":"(lb)";
+  $("bwUnit").textContent = wl; $("wUnit").textContent = wl;
+  $("hUnit").textContent = unit==="kg"?"(cm)":"(in)";
+});
+
+function level(ratio, std){
+  // returns {name, index0to4, pct0to100}
+  if(ratio < std[0]) return {name:"Untrained", idx:-0.5, pct: Math.max(4, ratio/std[0]*10)};
+  let i = 0;
+  for(; i<std.length-1; i++){ if(ratio < std[i+1]) break; }
+  // interpolate progress across the whole bar (5 tiers -> 0..100)
+  let seg, within;
+  if(ratio >= std[4]){ seg=4; within=Math.min(1,(ratio-std[4])/(std[4]-std[3])); }
+  else { seg=i; within=(ratio-std[seg])/(std[seg+1]-std[seg]); }
+  const pct = Math.min(100, ((seg+within)/4)*100);
+  return {name: LEVELS[Math.min(4,seg)], idx:seg, pct};
+}
+
+function repsAt(oneRM, load){ return Math.floor(30*(oneRM/load - 1)); }
+
+$("go").addEventListener("click", () => {
+  const sex = $("sex").value;
+  const bw = toKg(parseFloat($("bw").value));
+  const lift = toKg(parseFloat($("lift").value));
+  const reps = parseFloat($("reps").value);
+  const ex = $("exercise").value;
+  if(!bw || !lift || !reps){ alert("Fill in bodyweight, weight and reps."); return; }
+
+  const oneRM = lift * (1 + reps/30);            // Epley
+  const ratio = oneRM / bw;
+  const std = STANDARDS[sex][ex];
+  const lv = level(ratio, std);
+
+  $("oneRM").textContent = fmtW(oneRM);
+  $("ratio").textContent = ratio.toFixed(2) + "×";
+  $("levelName").textContent = lv.name;
+  $("levelFill").style.width = lv.pct.toFixed(0) + "%";
+
+  // rep table at plate loadings (kg): bar + N plates(20kg)/side
+  const tbody = $("repTable"); tbody.innerHTML = "";
+  const bar = 20;
+  const loads = [bar, bar+40, bar+80, bar+120, bar+160]; // 20,60,100,140,180 kg
+  const labels = ["Empty bar","1 plate / side","2 plates / side","3 plates / side","4 plates / side"];
+  loads.forEach((L,i)=>{
+    const r = repsAt(oneRM, L);
+    if(L < oneRM*0.98 && r >= 1){
+      tbody.insertAdjacentHTML("beforeend",
+        `<tr><td>${labels[i]} <small style="color:var(--muted)">(${fmtW(L)})</small></td><td><b>${r>30?"30+":r}</b> reps</td></tr>`);
+    }
+  });
+  if(!tbody.children.length){
+    tbody.insertAdjacentHTML("beforeend", `<tr><td colspan="2" style="color:var(--muted)">Your max is near an empty bar — keep building!</td></tr>`);
+  }
+
+  // training zones
+  $("zStr").innerHTML = `${fmtW(oneRM*0.88)} <small style="color:var(--muted)">× 3–5</small>`;
+  $("zHyp").innerHTML = `${fmtW(oneRM*0.72)} <small style="color:var(--muted)">× 8–12</small>`;
+  $("zEnd").innerHTML = `${fmtW(oneRM*0.58)} <small style="color:var(--muted)">× 15–20</small>`;
+
+  // ---- fun projections ----
+  const score = lv.pct; // 0..100 overall strength score
+  const bwRef = sex==="male" ? 80 : 65;
+  const bwAdj = Math.max(0.6, Math.min(1.4, bwRef / bw)); // lighter = more pull-ups / faster run
+  const maxPull = Math.max(0, Math.round((score/100) * (sex==="male"?24:16) * bwAdj));
+  $("pullups").textContent = maxPull;
+
+  const base5k = sex==="male" ? 34 : 37; // minutes at low score
+  let t = base5k - (score*0.15) - (bwAdj-1)*8;
+  t = Math.max(sex==="male"?15:17, Math.min(45, t));
+  const mm = Math.floor(t), ss = Math.round((t-mm)*60).toString().padStart(2,"0");
+  $("fivek").textContent = `${mm}:${ss}`;
+
+  $("muscleup").textContent = maxPull>=12 ? "Likely 💪" : maxPull>=7 ? "So close!" : "Not yet";
+
+  // ---- archetype (the hook) ----
+  const arch = pickArchetype({sex, ratio, lv, ex, maxPull, bwAdj, score});
+  $("archEmoji").textContent = arch.emoji;
+  $("archName").textContent = arch.name;
+  $("archDesc").textContent = arch.desc;
+
+  $("results").style.display = "block";
+  $("results").scrollIntoView({behavior:"smooth", block:"start"});
+});
+
+function pickArchetype({sex, ratio, lv, ex, maxPull, bwAdj, score}){
+  if(lv.name==="Untrained")
+    return {emoji:"💎", name:"Diamond in the Rough", desc:"Massive untapped upside. Your numbers only go up from here — time to get in the gym and shock yourself."};
+  if(lv.idx>=3 && (ex==="squat"||ex==="deadlift"||ex==="bench"))
+    return {emoji:"🏋️", name:"Future Olympic Lifter", desc:"You're built for the barbell. Raw strength like this is rare — chase a big total and see how far it goes."};
+  if(maxPull>=12)
+    return {emoji:"🤸", name:"Calisthenics Machine", desc:"Your strength-to-weight ratio is elite. Bars, rings, muscle-ups — the playground is yours."};
+  if(bwAdj>=1.15 && score>=35)
+    return {emoji:"🏃", name:"Marathoner in the Making", desc:"Light, efficient, and strong for your size — the perfect distance-runner build. Lace up."};
+  if(lv.idx>=2)
+    return {emoji:"⚡", name:"The All-Rounder", desc:"Balanced power across the board. You'd hold your own in almost any sport you picked up."};
+  return {emoji:"🌱", name:"The Rising Athlete", desc:"Solid foundation with clear room to grow. Pick a goal and the gains will come fast."};
+}
+</script>
+</body>
+</html>
