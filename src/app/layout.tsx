@@ -9,7 +9,7 @@ import "./globals.css";
 const ADSENSE_CLIENT_ID = "ca-pub-4738526719801061";
 const ADSENSE_LOADER_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bedrock.fit";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.bedrock.fit";
 
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
 

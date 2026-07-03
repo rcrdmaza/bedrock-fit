@@ -31,7 +31,7 @@ git push origin main
 
 | Name                   | Value                   | Environment |
 | ---------------------- | ----------------------- | ----------- |
-| `NEXT_PUBLIC_SITE_URL` | `https://bedrock.fit`   | Production  |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.bedrock.fit` | Production  |
 
 Leave it unset for Preview (it defaults fine), or set it to your staging
 URL if you want canonical tags correct there too.
@@ -57,29 +57,26 @@ preview URL for free.)
 
 ---
 
-## 4. Point the GoDaddy domain at Vercel
+## 4. Point the domain at Vercel  →  see `DOMAIN-SETUP.md`
 
-1. In Vercel: **Project → Settings → Domains → Add** `bedrock.fit` (and
-   `www.bedrock.fit`). Vercel shows you the exact DNS records to create —
-   **use the values Vercel displays**; the ones below are the current
-   defaults:
+**DNS is managed at Cloudflare, not GoDaddy.** GoDaddy is only the registrar;
+the nameservers are delegated to Cloudflare, so all DNS records are added in
+the **Cloudflare** dashboard. Vercel confirms this by showing "The DNS records
+at Cloudflare must match…".
 
-   | Type  | Name / Host | Value                    |
-   | ----- | ----------- | ------------------------ |
-   | A     | `@`         | `76.76.21.21`            |
-   | CNAME | `www`       | `cname.vercel-dns.com`   |
+The full, current process (records, proxy-off caveat, verification) lives in
+**`DOMAIN-SETUP.md`**. In short:
 
-2. In GoDaddy: **My Products → your domain → DNS → Manage DNS.**
-   - Delete GoDaddy's existing parking `A @` record, add the `A @` above.
-   - Add/replace the `CNAME www` above.
-   - Save. Propagation is usually minutes, up to a couple hours.
+1. In Vercel: **Settings → Domains → Add** `bedrock.fit` and
+   `www.bedrock.fit` (`www` is the primary; apex 308-redirects to it).
+2. In **Cloudflare → DNS → Records**, add a `CNAME @` and `CNAME www`, both
+   pointing at the target Vercel shows, with **Proxy status = DNS only
+   (grey cloud)**. Do not enable the orange-cloud proxy — it breaks Vercel's
+   SSL. Delete any conflicting `A @` / parking records first.
+3. Back in Vercel, both flip to **Valid Configuration** and HTTPS is issued
+   automatically. ✅ Status: connected.
 
-3. Back in Vercel, the domain flips to **Valid Configuration** once DNS
-   resolves. Vercel issues the HTTPS certificate automatically.
-
-**Optional staging subdomain:** add `staging.bedrock.fit` in Vercel and assign
-it to the `staging` branch, then add a `CNAME staging → cname.vercel-dns.com`
-in GoDaddy.
+> **Status: connected.** Domain is live at `https://www.bedrock.fit`.
 
 ---
 
