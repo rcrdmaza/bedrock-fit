@@ -31,10 +31,16 @@ revenue. Check items off as you go (`- [x]`).
 - [ ] `sitemap.xml` reachable and lists real pages (`src/app/sitemap.ts`)
 
 ### Content — the biggest risk (a lone calculator reads as "thin content")
-- [ ] **Privacy Policy** page (required) — cover cookies, ad personalization, and
-      Google/third-party data use
-- [ ] **About / Methodology** page — explain the Epley 1RM formula and the strength-
-      standard sources; this doubles as real, indexable content
+- [x] **Privacy Policy** page — built at route `/privacy`
+      (`src/app/privacy/page.tsx`), contact = privacy@bedrock.fit
+- [x] **About / Methodology** page — built at route `/methodology`
+      (`src/app/methodology/page.tsx`); Epley named, no formula shown
+- [x] **Navigation:** Privacy + Methodology links in the **footer only**,
+      **12px** (via `SiteFrame`); no header/nav links
+- [x] **Design:** document text is monochrome black-on-white (professional);
+      neon header, still-matrix background, and footer are the creative frame
+- [ ] Point the home-page bundle's footer "Privacy" link at `/privacy`
+      (separate edit inside `public/strength-scan.html`)
 - [ ] **Terms of Use** / disclaimer page (the "entertainment only, not medical
       advice" language belongs here too)
 - [ ] **Contact** method (page or email) — reviewers look for site ownership signals

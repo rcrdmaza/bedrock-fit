@@ -92,3 +92,15 @@ h3.sec{font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(-
 .site-footer a{color:var(--muted); text-decoration:none; font-size:13px; font-weight:600}
 .site-footer a:hover{color:var(--neon)}
 .site-footer .copy{width:100%; text-align:center; color:#4a564a; font-size:12px}
+
+/* ---- legal / methodology documents (professional black-on-white,
+   framed by the creative neon SiteFrame) ---- */
+.bf-doc{background:#ffffff; color:#1a1a1a; border-radius:14px; padding:44px 46px; margin-top:16px}
+@media(max-width:560px){.bf-doc{padding:30px 22px}}
+.bf-doc h1{font-family:var(--font-archivo), sans-serif; font-weight:800; font-size:28px; color:#111; margin:0 0 6px; line-height:1.15}
+.bf-doc .eff{font-family:var(--font-mono-bf), monospace; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:#666; margin:0 0 24px}
+.bf-doc h2{font-family:var(--font-archivo), sans-serif; font-weight:700; font-size:17px; color:#111; margin:26px 0 8px}
+.bf-doc p{font-family:var(--font-space), sans-serif; font-size:15px; line-height:1.75; color:#2a2a2a; margin:0 0 12px}
+.bf-doc a{color:#111; text-decoration:underline; word-break:break-word}
+.bf-foot-link{font-family:var(--font-mono-bf), monospace; font-size:12px; font-weight:500; color:#4dff4d; text-decoration:none; letter-spacing:.04em}
+.bf-foot-link:hover{text-decoration:underline}

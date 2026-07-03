@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Archivo, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 // Google AdSense publisher ID (carried over from the previous site — the
@@ -12,6 +12,13 @@ const ADSENSE_LOADER_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsb
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.bedrock.fit";
 
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
+
+// Brand fonts, matching the home-page bundle: Archivo (headings),
+// Space Grotesk (body), JetBrains Mono (mono labels). Exposed as CSS
+// variables and consumed by the legal/methodology pages via SiteFrame.
+const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], weight: ["700", "800", "900"] });
+const spaceGrotesk = Space_Grotesk({ variable: "--font-space", subsets: ["latin"], weight: ["400", "500", "700"] });
+const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono-bf", subsets: ["latin"], weight: ["500", "700"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -35,7 +42,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={geist.variable}>
+    <html
+      lang="en"
+      className={`${geist.variable} ${archivo.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+    >
       <head>
         {/* Raw AdSense loader — emitted verbatim into SSR HTML so the
             AdSense verification crawler finds the literal tag. Do NOT
