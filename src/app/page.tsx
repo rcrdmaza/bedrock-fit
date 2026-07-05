@@ -270,17 +270,17 @@ export default function Home() {
 
         {/* hero: form + result */}
         <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18, padding: "30px 32px", marginTop: 16 }}>
-          <h1 style={{ margin: "0 0 22px", font: `900 40px/1 ${archivo}`, letterSpacing: "-.01em", color: "var(--ink)", textTransform: "uppercase" }}>
+          <h1 className="bf-h1">
             Unlock your <span style={{ color: "var(--accent)" }}>athletic potential</span>
           </h1>
           <p style={{ margin: "0 0 24px", maxWidth: 560, font: `500 14px/1.6 var(--font-space), sans-serif`, color: "var(--muted)" }}>
             Enter a few numbers and one lift you do often. We&rsquo;ll estimate your true strength ceiling — and reveal the athlete you&rsquo;re built to become.
           </p>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1.2fr .8fr", gap: 30, alignItems: "start" }}>
+          <div className="bf-hero">
             {/* form */}
             <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 16, padding: 24 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 18 }}>
+              <div className="bf-two" style={{ marginBottom: 18 }}>
                 <div>
                   <label style={labelStyle}>SEX</label>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -297,7 +297,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+              <div className="bf-two" style={{ marginBottom: 20 }}>
                 <div>
                   <label style={labelStyle}>HEIGHT {unit === "kg" ? "(cm)" : "(in)"}</label>
                   <input type="number" inputMode="decimal" placeholder="0" value={height} onChange={(e) => setHeight(e.target.value)} style={inputStyle} />
@@ -309,7 +309,7 @@ export default function Home() {
               </div>
 
               <label style={{ ...labelStyle, letterSpacing: ".1em" }}>YOUR GO-TO LIFT</label>
-              <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: 12 }}>
+              <div className="bf-lift">
                 <select value={exercise} onChange={(e) => setExercise(e.target.value)} style={{ ...inputStyle, font: `700 14px var(--font-space), sans-serif` }}>
                   {EXERCISES.map(([v, l]) => (
                     <option key={v} value={v}>{l}</option>
@@ -362,10 +362,10 @@ export default function Home() {
         {/* full results */}
         {res && (
           <>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
+            <div className="bf-two" style={{ marginTop: 16 }}>
               <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18, padding: "26px 28px" }}>
                 <div style={secHead}>Estimated 1-rep max</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="bf-two-tight">
                   <div style={statBox}>
                     <div style={{ font: `900 30px ${archivo}`, color: "var(--accent)" }}>{res.oneRM}</div>
                     <div style={{ font: `600 12px ${mono}`, color: "var(--muted)" }}>Your max</div>
@@ -421,7 +421,7 @@ export default function Home() {
 
             <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18, padding: "26px 28px", marginTop: 16 }}>
               <div style={secHead}>Just for fun — your projected feats 🔮</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              <div className="bf-three">
                 <div style={statBox}>
                   <div style={{ font: `900 30px ${archivo}`, color: "var(--accent)" }}>{res.pullups}</div>
                   <div style={{ font: `600 12px ${mono}`, color: "var(--muted)" }}>Max pull-ups</div>

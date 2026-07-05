@@ -104,3 +104,16 @@ h3.sec{font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(-
 .bf-doc a{color:#111; text-decoration:underline; word-break:break-word}
 .bf-foot-link{font-family:var(--font-mono-bf), monospace; font-size:12px; font-weight:500; color:#4dff4d; text-decoration:none; letter-spacing:.04em}
 .bf-foot-link:hover{text-decoration:underline}
+
+/* ---- home calculator: responsive grids + hero heading ---- */
+.bf-hero{display:grid; grid-template-columns:1.2fr .8fr; gap:30px; align-items:start}
+.bf-two{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+.bf-two-tight{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.bf-three{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
+.bf-lift{display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:12px}
+.bf-h1{margin:0 0 22px; font:900 40px/1.02 var(--font-archivo), sans-serif; letter-spacing:-.01em; word-spacing:.12em; color:var(--ink); text-transform:uppercase}
+@media(max-width:860px){ .bf-hero{grid-template-columns:1fr} }
+@media(max-width:600px){
+  .bf-two, .bf-two-tight, .bf-three, .bf-lift{grid-template-columns:1fr}
+  .bf-h1{font:900 30px/1.05 var(--font-archivo), sans-serif; word-spacing:.1em}
+}

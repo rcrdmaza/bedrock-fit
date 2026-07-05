@@ -65,6 +65,9 @@ Planned from the 2026-07-03 session. Priority: 🔴 critical · 🟡 moderate ·
       a still, low-opacity (0.2) matrix, white headings with green reserved for
       key numbers/CTA (not every heading), and the calmer palette.
 - [ ] 🟢 Optional further toning if still too loud after review.
+- [x] 🟡 **Mobile responsive home (this batch)** — hero + results grids stack on
+      phones (breakpoints at 860px / 600px).
+- [x] 🟡 **Hero word-spacing fixed** — "UNLOCK YOUR" no longer renders tight.
 - [ ] 🟢 **Logo.** Search for / design a real logo — the current mark is a
       generic hexagon. Explore concepts, then produce favicon + OG image set.
 
