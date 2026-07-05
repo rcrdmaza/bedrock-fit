@@ -26,7 +26,7 @@ function MatrixStill() {
       for (let j = 0; j < len; j++) {
         const y = (startY - j) * font;
         if (y < 0) break;
-        const op = Math.max(0, 1 - j / len) * 0.5;
+        const op = Math.max(0, 1 - j / len) * 0.3;
         ctx.fillStyle = `rgba(77,255,77,${op.toFixed(3)})`;
         ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * font, y);
       }
@@ -36,7 +36,7 @@ function MatrixStill() {
     <canvas
       ref={ref}
       aria-hidden
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 0, opacity: 0.5 }}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 0, opacity: 0.26 }}
     />
   );
 }
