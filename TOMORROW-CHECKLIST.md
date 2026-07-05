@@ -10,19 +10,16 @@ Planned from the 2026-07-03 session. Priority: 🔴 critical · 🟡 moderate ·
 
 ---
 
-## A. Home calculator — functionality [bundle]
+## A. Home calculator — functionality  ✅ REBUILT IN REACT (this batch)
 
-- [ ] 🔴 **Build the calculator — there is NO calc logic today.** Inspected the
-      bundle: the only script handles theme, language, and the matrix animation.
-      The form, "Reveal my physique" button, 245 1RM, nutrition, and celebrity
-      matches are **hardcoded static HTML** — nothing computes. Confirmed live
-      (bodyweight 200 + lift 315 → still 245). This is a build, not a fix.
-      **Recommendation:** rebuild the home experience as a real React page
-      (reusing the working logic already in `src/app/_previous-page.tsx.bak`)
-      rather than trying to add logic inside the opaque bundle.
-- [ ] 🟡 **Add a Reset button** — clears all inputs and results back to the
-      default/empty state (sits next to "Reveal my physique").
-- [ ] 🟡 **Set input placeholders to `0`** — currently 70 / 185 / 185 / 5.
+- [x] 🔴 **Calculator built as a real React page** (`src/app/page.tsx`).
+      Replaced the static iframe bundle with working Epley 1RM math, strength
+      level, rep table, training zones, and projected feats — all computed live
+      from the form. Logic reused from `_previous-page.tsx.bak`.
+- [x] 🟡 **Reset button** — clears inputs + results, sits next to "Reveal".
+- [x] 🟡 **Input placeholders set to `0`.**
+- Note: the old `public/strength-scan.html` bundle is now **orphaned** (no route
+      uses it). Safe to delete later; kept for reference for now.
 
 ## B. Home calculator — archetype visuals [bundle] + assets
 
@@ -55,30 +52,30 @@ Planned from the 2026-07-03 session. Priority: 🔴 critical · 🟡 moderate ·
 
 ## D. Layout for monetization [next] / [bundle]
 
-- [ ] 🟡 **Ad-slot spacing along the panes.** Note: the bundle **already has a
-      dashed "970 × 90 · FULL-WIDTH AD UNIT" placeholder** just above the footer
-      (visual only, no real ad code). Plan real, well-spaced responsive slots
-      between the hero, results, and nutrition panes (plus the existing full-
-      width slot), reserving fixed heights to keep layout shift (CLS) low.
-  - Note: still **no live ad code** until AdSense approves the site — layout
-        planning only, consistent with the earlier decision.
+- [x] 🟡 **Ad-slot layout added (this batch).** The React home now has two
+      reserved, dashed ad containers — a 728×90 leaderboard under the header and
+      a 970×90 full-width unit above the footer — with fixed heights to minimize
+      layout shift. **Still no live ad code** until AdSense approves (label-only
+      placeholders). Follow-up: add an in-content slot between result panes if
+      desired.
 
 ## E. Visual refinement
 
-- [ ] 🟡 **Reduce neon-green impact** for a more refined feel: lower matrix
-      background opacity, use green as an accent rather than on every heading,
-      and soften the all-caps green blocks. Improves polish and ad legibility.
-      (Matrix opacity is easy to tune on the legal pages **[next]**; the home
-      version is **[bundle]**.)
+- [x] 🟡 **Reduced neon-green impact on home (this batch).** The React home uses
+      a still, low-opacity (0.2) matrix, white headings with green reserved for
+      key numbers/CTA (not every heading), and the calmer palette.
+- [ ] 🟢 Optional further toning if still too loud after review.
 - [ ] 🟢 **Logo.** Search for / design a real logo — the current mark is a
       generic hexagon. Explore concepts, then produce favicon + OG image set.
 
 ## F. Carry-over from the design audit
 
-- [x] 🔴 **DONE — home footer "Privacy" → `/privacy`, "About" → `/methodology`**
-      (both `target="_top"`, edited in the bundle). Unblocks AdSense navigation.
-- [x] 🟢 **DONE — reduced neon/matrix intensity on the legal pages** (SiteFrame
-      canvas opacity 0.5 → 0.26, per-char 0.5 → 0.3).
+- [x] 🔴 **DONE + VERIFIED LIVE (2026-07-03)** — home footer "Privacy" →
+      `/privacy`, "About" → `/methodology` (both `target="_top"`). Clicking
+      Privacy on the live site navigates to `www.bedrock.fit/privacy`.
+      AdSense navigation unblocked.
+- [x] 🟢 **DONE + VERIFIED LIVE** — reduced neon/matrix intensity on the legal
+      pages (SiteFrame canvas opacity 0.5 → 0.26, per-char 0.5 → 0.3).
 - [ ] 🟡 Hero renders as "UNLOCKYOUR" (missing word-space); fix spacing. **[bundle]**
 - [ ] 🟡 Stray "×" glyph before the "YOUR GO-TO LIFT" label; remove/replace. **[bundle]**
 - [ ] 🟡 Redundant "Your projected physique" heading (banner + right column). **[bundle]**
