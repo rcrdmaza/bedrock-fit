@@ -215,6 +215,14 @@ export default function Home() {
   const [exercise, setExercise] = useState("bench");
   const [lift, setLift] = useState("");
   const [reps, setReps] = useState("");
+  /* fun extras — optional, don't gate the scan */
+  const [orgSports, setOrgSports] = useState("");
+  const [proSports, setProSports] = useState("");
+  const [bodyFat, setBodyFat] = useState("");
+  const [pullupsIn, setPullupsIn] = useState("");
+  const [marathon, setMarathon] = useState("");
+  const [tenK, setTenK] = useState("");
+  const [dash100, setDash100] = useState("");
   const [res, setRes] = useState<Results | null>(null);
   const [err, setErr] = useState("");
 
@@ -295,6 +303,13 @@ export default function Home() {
     setExercise("bench");
     setLift("");
     setReps("");
+    setOrgSports("");
+    setProSports("");
+    setBodyFat("");
+    setPullupsIn("");
+    setMarathon("");
+    setTenK("");
+    setDash100("");
     setRes(null);
     setErr("");
   }
@@ -323,6 +338,26 @@ export default function Home() {
     font: `700 12px ${archivo}`,
     cursor: "pointer",
   });
+
+  const ynBtn = (active: boolean): React.CSSProperties => ({
+    padding: "0 14px",
+    height: 36,
+    borderRadius: 9,
+    border: `1px solid ${active ? "var(--green)" : "var(--line)"}`,
+    background: active ? "var(--green)" : "#fff",
+    color: active ? "#fff" : "var(--muted)",
+    font: `700 11px ${archivo}`,
+    cursor: "pointer",
+  });
+
+  const yn = (value: string, onChange: (v: string) => void, ariaLabel: string) => (
+    <div style={{ display: "flex", gap: 6 }} role="group" aria-label={ariaLabel}>
+      <button type="button" style={ynBtn(value === "yes")} onClick={() => onChange(value === "yes" ? "" : "yes")}>Yes</button>
+      <button type="button" style={ynBtn(value === "no")} onClick={() => onChange(value === "no" ? "" : "no")}>No</button>
+    </div>
+  );
+
+  const extraHead: React.CSSProperties = { margin: "18px 0 12px", font: `700 10px ${space}`, letterSpacing: ".14em", color: "var(--muted)", textTransform: "uppercase", borderTop: "1px dashed var(--line)", paddingTop: 14 };
 
   const wrap: React.CSSProperties = { width: "100%", maxWidth: 1120, margin: "0 auto", padding: "0 20px" };
   const h2Style: React.CSSProperties = { font: `800 clamp(26px, 4vw, 38px)/1.15 ${archivo}`, letterSpacing: "-.01em", color: "var(--ink)", margin: 0 };
@@ -452,7 +487,7 @@ export default function Home() {
               type="button"
               onClick={() => setModalOpen(false)}
               aria-label="Close"
-              style={{ position: "absolute", top: 14, right: 14, width: 34, height: 34, borderRadius: 10, border: "1px solid var(--line)", background: "#fff", color: "var(--muted)", font: `700 15px ${space}`, cursor: "pointer", lineHeight: 1 }}
+              style={{ position: "absolute", top: -18, right: -18, width: 42, height: 42, borderRadius: "50%", border: "2px solid #1E2124", background: "transparent", color: "#fff", font: `800 17px ${space}`, cursor: "pointer", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}
             >
               ✕
             </button>
@@ -474,69 +509,123 @@ export default function Home() {
 
                 <div style={{ textAlign: "center", margin: "26px 0 20px" }}>
                   <h2 style={{ font: `800 24px ${archivo}`, color: "var(--ink)", margin: 0 }}>Run your free strength scan</h2>
-                  <p style={{ font: `500 13.5px/1.6 ${space}`, color: "var(--muted)", margin: "8px auto 0", maxWidth: 400 }}>
-                    A few numbers and one lift. Results appear instantly — nothing is uploaded or stored.
+                  <p style={{ font: `600 13.5px/1.4 ${space}`, color: "var(--green)", margin: "7px auto 0" }}>
+                    A few numbers, one lift, instant results.
                   </p>
                 </div>
 
-                <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginBottom: 14 }}>
-                  <div>
-                    <label style={labelStyle}>Sex</label>
-                    <div style={{ display: "flex", gap: 6, height: 42 }}>
-                      <button type="button" style={{ ...seg(sex === "male"), flex: "none", padding: "0 16px" }} onClick={() => setSex("male")}>M</button>
-                      <button type="button" style={{ ...seg(sex === "female"), flex: "none", padding: "0 16px" }} onClick={() => setSex("female")}>F</button>
-                    </div>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Weight {wl}</label>
-                    <Stepper value={bw} onChange={setBw} step={1} min={0} max={500} decimals={1} inputWidth={48} placeholder={unit === "kg" ? "70" : "155"} ariaLabel="Bodyweight" />
-                  </div>
-                  {lUnit === "m" ? (
-                    <div>
-                      <label style={labelStyle}>Height (m)</label>
-                      <Stepper value={height} onChange={setHeight} step={0.01} min={0} max={2.5} decimals={2} inputWidth={54} placeholder="1.75" ariaLabel="Height in meters" />
-                    </div>
-                  ) : (
-                    <div>
-                      <label style={labelStyle}>Height (ft / in)</label>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <Stepper value={heightFt} onChange={setHeightFt} step={1} min={0} max={8} inputWidth={34} placeholder="5" ariaLabel="Height feet" />
-                        <Stepper value={heightIn} onChange={setHeightIn} step={1} min={0} max={11} inputWidth={34} placeholder="10" ariaLabel="Height inches" />
+                <div className="bf-scan-cols">
+                  {/* section 1: the body */}
+                  <section style={{ background: "var(--mint)", border: "1px solid var(--line)", borderRadius: 14, padding: "18px 18px 20px" }}>
+                    <h3 style={{ font: `800 16px ${archivo}`, color: "var(--ink)", margin: 0 }}>📏 Your Build</h3>
+                    <p style={{ font: `600 11.5px ${space}`, color: "var(--green)", margin: "3px 0 16px", letterSpacing: ".02em" }}>what the tape measure says</p>
+
+                    <div style={{ marginBottom: 14 }}>
+                      <label style={labelStyle}>Sex</label>
+                      <div style={{ display: "flex", gap: 6, height: 42 }}>
+                        <button type="button" style={{ ...seg(sex === "male"), flex: "none", padding: "0 18px" }} onClick={() => setSex("male")}>M</button>
+                        <button type="button" style={{ ...seg(sex === "female"), flex: "none", padding: "0 18px" }} onClick={() => setSex("female")}>F</button>
                       </div>
                     </div>
-                  )}
+
+                    <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                      <div>
+                        <label style={labelStyle}>Weight {wl}</label>
+                        <Stepper value={bw} onChange={setBw} step={1} min={0} max={500} decimals={1} inputWidth={48} placeholder={unit === "kg" ? "70" : "155"} ariaLabel="Bodyweight" />
+                      </div>
+                      {lUnit === "m" ? (
+                        <div>
+                          <label style={labelStyle}>Height (m)</label>
+                          <Stepper value={height} onChange={setHeight} step={0.01} min={0} max={2.5} decimals={2} inputWidth={54} placeholder="1.75" ariaLabel="Height in meters" />
+                        </div>
+                      ) : (
+                        <div>
+                          <label style={labelStyle}>Height (ft / in)</label>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <Stepper value={heightFt} onChange={setHeightFt} step={1} min={0} max={8} inputWidth={34} placeholder="5" ariaLabel="Height feet" />
+                            <Stepper value={heightIn} onChange={setHeightIn} step={1} min={0} max={11} inputWidth={34} placeholder="10" ariaLabel="Height inches" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={extraHead}>Extra credit · optional</div>
+                    <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
+                      <div>
+                        <label style={labelStyle}>Played organized sports?</label>
+                        {yn(orgSports, setOrgSports, "Played organized sports")}
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Ever gone pro?</label>
+                        {yn(proSports, setProSports, "Played professional sports")}
+                      </div>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Body fat %</label>
+                      <Stepper value={bodyFat} onChange={setBodyFat} step={1} min={3} max={60} decimals={1} inputWidth={44} placeholder="18" ariaLabel="Body fat percentage" />
+                    </div>
+                  </section>
+
+                  {/* section 2: the lift */}
+                  <section style={{ background: "var(--mint)", border: "1px solid var(--line)", borderRadius: 14, padding: "18px 18px 20px" }}>
+                    <h3 style={{ font: `800 16px ${archivo}`, color: "var(--ink)", margin: 0 }}>⚡ Power Numbers</h3>
+                    <p style={{ font: `600 11.5px ${space}`, color: "var(--green)", margin: "3px 0 16px", letterSpacing: ".02em" }}>what you can actually move</p>
+
+                    <div style={{ marginBottom: 14 }}>
+                      <label style={labelStyle}>Lift</label>
+                      <select value={exercise} onChange={(e) => setExercise(e.target.value)} style={{ ...inputStyle, height: 42, width: "auto", minWidth: 172, paddingRight: 28 }}>
+                        {EXERCISES.map(([v, l]) => (
+                          <option key={v} value={v}>{l}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                      <div>
+                        <label style={labelStyle}>Weight {wl}</label>
+                        <Stepper value={lift} onChange={setLift} step={unit === "kg" ? 2.5 : 5} min={0} max={500} decimals={1} inputWidth={48} placeholder={unit === "kg" ? "60" : "135"} ariaLabel="Lift weight" />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Reps</label>
+                        <Stepper value={reps} onChange={setReps} step={1} min={1} max={30} inputWidth={36} placeholder="8" ariaLabel="Reps" />
+                      </div>
+                    </div>
+
+                    <div style={extraHead}>Extra credit · optional</div>
+                    <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
+                      <div>
+                        <label style={labelStyle}>Max pull-ups, no stopping</label>
+                        <Stepper value={pullupsIn} onChange={setPullupsIn} step={1} min={0} max={100} inputWidth={40} placeholder="10" ariaLabel="Max pull-ups" />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Could you run a marathon?</label>
+                        {yn(marathon, setMarathon, "Can run a full marathon")}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                      <div>
+                        <label style={labelStyle}>Fastest 10K (min)</label>
+                        <Stepper value={tenK} onChange={setTenK} step={1} min={25} max={120} inputWidth={40} placeholder="55" ariaLabel="Fastest 10K in minutes" />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Fastest 100m (sec)</label>
+                        <Stepper value={dash100} onChange={setDash100} step={0.5} min={9} max={30} decimals={1} inputWidth={44} placeholder="14.5" ariaLabel="Fastest 100 meter dash in seconds" />
+                      </div>
+                    </div>
+                  </section>
                 </div>
 
-                <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "flex-end", marginBottom: 14 }}>
-                  <div style={{ flex: 1, minWidth: 170 }}>
-                    <label style={labelStyle}>Lift</label>
-                    <select value={exercise} onChange={(e) => setExercise(e.target.value)} style={{ ...inputStyle, height: 42 }}>
-                      {EXERCISES.map(([v, l]) => (
-                        <option key={v} value={v}>{l}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Weight {wl}</label>
-                    <Stepper value={lift} onChange={setLift} step={unit === "kg" ? 2.5 : 5} min={0} max={500} decimals={1} inputWidth={48} placeholder={unit === "kg" ? "60" : "135"} ariaLabel="Lift weight" />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Reps</label>
-                    <Stepper value={reps} onChange={setReps} step={1} min={1} max={30} inputWidth={36} placeholder="8" ariaLabel="Reps" />
-                  </div>
-                </div>
+                {err && <p style={{ color: "#c0392b", fontSize: 13, margin: "10px 0 0", textAlign: "center" }}>{err}</p>}
 
-                {err && <p style={{ color: "#c0392b", fontSize: 13, margin: "8px 0" }}>{err}</p>}
-
-                <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-                  <button type="button" onClick={compute} style={{ ...btnGreen, flex: 1, textAlign: "center" }}>
+                <div style={{ display: "flex", gap: 10, marginTop: 18, justifyContent: "center" }}>
+                  <button type="button" onClick={compute} style={{ ...btnGreen, padding: "11px 24px", font: `800 13px ${archivo}` }}>
                     Reveal my results →
                   </button>
                   <button
                     type="button"
                     onClick={reset}
                     aria-label="Reset the calculator"
-                    style={{ padding: "12px 16px", background: "#fff", color: "var(--muted)", border: "1px solid var(--line)", borderRadius: 12, font: `700 12px ${archivo}`, letterSpacing: ".04em", cursor: "pointer" }}
+                    style={{ padding: "11px 16px", background: "#fff", color: "var(--muted)", border: "1px solid var(--line)", borderRadius: 12, font: `700 12px ${archivo}`, letterSpacing: ".04em", cursor: "pointer" }}
                   >
                     Reset
                   </button>

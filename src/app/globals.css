@@ -127,12 +127,15 @@ html{scroll-behavior:smooth}
 .lp-flink:hover{color:#7ede9f}
 
 /* ---- strength-scan modal (form → results window) ---- */
-.lp-overlay{position:fixed;inset:0;z-index:100;background:rgba(23,28,24,.55);backdrop-filter:blur(3px);
-  display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px;overflow-y:auto;
+.lp-overlay{position:fixed;inset:0;z-index:100;background:rgba(23,28,24,.5);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px;overflow-y:auto;
   animation:lpFadeIn .18s ease both}
 .lp-modal{position:relative;background:#fff;border:1px solid #e2eae4;border-radius:20px;
-  width:100%;max-width:720px;padding:30px 30px 26px;margin-bottom:6vh;
+  width:100%;max-width:780px;padding:30px 30px 26px;margin-bottom:7vh;
   box-shadow:0 24px 60px rgba(23,28,24,.28);animation:lpPop .22s cubic-bezier(.2,.85,.3,1.05) both}
+.bf-scan-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:left}
+@media(max-width:640px){.bf-scan-cols{grid-template-columns:1fr}}
 @media(max-width:560px){.lp-modal{padding:24px 18px 20px}}
 @keyframes lpFadeIn{from{opacity:0}to{opacity:1}}
 /* compact stepper inputs: hide native number spinners (custom ▲/▼ instead) */
