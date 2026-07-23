@@ -212,7 +212,7 @@ export default function Home() {
   const [heightFt, setHeightFt] = useState("");
   const [heightIn, setHeightIn] = useState("");
   const [bw, setBw] = useState("");
-  const [exercise, setExercise] = useState("bench");
+  const [exercise, setExercise] = useState("");
   const [lift, setLift] = useState("");
   const [reps, setReps] = useState("");
   /* fun extras — optional, don't gate the scan */
@@ -247,8 +247,8 @@ export default function Home() {
     const bwKg = toKg(parseFloat(bw));
     const liftKg = toKg(parseFloat(lift));
     const r = parseFloat(reps);
-    if (!bwKg || !liftKg || !r) {
-      setErr("Fill in bodyweight, weight and reps.");
+    if (!exercise || !bwKg || !liftKg || !r) {
+      setErr("Select your core lift and fill in bodyweight, weight and reps.");
       return;
     }
     setErr("");
@@ -300,7 +300,7 @@ export default function Home() {
     setHeightFt("");
     setHeightIn("");
     setBw("");
-    setExercise("bench");
+    setExercise("");
     setLift("");
     setReps("");
     setOrgSports("");
@@ -531,19 +531,19 @@ export default function Home() {
                     <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                       <div>
                         <label style={labelStyle}>Weight {wl}</label>
-                        <Stepper value={bw} onChange={setBw} step={1} min={0} max={500} decimals={1} inputWidth={48} placeholder={unit === "kg" ? "70" : "155"} ariaLabel="Bodyweight" />
+                        <Stepper value={bw} onChange={setBw} step={1} min={0} max={500} decimals={1} inputWidth={48} placeholder="0" ariaLabel="Bodyweight" />
                       </div>
                       {lUnit === "m" ? (
                         <div>
                           <label style={labelStyle}>Height (m)</label>
-                          <Stepper value={height} onChange={setHeight} step={0.01} min={0} max={2.5} decimals={2} inputWidth={54} placeholder="1.75" ariaLabel="Height in meters" />
+                          <Stepper value={height} onChange={setHeight} step={0.01} min={0} max={2.5} decimals={2} inputWidth={54} placeholder="0" ariaLabel="Height in meters" />
                         </div>
                       ) : (
                         <div>
                           <label style={labelStyle}>Height (ft / in)</label>
                           <div style={{ display: "flex", gap: 8 }}>
-                            <Stepper value={heightFt} onChange={setHeightFt} step={1} min={0} max={8} inputWidth={34} placeholder="5" ariaLabel="Height feet" />
-                            <Stepper value={heightIn} onChange={setHeightIn} step={1} min={0} max={11} inputWidth={34} placeholder="10" ariaLabel="Height inches" />
+                            <Stepper value={heightFt} onChange={setHeightFt} step={1} min={0} max={8} inputWidth={34} placeholder="0" ariaLabel="Height feet" />
+                            <Stepper value={heightIn} onChange={setHeightIn} step={1} min={0} max={11} inputWidth={34} placeholder="0" ariaLabel="Height inches" />
                           </div>
                         </div>
                       )}
@@ -562,7 +562,7 @@ export default function Home() {
                     </div>
                     <div>
                       <label style={labelStyle}>Body fat %</label>
-                      <Stepper value={bodyFat} onChange={setBodyFat} step={1} min={3} max={60} decimals={1} inputWidth={44} placeholder="18" ariaLabel="Body fat percentage" />
+                      <Stepper value={bodyFat} onChange={setBodyFat} step={1} min={3} max={60} decimals={1} inputWidth={44} placeholder="0" ariaLabel="Body fat percentage" />
                     </div>
                   </section>
 
@@ -573,9 +573,14 @@ export default function Home() {
 
                     <div style={{ marginBottom: 14 }}>
                       <label style={labelStyle}>Lift</label>
-                      <select value={exercise} onChange={(e) => setExercise(e.target.value)} style={{ ...inputStyle, height: 42, width: "auto", minWidth: 172, paddingRight: 28 }}>
+                      <select
+                        value={exercise}
+                        onChange={(e) => setExercise(e.target.value)}
+                        style={{ ...inputStyle, height: 42, width: "auto", minWidth: 172, paddingRight: 28, color: exercise ? "var(--ink)" : "#a2aba3" }}
+                      >
+                        <option value="" disabled>Select core lift</option>
                         {EXERCISES.map(([v, l]) => (
-                          <option key={v} value={v}>{l}</option>
+                          <option key={v} value={v} style={{ color: "var(--ink)" }}>{l}</option>
                         ))}
                       </select>
                     </div>
@@ -583,11 +588,11 @@ export default function Home() {
                     <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                       <div>
                         <label style={labelStyle}>Weight {wl}</label>
-                        <Stepper value={lift} onChange={setLift} step={unit === "kg" ? 2.5 : 5} min={0} max={500} decimals={1} inputWidth={48} placeholder={unit === "kg" ? "60" : "135"} ariaLabel="Lift weight" />
+                        <Stepper value={lift} onChange={setLift} step={unit === "kg" ? 2.5 : 5} min={0} max={500} decimals={1} inputWidth={48} placeholder="0" ariaLabel="Lift weight" />
                       </div>
                       <div>
                         <label style={labelStyle}>Reps</label>
-                        <Stepper value={reps} onChange={setReps} step={1} min={1} max={30} inputWidth={36} placeholder="8" ariaLabel="Reps" />
+                        <Stepper value={reps} onChange={setReps} step={1} min={1} max={30} inputWidth={36} placeholder="0" ariaLabel="Reps" />
                       </div>
                     </div>
 
@@ -595,7 +600,7 @@ export default function Home() {
                     <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
                       <div>
                         <label style={labelStyle}>Max pull-ups, no stopping</label>
-                        <Stepper value={pullupsIn} onChange={setPullupsIn} step={1} min={0} max={100} inputWidth={40} placeholder="10" ariaLabel="Max pull-ups" />
+                        <Stepper value={pullupsIn} onChange={setPullupsIn} step={1} min={0} max={100} inputWidth={40} placeholder="0" ariaLabel="Max pull-ups" />
                       </div>
                       <div>
                         <label style={labelStyle}>Could you run a marathon?</label>
@@ -605,11 +610,11 @@ export default function Home() {
                     <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                       <div>
                         <label style={labelStyle}>Fastest 10K (min)</label>
-                        <Stepper value={tenK} onChange={setTenK} step={1} min={25} max={120} inputWidth={40} placeholder="55" ariaLabel="Fastest 10K in minutes" />
+                        <Stepper value={tenK} onChange={setTenK} step={1} min={25} max={120} inputWidth={40} placeholder="0" ariaLabel="Fastest 10K in minutes" />
                       </div>
                       <div>
                         <label style={labelStyle}>Fastest 100m (sec)</label>
-                        <Stepper value={dash100} onChange={setDash100} step={0.5} min={9} max={30} decimals={1} inputWidth={44} placeholder="14.5" ariaLabel="Fastest 100 meter dash in seconds" />
+                        <Stepper value={dash100} onChange={setDash100} step={0.5} min={9} max={30} decimals={1} inputWidth={44} placeholder="0" ariaLabel="Fastest 100 meter dash in seconds" />
                       </div>
                     </div>
                   </section>
