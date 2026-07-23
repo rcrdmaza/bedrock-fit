@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+{{ svg }}
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:140,&quot;height&quot;:140},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;],&quot;default&quot;:&quot;a&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;struct&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#2C2F33&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#A8E063&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const struct = this.props.struct || '#2C2F33';
+    const accent = this.props.accent || '#A8E063';
+    const v = this.props.variant || 'a';
+    const h = React.createElement;
+    let kids = [];
+    if (v === 'a') {
+      kids = [
+        h('rect',{key:'p1',x:14,y:34,width:12,height:52,rx:6,fill:struct}),
+        h('rect',{key:'p2',x:30,y:44,width:9,height:32,rx:4.5,fill:struct}),
+        h('rect',{key:'bar',x:39,y:54,width:30,height:12,rx:6,fill:struct}),
+        h('path',{key:'w1',d:'M64 63 Q96 62 112 52',fill:'none',stroke:accent,strokeWidth:9,strokeLinecap:'round'}),
+        h('path',{key:'w2',d:'M64 58 Q94 52 108 36',fill:'none',stroke:accent,strokeWidth:9,strokeLinecap:'round'}),
+        h('path',{key:'w3',d:'M66 53 Q88 44 94 26',fill:'none',stroke:accent,strokeWidth:9,strokeLinecap:'round'}),
+      ];
+    } else if (v === 'b') {
+      kids = [
+        h('rect',{key:'t',x:40,y:28,width:24,height:12,rx:6,fill:struct}),
+        h('rect',{key:'b',x:40,y:80,width:24,height:12,rx:6,fill:struct}),
+        h('rect',{key:'s',x:48,y:38,width:8,height:44,rx:4,fill:struct}),
+        h('path',{key:'l1',d:'M50 62 Q30 60 16 50',fill:'none',stroke:accent,strokeWidth:8,strokeLinecap:'round'}),
+        h('path',{key:'l2',d:'M50 57 Q32 51 22 40',fill:'none',stroke:accent,strokeWidth:8,strokeLinecap:'round'}),
+        h('path',{key:'r1',d:'M54 62 Q74 60 88 50',fill:'none',stroke:accent,strokeWidth:8,strokeLinecap:'round'}),
+        h('path',{key:'r2',d:'M54 57 Q72 51 82 40',fill:'none',stroke:accent,strokeWidth:8,strokeLinecap:'round'}),
+      ];
+    } else {
+      kids = [
+        h('rect',{key:'base',x:28,y:90,width:64,height:11,rx:5.5,fill:struct}),
+        h('path',{key:'wArrow',d:'M32 74 L60 52 L88 74',fill:'none',stroke:struct,strokeWidth:11,strokeLinecap:'round',strokeLinejoin:'round'}),
+        h('path',{key:'gArrow',d:'M32 52 L60 30 L88 52',fill:'none',stroke:accent,strokeWidth:11,strokeLinecap:'round',strokeLinejoin:'round'}),
+      ];
+    }
+    const svg = h('svg',{viewBox:'0 0 120 120',width:'100%',height:'100%',style:{display:'block'}},kids);
+    return { svg };
+  }
+}
+</script>
+</body>
+</html>

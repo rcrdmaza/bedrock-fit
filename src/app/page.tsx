@@ -124,15 +124,26 @@ const FEATURES = [
   { emoji: "🦸", title: "Athlete archetype", desc: "The fun part: discover the athlete you're built to become, from Calisthenics Machine to Future Olympic Lifter." },
 ];
 
+/* "Ascend" mark (Direction C) on the black-background tile — see marketing/ */
 function Logo({ light = false }: { light?: boolean }) {
   return (
-    <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
-      <svg width="24" height="26" viewBox="0 0 26 28" aria-hidden="true">
-        <polygon points="13,1 25,7.5 25,20.5 13,27 1,20.5 1,7.5" fill="none" stroke="var(--green)" strokeWidth="2" />
-        <polygon points="13,8 19,18 7,18" fill="var(--green)" />
+    <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+      <svg width="32" height="32" viewBox="0 0 120 120" aria-hidden="true" style={{ flex: "none" }}>
+        <defs>
+          <radialGradient id={light ? "bfTileF" : "bfTileH"} cx="30%" cy="20%" r="120%">
+            <stop offset="0%" stopColor="#26292D" />
+            <stop offset="70%" stopColor="#1B1E21" />
+          </radialGradient>
+        </defs>
+        <rect x="0" y="0" width="120" height="120" rx="26" fill={`url(#${light ? "bfTileF" : "bfTileH"})`} />
+        <g transform="translate(13.2 13.2) scale(0.78)">
+          <rect x="28" y="90" width="64" height="11" rx="5.5" fill="#F2F4EF" />
+          <path d="M32 74 L60 52 L88 74" fill="none" stroke="#F2F4EF" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M32 52 L60 30 L88 52" fill="none" stroke="#A8E063" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
       </svg>
-      <span style={{ font: `800 17px ${archivo}`, color: light ? "#fff" : "var(--ink)" }}>
-        bedrock<span style={{ color: "var(--green)" }}>.fit</span>
+      <span style={{ font: `800 17px ${archivo}`, color: light ? "#F2F4EF" : "#1E2124" }}>
+        bedrock<span style={{ color: light ? "#A8E063" : "#7FBF3A" }}>.fit</span>
       </span>
     </Link>
   );

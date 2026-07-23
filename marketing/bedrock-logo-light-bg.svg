@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- bedrock.fit "Ascend" mark — for light backgrounds (Direction C) -->
+  <rect x="28" y="90" width="64" height="11" rx="5.5" fill="#2C2F33"/>
+  <path d="M32 74 L60 52 L88 74" fill="none" stroke="#2C2F33" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 52 L60 30 L88 52" fill="none" stroke="#7FBF3A" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
