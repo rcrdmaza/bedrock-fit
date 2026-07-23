@@ -22,16 +22,31 @@ const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono-bf", subsets: ["la
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Bedrock.fit — What's Your Athletic Potential?",
+  title: "Bedrock.fit — Free Strength Calculator & Athletic Potential Scan",
   description:
-    "Enter your stats and one lift to estimate your true strength ceiling, training zones, and the athlete you're built to become. Free strength standards calculator.",
+    "Free strength calculator: enter one lift to estimate your 1-rep max, rank against global strength standards, get training zones, and reveal your athlete archetype. No signup.",
   applicationName: "Bedrock.fit",
+  keywords: [
+    "strength calculator",
+    "1RM calculator",
+    "one rep max",
+    "strength standards",
+    "athletic potential",
+    "training zones",
+  ],
   openGraph: {
     type: "website",
     siteName: "Bedrock.fit",
-    title: "What's Your Athletic Potential? — Bedrock.fit",
+    url: SITE_URL,
+    title: "Bedrock.fit — Free Strength Calculator & Athletic Potential Scan",
     description:
-      "Estimate your 1-rep max, strength level, and playful athlete archetype from a single lift.",
+      "Estimate your 1-rep max, strength level, training zones, and athlete archetype from a single lift. Free, no signup.",
+  },
+  twitter: {
+    card: "summary",
+    title: "Bedrock.fit — Free Strength Calculator",
+    description:
+      "Estimate your 1-rep max, strength level, and athlete archetype from a single lift. Free, no signup.",
   },
   other: {
     "google-adsense-account": ADSENSE_CLIENT_ID,

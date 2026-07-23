@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- bedrock.fit "Ascend" mark — black-background tile (Direction C) -->
+  <defs>
+    <radialGradient id="tile" cx="30%" cy="20%" r="120%">
+      <stop offset="0%" stop-color="#26292D"/>
+      <stop offset="70%" stop-color="#1B1E21"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="120" height="120" rx="26" fill="url(#tile)"/>
+  <g transform="translate(13.2 13.2) scale(0.78)">
+    <rect x="28" y="90" width="64" height="11" rx="5.5" fill="#F2F4EF"/>
+    <path d="M32 74 L60 52 L88 74" fill="none" stroke="#F2F4EF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M32 52 L60 30 L88 52" fill="none" stroke="#A8E063" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -135,6 +135,10 @@ html{scroll-behavior:smooth}
   box-shadow:0 24px 60px rgba(23,28,24,.28);animation:lpPop .22s cubic-bezier(.2,.85,.3,1.05) both}
 @media(max-width:560px){.lp-modal{padding:24px 18px 20px}}
 @keyframes lpFadeIn{from{opacity:0}to{opacity:1}}
+/* compact stepper inputs: hide native number spinners (custom ▲/▼ instead) */
+.bf-num::-webkit-outer-spin-button,.bf-num::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.bf-num{-moz-appearance:textfield;appearance:textfield}
+.bf-num:focus{outline:none}
 @keyframes lpPop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
 
 /* ---- home calculator: responsive grids + hero heading ---- */

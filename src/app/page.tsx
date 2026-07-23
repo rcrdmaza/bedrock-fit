@@ -125,6 +125,59 @@ const FEATURES = [
   { emoji: "🦸", title: "Athlete archetype", desc: "The fun part: discover the athlete you're built to become, from Calisthenics Machine to Future Olympic Lifter." },
 ];
 
+/* compact number field with counter arrows: type a number to jump straight
+   to it, or nudge with the ▲/▼ stepper on the right */
+const stepBtnStyle: React.CSSProperties = { flex: 1, border: "none", background: "var(--mint)", color: "var(--muted)", fontSize: 8, lineHeight: 1, cursor: "pointer", padding: 0 };
+
+function Stepper({
+  value,
+  onChange,
+  step = 1,
+  min = 0,
+  max,
+  decimals = 0,
+  inputWidth = 46,
+  placeholder,
+  ariaLabel,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  step?: number;
+  min?: number;
+  max?: number;
+  decimals?: number;
+  inputWidth?: number;
+  placeholder?: string;
+  ariaLabel: string;
+}) {
+  const bump = (dir: number) => {
+    const cur = parseFloat(value);
+    let n = (isNaN(cur) ? min : cur) + dir * step;
+    n = +n.toFixed(decimals);
+    if (n < min) n = min;
+    if (max !== undefined && n > max) n = max;
+    onChange(String(n));
+  };
+  return (
+    <div style={{ display: "inline-flex", alignItems: "stretch", border: "1px solid var(--line)", borderRadius: 10, background: "#fff", overflow: "hidden", height: 42 }}>
+      <input
+        className="bf-num"
+        type="number"
+        inputMode="decimal"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel}
+        style={{ width: inputWidth, border: "none", outline: "none", padding: "0 4px 0 10px", color: "var(--ink)", font: `600 14px ${space}`, background: "transparent", textAlign: "left" }}
+      />
+      <div style={{ display: "flex", flexDirection: "column", borderLeft: "1px solid var(--line)", width: 24 }}>
+        <button type="button" tabIndex={-1} onClick={() => bump(1)} aria-label={`Increase ${ariaLabel}`} style={stepBtnStyle}>▲</button>
+        <button type="button" tabIndex={-1} onClick={() => bump(-1)} aria-label={`Decrease ${ariaLabel}`} style={{ ...stepBtnStyle, borderTop: "1px solid var(--line)" }}>▼</button>
+      </div>
+    </div>
+  );
+}
+
 /* "Ascend" mark (Direction C) on the black-background tile — see marketing/ */
 function Logo({ light = false }: { light?: boolean }) {
   return (
@@ -426,46 +479,51 @@ export default function Home() {
                   </p>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginBottom: 14 }}>
                   <div>
                     <label style={labelStyle}>Sex</label>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button type="button" style={seg(sex === "male")} onClick={() => setSex("male")}>M</button>
-                      <button type="button" style={seg(sex === "female")} onClick={() => setSex("female")}>F</button>
+                    <div style={{ display: "flex", gap: 6, height: 42 }}>
+                      <button type="button" style={{ ...seg(sex === "male"), flex: "none", padding: "0 16px" }} onClick={() => setSex("male")}>M</button>
+                      <button type="button" style={{ ...seg(sex === "female"), flex: "none", padding: "0 16px" }} onClick={() => setSex("female")}>F</button>
                     </div>
                   </div>
                   <div>
                     <label style={labelStyle}>Weight {wl}</label>
-                    <input type="number" inputMode="decimal" placeholder="0" value={bw} onChange={(e) => setBw(e.target.value)} style={inputStyle} />
+                    <Stepper value={bw} onChange={setBw} step={1} min={0} max={500} decimals={1} inputWidth={48} placeholder={unit === "kg" ? "70" : "155"} ariaLabel="Bodyweight" />
                   </div>
-                </div>
-
-                <div style={{ marginBottom: 12 }}>
                   {lUnit === "m" ? (
                     <div>
                       <label style={labelStyle}>Height (m)</label>
-                      <input type="number" inputMode="decimal" step="0.01" placeholder="1.75" value={height} onChange={(e) => setHeight(e.target.value)} style={inputStyle} />
+                      <Stepper value={height} onChange={setHeight} step={0.01} min={0} max={2.5} decimals={2} inputWidth={54} placeholder="1.75" ariaLabel="Height in meters" />
                     </div>
                   ) : (
                     <div>
                       <label style={labelStyle}>Height (ft / in)</label>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                        <input type="number" inputMode="numeric" placeholder="5 ft" value={heightFt} onChange={(e) => setHeightFt(e.target.value)} style={inputStyle} />
-                        <input type="number" inputMode="numeric" placeholder="10 in" value={heightIn} onChange={(e) => setHeightIn(e.target.value)} style={inputStyle} />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <Stepper value={heightFt} onChange={setHeightFt} step={1} min={0} max={8} inputWidth={34} placeholder="5" ariaLabel="Height feet" />
+                        <Stepper value={heightIn} onChange={setHeightIn} step={1} min={0} max={11} inputWidth={34} placeholder="10" ariaLabel="Height inches" />
                       </div>
                     </div>
                   )}
                 </div>
 
-                <label style={labelStyle}>Lift</label>
-                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
-                  <select value={exercise} onChange={(e) => setExercise(e.target.value)} style={inputStyle}>
-                    {EXERCISES.map(([v, l]) => (
-                      <option key={v} value={v}>{l}</option>
-                    ))}
-                  </select>
-                  <input type="number" inputMode="decimal" placeholder="wt" value={lift} onChange={(e) => setLift(e.target.value)} style={inputStyle} />
-                  <input type="number" inputMode="numeric" placeholder="reps" value={reps} onChange={(e) => setReps(e.target.value)} style={inputStyle} />
+                <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "flex-end", marginBottom: 14 }}>
+                  <div style={{ flex: 1, minWidth: 170 }}>
+                    <label style={labelStyle}>Lift</label>
+                    <select value={exercise} onChange={(e) => setExercise(e.target.value)} style={{ ...inputStyle, height: 42 }}>
+                      {EXERCISES.map(([v, l]) => (
+                        <option key={v} value={v}>{l}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Weight {wl}</label>
+                    <Stepper value={lift} onChange={setLift} step={unit === "kg" ? 2.5 : 5} min={0} max={500} decimals={1} inputWidth={48} placeholder={unit === "kg" ? "60" : "135"} ariaLabel="Lift weight" />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Reps</label>
+                    <Stepper value={reps} onChange={setReps} step={1} min={1} max={30} inputWidth={36} placeholder="8" ariaLabel="Reps" />
+                  </div>
                 </div>
 
                 {err && <p style={{ color: "#c0392b", fontSize: 13, margin: "8px 0" }}>{err}</p>}
