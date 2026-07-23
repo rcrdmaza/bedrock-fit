@@ -33,6 +33,7 @@ const EXERCISES: [string, string][] = [
 const LB_PER_KG = 0.45359237;
 
 type Unit = "kg" | "lb";
+type LUnit = "m" | "ftin";
 
 interface Results {
   oneRM: string;
@@ -151,9 +152,12 @@ function Logo({ light = false }: { light?: boolean }) {
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
-  const [unit, setUnit] = useState<Unit>("lb");
+  const [unit, setUnit] = useState<Unit>("kg");
+  const [lUnit, setLUnit] = useState<LUnit>("m");
   const [sex, setSex] = useState("male");
   const [height, setHeight] = useState("");
+  const [heightFt, setHeightFt] = useState("");
+  const [heightIn, setHeightIn] = useState("");
   const [bw, setBw] = useState("");
   const [exercise, setExercise] = useState("bench");
   const [lift, setLift] = useState("");
@@ -229,8 +233,11 @@ export default function Home() {
 
   function reset() {
     setSex("male");
-    setUnit("lb");
+    setUnit("kg");
+    setLUnit("m");
     setHeight("");
+    setHeightFt("");
+    setHeightIn("");
     setBw("");
     setExercise("bench");
     setLift("");
@@ -242,6 +249,16 @@ export default function Home() {
   function openScan() {
     setModalOpen(true);
   }
+
+  const miniSeg = (active: boolean): React.CSSProperties => ({
+    padding: "4px 10px",
+    borderRadius: 7,
+    border: "none",
+    background: active ? "var(--green)" : "transparent",
+    color: active ? "#fff" : "var(--muted)",
+    font: `700 10.5px ${space}`,
+    cursor: "pointer",
+  });
 
   const seg = (active: boolean): React.CSSProperties => ({
     flex: 1,
@@ -390,7 +407,19 @@ export default function Home() {
             {!res ? (
               /* ---- step 1: the form ---- */
               <>
-                <div style={{ textAlign: "center", marginBottom: 20 }}>
+                {/* subtle unit switches — top left */}
+                <div style={{ position: "absolute", top: 16, left: 18, display: "flex", gap: 8 }}>
+                  <div style={{ display: "inline-flex", border: "1px solid var(--line)", borderRadius: 9, padding: 2, background: "#fff" }} role="group" aria-label="Weight unit">
+                    <button type="button" onClick={() => setUnit("kg")} style={miniSeg(unit === "kg")}>kg</button>
+                    <button type="button" onClick={() => setUnit("lb")} style={miniSeg(unit === "lb")}>lb</button>
+                  </div>
+                  <div style={{ display: "inline-flex", border: "1px solid var(--line)", borderRadius: 9, padding: 2, background: "#fff" }} role="group" aria-label="Length unit">
+                    <button type="button" onClick={() => setLUnit("m")} style={miniSeg(lUnit === "m")}>m</button>
+                    <button type="button" onClick={() => setLUnit("ftin")} style={miniSeg(lUnit === "ftin")}>ft/in</button>
+                  </div>
+                </div>
+
+                <div style={{ textAlign: "center", margin: "26px 0 20px" }}>
                   <h2 style={{ font: `800 24px ${archivo}`, color: "var(--ink)", margin: 0 }}>Run your free strength scan</h2>
                   <p style={{ font: `500 13.5px/1.6 ${space}`, color: "var(--muted)", margin: "8px auto 0", maxWidth: 400 }}>
                     A few numbers and one lift. Results appear instantly — nothing is uploaded or stored.
@@ -406,23 +435,26 @@ export default function Home() {
                     </div>
                   </div>
                   <div>
-                    <label style={labelStyle}>Units</label>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button type="button" style={seg(unit === "kg")} onClick={() => setUnit("kg")}>KG</button>
-                      <button type="button" style={seg(unit === "lb")} onClick={() => setUnit("lb")}>LB</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
-                  <div>
-                    <label style={labelStyle}>Height {unit === "kg" ? "(cm)" : "(in)"}</label>
-                    <input type="number" inputMode="decimal" placeholder="0" value={height} onChange={(e) => setHeight(e.target.value)} style={inputStyle} />
-                  </div>
-                  <div>
                     <label style={labelStyle}>Weight {wl}</label>
                     <input type="number" inputMode="decimal" placeholder="0" value={bw} onChange={(e) => setBw(e.target.value)} style={inputStyle} />
                   </div>
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                  {lUnit === "m" ? (
+                    <div>
+                      <label style={labelStyle}>Height (m)</label>
+                      <input type="number" inputMode="decimal" step="0.01" placeholder="1.75" value={height} onChange={(e) => setHeight(e.target.value)} style={inputStyle} />
+                    </div>
+                  ) : (
+                    <div>
+                      <label style={labelStyle}>Height (ft / in)</label>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        <input type="number" inputMode="numeric" placeholder="5 ft" value={heightFt} onChange={(e) => setHeightFt(e.target.value)} style={inputStyle} />
+                        <input type="number" inputMode="numeric" placeholder="10 in" value={heightIn} onChange={(e) => setHeightIn(e.target.value)} style={inputStyle} />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <label style={labelStyle}>Lift</label>
