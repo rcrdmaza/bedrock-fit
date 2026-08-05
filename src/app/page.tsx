@@ -366,14 +366,16 @@ export default function Home() {
     <div style={{ ...rootVars, background: "var(--paper)", minHeight: "100vh", color: "var(--body)", fontFamily: space }}>
       {/* ── sticky nav ── */}
       <header className="lp-nav" style={{ position: "sticky", top: 0, zIndex: 30, background: "rgba(255,255,255,.9)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--line)" }}>
-        <div style={{ ...wrap, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, padding: "14px 20px" }}>
+        {/* flexWrap lets .lp-nav-links drop to its own row under 820px — see globals.css */}
+        <div style={{ ...wrap, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 18, padding: "14px 20px" }}>
           <Logo />
           <nav className="lp-nav-links" aria-label="Main">
             <a href="#features" style={{ font: `600 14px ${space}`, color: "var(--body)", textDecoration: "none" }}>Features</a>
             <a href="#archetypes" style={{ font: `600 14px ${space}`, color: "var(--body)", textDecoration: "none" }}>Archetypes</a>
+            <Link href="/training" style={{ font: `600 14px ${space}`, color: "var(--body)", textDecoration: "none" }}>Training</Link>
             <Link href="/methodology" style={{ font: `600 14px ${space}`, color: "var(--body)", textDecoration: "none" }}>Methodology</Link>
           </nav>
-          <button type="button" onClick={openScan} style={{ ...btnGreen, padding: "10px 18px", font: `800 13px ${archivo}` }}>Get my strength scan</button>
+          <button type="button" className="lp-nav-cta" onClick={openScan} style={{ ...btnGreen, padding: "10px 18px", font: `800 13px ${archivo}` }}>Get my strength scan</button>
         </div>
       </header>
 
@@ -463,6 +465,7 @@ export default function Home() {
             </div>
             <div>
               <h4 style={{ font: `800 13px ${archivo}`, color: "#fff", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: ".06em" }}>Resources</h4>
+              <Link href="/training" className="lp-flink">Training</Link>
               <Link href="/methodology" className="lp-flink">Methodology</Link>
               <Link href="/privacy" className="lp-flink">Privacy policy</Link>
             </div>

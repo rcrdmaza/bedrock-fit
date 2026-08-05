@@ -109,7 +109,21 @@ h3.sec{font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(-
 html{scroll-behavior:smooth}
 .lp-nav-links{display:flex;gap:26px;align-items:center}
 .lp-nav-links a:hover{color:#2f9e5f}
-@media(max-width:820px){.lp-nav-links{display:none}}
+/* Under 820px the links used to be display:none, which left phones with no
+   navigation at all. Instead, drop them onto their own full-width row beneath
+   the logo and let that row scroll sideways if it ever outgrows the screen.
+   The header's inner flex container sets flex-wrap inline, which is what lets
+   flex-basis:100% here push the nav to a second line.
+   The CTA is shrunk with !important because its size is set inline. */
+@media(max-width:820px){
+  /* the mask fades whatever sits under the last 26px, so an overflowing row
+     reads as scrollable instead of truncated; when the links fit, that strip
+     is empty and the fade is invisible */
+  .lp-nav-links{order:3;flex-basis:100%;gap:22px;margin-top:2px;padding-right:26px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 26px),transparent)}
+  .lp-nav-links::-webkit-scrollbar{display:none}
+  .lp-nav-links a{white-space:nowrap}
+  .lp-nav-cta{padding:9px 15px!important;font-size:12px!important;white-space:nowrap}
+}
 .lp-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 .lp-feats,.lp-arch,.lp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 @media(max-width:940px){.lp-steps{grid-template-columns:repeat(2,1fr)}}
@@ -125,6 +139,23 @@ html{scroll-behavior:smooth}
 @media(max-width:700px){.lp-footer-cols{grid-template-columns:1fr}}
 .lp-flink{display:block;font:500 14px var(--font-space),sans-serif;color:rgba(255,255,255,.65);text-decoration:none;margin-bottom:9px}
 .lp-flink:hover{color:#7ede9f}
+
+/* ---- article bar charts (CSS, not SVG, so text never scales below legible) ---- */
+.bf-chart{display:flex;flex-direction:column;gap:12px}
+.bf-chart-row{display:grid;grid-template-columns:208px minmax(0,1fr);align-items:center;gap:5px 14px}
+.bf-chart-label{font:600 12.5px/1.35 var(--font-space),sans-serif;color:#414941;text-align:right}
+.bf-chart-track{display:grid;grid-template-columns:minmax(0,1fr) 58px;align-items:center;gap:8px}
+.bf-chart-meter{height:26px;display:flex;align-items:center;background-image:linear-gradient(to right,#d7e6dc 1px,transparent 1px);background-size:25% 100%}
+.bf-chart-bar{height:15px;border-radius:4px;background:#8fcfa8}
+.bf-chart-bar.is-accent{background:#2f9e5f}
+.bf-chart-val{font:700 12px var(--font-space),sans-serif;color:#6b756c;white-space:nowrap}
+.bf-chart-val.is-accent{color:#227a48}
+.bf-chart-axis{display:flex;justify-content:space-between;border-top:1px solid #b9d5c4;padding-top:5px;margin:0 66px 0 222px;font:500 10px var(--font-mono-bf),monospace;color:#8a948b}
+@media(max-width:640px){
+  .bf-chart-row{grid-template-columns:minmax(0,1fr)}
+  .bf-chart-label{text-align:left}
+  .bf-chart-axis{margin-left:0}
+}
 
 /* ---- strength-scan modal (form → results window) ---- */
 .lp-overlay{position:fixed;inset:0;z-index:100;background:rgba(23,28,24,.5);
