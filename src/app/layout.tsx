@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Archivo, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 // Google AdSense publisher ID (carried over from the previous site — the
@@ -10,6 +11,19 @@ const ADSENSE_CLIENT_ID = "ca-pub-4738526719801061";
 const ADSENSE_LOADER_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.bedrock.fit";
+
+// GA4 measurement ID for the bedrock.fit property. Hardcoded default (matching
+// the ADSENSE_CLIENT_ID pattern above) so production still reports if the env
+// var is never set in Vercel; override per-environment with NEXT_PUBLIC_GA_ID.
+//
+// NOTE: a *different* GA4 property (356092132) serves mrtask.com / fctech.xyz.
+// This ID must stay distinct from that one. Verify by adding the `hostName`
+// dimension to any report — only www.bedrock.fit should appear.
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID ?? "G-ES80M9ZLC4";
+
+// Only report from real production builds, so local `next dev` doesn't
+// pollute the property with localhost sessions.
+const GA_ENABLED = process.env.NODE_ENV === "production";
 
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
 
@@ -68,6 +82,25 @@ export default function RootLayout({
         <script async src={ADSENSE_LOADER_SRC} crossOrigin="anonymous" />
       </head>
       <body>{children}</body>
+      {/* GA4 (gtag.js) via next/script — App Router docs place Script as a
+          sibling of <body> inside <html>. Default strategy is
+          `afterInteractive`, stated explicitly here for clarity. The inline
+          companion needs an `id` so Next can track it. */}
+      {GA_ENABLED && (
+        <>
+          <Script
+            id="ga4-loader"
+            src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+            strategy="afterInteractive"
+          />
+          <Script id="ga4-init" strategy="afterInteractive">
+            {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_MEASUREMENT_ID}');`}
+          </Script>
+        </>
+      )}
     </html>
   );
 }
