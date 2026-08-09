@@ -61,6 +61,50 @@ const RULES = {
    cells, figure captions, sources and the CTA are deliberately excluded. */
 const COUNTED = new Set(["lede", "p", "h2", "h3", "list", "callout", "quote"]);
 
+/* ── house style, enforced ──────────────────────────────────────────────
+ *
+ * These are the rules that would otherwise decay into "we usually do it this
+ * way". Encoded here so a piece that breaks them cannot ship, rather than
+ * relying on whoever reviews it to notice.
+ */
+
+/** Em and en dashes are banned outright. A hyphen is only allowed inside a
+ *  compound word (re-established, single-leg, 30-second), never as punctuation
+ *  standing between spaces. Dashes read as a writing tic and they push the
+ *  reading level up by welding two sentences into one. */
+const BANNED_DASHES = /[—–]/;
+const SPACED_HYPHEN = /\s-\s|\s-$|^-\s/;
+
+/** Flesch–Kincaid grade. Ninth grade or below. */
+const MAX_GRADE = 9.0;
+
+/** Every article opens with a lede, closes with a cta, and carries at least
+ *  one video. Locking the shape is what makes the pieces feel like one
+ *  publication rather than ten separate efforts. */
+const TEMPLATE = {
+  firstBlock: "lede",
+  lastBlock: "cta",
+  requires: ["h2", "video"],
+  videos: { min: 1, max: 2, label: "Videos" },
+};
+
+/** Syllables, approximated by vowel groups. Good enough for a grade estimate;
+ *  the point is to catch prose drifting toward twelfth grade, not to be exact. */
+function syllables(word) {
+  word = word.toLowerCase().replace(/[^a-z]/g, "");
+  if (word.length <= 3) return 1;
+  word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, "").replace(/^y/, "");
+  return (word.match(/[aeiouy]{1,2}/g) || []).length || 1;
+}
+
+function fleschKincaid(text) {
+  const sentences = (text.match(/[.!?]+(?=\s|$)/g) || []).length || 1;
+  const words = text.split(/\s+/).filter(Boolean);
+  if (!words.length) return 0;
+  const syl = words.reduce((n, w) => n + syllables(w), 0);
+  return 0.39 * (words.length / sentences) + 11.8 * (syl / words.length) - 15.59;
+}
+
 /* ── tiny TS-AST readers ───────────────────────────────────────────────── */
 
 const isObj = (n) => ts.isObjectLiteralExpression(n);
@@ -262,6 +306,34 @@ function check(file) {
     .reduce((n, t) => n + stripInline(t).length, 0);
   add(chars >= RULES.chars.min && chars <= RULES.chars.max,
       `${RULES.chars.label}: ${chars.toLocaleString()} — outside ${RULES.chars.min.toLocaleString()}–${RULES.chars.max.toLocaleString()}`);
+
+  /* house style — dashes, reading level, template shape */
+  const counted = a.blocks.flatMap(countedText).map(stripInline);
+  const bodyProse = counted.join(" ");
+
+  const dashHits = counted.filter((t) => BANNED_DASHES.test(t));
+  add(dashHits.length === 0,
+      `Em/en dashes: ${dashHits.length} block(s) contain one. House style bans them. First: “${(dashHits[0] || "").slice(0, 70)}…”`);
+
+  const spacedHits = counted.filter((t) => SPACED_HYPHEN.test(t));
+  add(spacedHits.length === 0,
+      `Hyphen used as punctuation in ${spacedHits.length} block(s). Only compound words (re-established, single-leg) may hyphenate.`);
+
+  const grade = fleschKincaid(bodyProse);
+  add(grade <= MAX_GRADE,
+      `Reading level: grade ${grade.toFixed(1)} — target is ${MAX_GRADE.toFixed(1)} or below`);
+
+  const kinds = a.blocks.map((b) => b.type);
+  add(kinds[0] === TEMPLATE.firstBlock,
+      `Template: first block is "${kinds[0]}", must be "${TEMPLATE.firstBlock}"`);
+  add(kinds[kinds.length - 1] === TEMPLATE.lastBlock,
+      `Template: last block is "${kinds[kinds.length - 1]}", must be "${TEMPLATE.lastBlock}"`);
+  for (const need of TEMPLATE.requires) {
+    add(kinds.includes(need), `Template: no "${need}" block — every article needs at least one`);
+  }
+  const videos = kinds.filter((k) => k === "video").length;
+  add(videos >= TEMPLATE.videos.min && videos <= TEMPLATE.videos.max,
+      `${TEMPLATE.videos.label}: ${videos} — need ${TEMPLATE.videos.min}–${TEMPLATE.videos.max}`);
 
   /* links */
   const prose = a.blocks.flatMap(allText).join("\n");

@@ -262,3 +262,81 @@ is written so the articles are authored against the finished blocks.
   See `MONETIZATION-CHECKLIST.md`.
 - **Nothing is committed yet.** Everything from the restructure is still working
   tree only.
+
+---
+
+# House style, enforced
+
+Added 2026-08-09. Everything in this section is checked by
+`scripts/check-article.mjs`, not left to review. An article that breaks any of
+it cannot pass `npm run check:articles`, which is deliberate: these are the
+rules most likely to decay into "we usually do it this way".
+
+## Prose
+
+| Rule | Enforced as |
+|---|---|
+| **No em or en dashes.** Not as punctuation, not for asides, not ever. | Hard fail. Names the first offending block. |
+| **Hyphens only inside compound words** — `re-established`, `single-leg`, `30-second`. Never standing alone between spaces. | Hard fail. |
+| **Ninth grade reading level or below.** Flesch Kincaid grade 9.0 max. | Hard fail, reports the computed grade. |
+| **13,000 characters**, tolerance 8%, so 11,960 to 14,040. Body prose only. | Hard fail. |
+
+Why the dash rule: a dash welds two sentences into one and pushes the grade
+level up, which fights the ninth grade target directly. Removing them forces
+shorter sentences, which is the single biggest lever on readability.
+
+Tone is informative but not dry. Take an angle. The evidence is the constraint,
+not the voice.
+
+## Shape
+
+Every article is the same shape. The checker locks it:
+
+- First block is a `lede`. Last block is a `cta`.
+- At least one `h2`.
+- **One or two `video` blocks**, YouTube, on topic, embedded small.
+- 2 to 4 charts.
+- 8 to 12 numbered sources, rendered small at the foot.
+- 3 to 6 internal links, at least one into `/training`, at least one to `/`.
+- 2 to 4 inline external links, opening in a new tab so the reader keeps our
+  page. Citations stay `nofollow`; inline contextual links are `dofollow`.
+
+## Sourcing
+
+Every source is opened and read before it is cited. Not the abstract, not a
+secondary write up, not memory. This is the rule that sets the pace: at 8 to 12
+sources an article, expect one to two articles per working session rather than
+a batch of ten drafted at once.
+
+## Images
+
+Articles publish without images and gain them later. Where a processed image
+already exists for the slug it is applied immediately. Metadata is written into
+every image file before it ships, and the `figure` block carries `alt`,
+`credit`, `sourceUrl` and a `license` **URL**.
+
+---
+
+# Batch 1, revised
+
+Ten articles. Narrower than the original five: leg work, strength training and
+mature adult leg health. Ordered so the two hubs are written first and
+everything else links back to one of them.
+
+| # | Article | Category | Cluster role |
+|---|---|---|---|
+| 1 | Progressive Overload | Strength Training | **Hub A.** Write first. |
+| 2 | Sarcopenia: What It Is, When It Starts | Over 40 | **Hub B.** Pairs with Leg Strength, already live. |
+| 3 | Do Squats Wreck Your Knees? | Strength Training | Highest traffic potential. Evidence points the other way. |
+| 4 | How Close to Failure Should You Train? | Strength Training | Contested evidence, honest answer is unpopular. |
+| 5 | How Many Sets Per Muscle Per Week? | Strength Training | Strong meta analytic base. |
+| 6 | Squat Depth: How Low Is Necessary? | Strength Training | Leg specific, resolvable from evidence. |
+| 7 | Single Leg Training: Why Bilateral Is Not Enough | Mobility & Balance | Extends a section already in Leg Strength. |
+| 8 | Calves: Trained Last, Matter Most | Strength Training | The calf section has no depth behind it yet. |
+| 9 | Protein After 50 | Over 40 | Anabolic resistance, badly explained everywhere. |
+| 10 | Balance Training: The Third Nobody Does | Mobility & Balance | Fall rates cut 23 to 34%. Almost nobody trains it. |
+
+**Dropped from the original five:** What Zone 2 Actually Means, and Does
+Stretching Prevent Injury. Both sit outside the three areas above. Dropping
+Zone 2 leaves the Endurance category empty on the index, and orphans
+`runner-open-road.jpg`, which would suit #10 instead.
