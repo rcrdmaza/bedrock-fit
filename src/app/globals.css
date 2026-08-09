@@ -157,6 +157,16 @@ html{scroll-behavior:smooth}
   .bf-chart-axis{margin-left:0}
 }
 
+/* ---- wrapped article figures (portrait images floated beside the text) ----
+   The float direction and margins are set inline per figure; what has to live
+   here is the width and the mobile override, since a float in a ~320px column
+   leaves roughly 180px of text per line, which is unreadable. Below 640px the
+   figure goes back to being a full-width block. */
+.bf-fig-wrap{width:42%}
+@media(max-width:640px){
+  .bf-fig-wrap{float:none!important;width:100%;margin:26px 0!important}
+}
+
 /* ---- strength-scan modal (form → results window) ---- */
 .lp-overlay{position:fixed;inset:0;z-index:100;background:rgba(23,28,24,.5);
   backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
