@@ -1,7 +1,25 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+
+/**
+ * The article featured on the landing page.
+ *
+ * Hardcoded on purpose: this file is a client component, so importing the
+ * article registry would ship every article's full `blocks` array in the
+ * landing-page bundle. Update this when a stronger lead piece exists.
+ */
+const FEATURED = {
+  slug: "leg-strength",
+  kicker: "Strength · Over 40",
+  title: "Why strong legs matter more as you age",
+  dek:
+    "Lower-body strength declines faster than muscle mass, and power faster still. What the evidence says about falls, independence and how much of it is recoverable — with 12 sources.",
+  image: "/articles/leg-strength/stairs-in-trainers.jpg",
+  imageAlt: "Legs in trainers climbing a flight of concrete stairs.",
+};
 
 /* ---------- blended strength standards: 1RM as multiple of bodyweight ----------
    Tiers: [Beginner, Novice, Intermediate, Advanced, Elite] (MALE baseline).
@@ -444,6 +462,63 @@ export default function Home() {
           </div>
           <div style={{ textAlign: "center", marginTop: 34 }}>
             <button type="button" onClick={openScan} style={btnGreen}>Find my archetype →</button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── training / articles ──
+          Deliberately hardcoded rather than read from getArticles(). This is a
+          client component, so importing the registry would pull every article's
+          full `blocks` array into the landing-page bundle — a cost that grows
+          with each article published. A landing page wants one curated feature
+          anyway; update FEATURED when a better lead piece exists. */}
+      <section id="training" style={{ padding: "64px 0", scrollMarginTop: 70 }}>
+        <div style={wrap}>
+          <div style={{ textAlign: "center", maxWidth: 660, margin: "0 auto 40px" }}>
+            <h2 style={h2Style}>The evidence behind the numbers</h2>
+            <p style={{ font: `500 15px/1.65 ${space}`, color: "var(--muted)", margin: "12px 0 0" }}>
+              Long-form, footnoted articles on strength, endurance and training over 40. Every
+              figure sourced to primary research or public health guidance.
+            </p>
+          </div>
+
+          <Link
+            href={`/training/${FEATURED.slug}`}
+            style={{
+              display: "flex", flexWrap: "wrap", alignItems: "stretch", gap: 0,
+              border: "1px solid var(--line)", borderRadius: 16, overflow: "hidden",
+              textDecoration: "none", background: "#fff", maxWidth: 900, margin: "0 auto",
+            }}
+          >
+            <div style={{ position: "relative", flex: "1 1 340px", minHeight: 220 }}>
+              <Image
+                src={FEATURED.image}
+                alt={FEATURED.imageAlt}
+                fill
+                sizes="(max-width: 820px) 100vw, 420px"
+                style={{ objectFit: "cover" }}
+              />
+            </div>
+            <div style={{ flex: "1 1 340px", padding: "28px 26px" }}>
+              <div style={{ font: `800 11px ${archivo}`, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--green)" }}>
+                {FEATURED.kicker}
+              </div>
+              <h3 style={{ font: `800 22px/1.25 ${archivo}`, color: "var(--ink)", margin: "10px 0 10px" }}>
+                {FEATURED.title}
+              </h3>
+              <p style={{ font: `500 14px/1.6 ${space}`, color: "var(--muted)", margin: 0 }}>
+                {FEATURED.dek}
+              </p>
+              <div style={{ font: `600 13px ${space}`, color: "var(--green)", marginTop: 16 }}>
+                Read the article →
+              </div>
+            </div>
+          </Link>
+
+          <div style={{ textAlign: "center", marginTop: 28 }}>
+            <Link href="/training" style={{ font: `600 14px ${space}`, color: "var(--body)" }}>
+              See all articles →
+            </Link>
           </div>
         </div>
       </section>

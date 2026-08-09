@@ -251,8 +251,19 @@ function check(file) {
 
   add(internal.length >= RULES.internalLinks.min && internal.length <= RULES.internalLinks.max,
       `${RULES.internalLinks.label}: ${internal.length} — need ${RULES.internalLinks.min}–${RULES.internalLinks.max}`);
-  add(internal.some((l) => l.url.startsWith("/training/")),
-      "Internal links: none point at another /training article");
+  /*
+   * At least one link into the training section, and never to itself.
+   *
+   * The index (`/training`) counts as well as a sibling article
+   * (`/training/<slug>`). docs/CONTENT-PLAN.md flags the bootstrapping problem
+   * directly: the first article has nothing to point at, because the batch is
+   * written together and cross-links within itself. Requiring a sibling before
+   * one exists forces either a self-link or a link to a page that 404s, and
+   * both are worse than linking the index. Once batch 1 lands this passes on
+   * sibling links naturally and the index clause stops mattering.
+   */
+  add(internal.some((l) => (l.url === "/training" || l.url.startsWith("/training/")) && l.url !== `/training/${a.slug}`),
+      "Internal links: none point into /training (index or a sibling article, not itself)");
   add(internal.some((l) => l.url === "/" || l.url.startsWith("/#")),
       "Internal links: none point at the strength scan (/)");
   add(external.length >= RULES.inlineExternal.min && external.length <= RULES.inlineExternal.max,

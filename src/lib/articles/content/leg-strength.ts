@@ -23,7 +23,7 @@ export const legStrength: Article = {
   updated: "2026-08-08",
 
   readingMinutes: 9,
-  wordCount: 1950,
+  wordCount: 2343,
 
   featured: true,
 
@@ -44,6 +44,18 @@ export const legStrength: Article = {
     },
 
     { type: "h2", text: "Your legs are the largest muscle system you own" },
+    {
+      type: "figure",
+      src: "/articles/leg-strength/calf-raise-heels-lowered.jpg",
+      alt: "Close-up of calves on a raised block with the heels lowered below the step.",
+      width: 1400,
+      height: 2100,
+      layout: "wrap-left",
+      caption: "The calves are the smallest of the four leg muscle groups and the most often skipped — and they are the ones doing the work every time you push off a kerb.",
+      credit: "Amar / Pexels",
+      sourceUrl: "https://www.pexels.com/photo/13965339/",
+      license: "Pexels Licence",
+    },
     {
       type: "p",
       text: "The quadriceps, hamstrings, glutes, and calves together make up the biggest concentration of muscle tissue in the human body. That matters for reasons that go far beyond how much you can squat. Skeletal muscle is the primary site of glucose disposal — the tissue responsible for the large majority of insulin-stimulated glucose uptake after a meal[^8]. Practically speaking, your legs are the biggest metabolic sink you have. A larger, more active, more insulin-sensitive sink handles a carbohydrate load more gracefully than a small, sedentary one.",
@@ -78,6 +90,18 @@ export const legStrength: Article = {
     {
       type: "p",
       text: "It gets one layer worse. Muscle *power* — force produced quickly, which is what a stumble recovery or a fast step off a curb actually demands — declines earlier and more steeply than raw strength does. In comparisons of mobility-limited older adults against healthy peers, leg muscle power was reduced by around 65% while muscle mass differed by only about 13%[^2]. Peak leg power turns out to predict chair-rise performance, stair-climbing, and walking speed better than strength alone.",
+    },
+    {
+      type: "figure",
+      src: "/articles/leg-strength/stairs-in-trainers.jpg",
+      alt: "Legs in trainers climbing a flight of concrete stairs.",
+      width: 1520,
+      height: 1013,
+      layout: "full",
+      caption: "A flight of stairs is a power test disguised as an errand. It is one of the first things to feel harder, and one of the last things people mention to a doctor.",
+      credit: "Maks Gelatin / Pexels",
+      sourceUrl: "https://www.pexels.com/photo/4422912/",
+      license: "Pexels Licence",
     },
     {
       type: "p",
@@ -167,7 +191,7 @@ export const legStrength: Article = {
     },
     {
       type: "p",
-      text: "Thirty to sixty minutes a week. That is two short sessions. The barrier to entry here is genuinely low, which makes the widespread avoidance of resistance training all the more expensive.",
+      text: "Thirty to sixty minutes a week. That is two short sessions. The barrier to entry here is genuinely low, which makes the widespread avoidance of resistance training all the more expensive. It is also the floor rather than the target: the [US Physical Activity Guidelines](https://odphp.health.gov/our-work/nutrition-physical-activity/physical-activity-guidelines) ask for muscle-strengthening work on two or more days a week alongside aerobic activity, and note that the two together do more than either alone.",
     },
 
     { type: "h2", text: "It is not too late — and that isn’t a platitude" },
@@ -212,8 +236,20 @@ export const legStrength: Article = {
 
     { type: "h3", text: "3. Train one leg at a time" },
     {
+      type: "figure",
+      src: "/articles/leg-strength/dumbbell-split-squat.jpg",
+      alt: "A woman performing a dumbbell split squat, rear knee lowered toward the floor.",
+      width: 1400,
+      height: 2100,
+      layout: "wrap-right",
+      caption: "A split squat trains the position you spend most of every stride in — one leg loaded, the other passing through.",
+      credit: "Amar / Pexels",
+      sourceUrl: "https://www.pexels.com/photo/14673249/",
+      license: "Pexels Licence",
+    },
+    {
       type: "p",
-      text: "Walking, stairs, and stumble recovery are all single-leg events. Split squats, step-ups, and lunges expose and correct side-to-side imbalances that bilateral lifts hide, and they load balance and hip stability at the same time.",
+      text: "Walking, stairs, and stumble recovery are all single-leg events. Split squats, step-ups, and lunges expose and correct side-to-side imbalances that bilateral lifts hide, and they load balance and hip stability at the same time. This matters more than it sounds. A two-legged squat lets the stronger side quietly compensate for the weaker one, and the asymmetry can persist for years without ever showing up in the numbers you track. Standing on one leg removes that option. It is also the position you are actually in for roughly 40% of every walking stride — so the ability to control it is not an accessory to walking, it *is* walking. Start with your bodyweight and a hand on a doorframe if you need it, and add load only once you can lower under control rather than drop.",
     },
 
     { type: "h3", text: "4. Train speed, not just strength" },
@@ -228,10 +264,16 @@ export const legStrength: Article = {
       text: "Loaded carries and hills build the unglamorous, everyday capacity that shows up in gait speed. They also double as a signal you can monitor: if your usual walk to the store has quietly gotten slower over two years, that is data.",
     },
 
+    { type: "h3", text: "6. Don’t skip the calves" },
+    {
+      type: "p",
+      text: "The calves are named in every list of leg muscles and trained in almost none of them. They are also the muscles that push you off the ground at the end of every step, absorb the landing when you come down a kerb, and hold the ankle steady when the ground turns out to be less level than you assumed. Ankle strength and range of motion both narrow with age, and a stiff, weak ankle shifts the work of balancing upward to the hip, where the corrections are slower and larger. Straight-leg calf raises off a step, lowering under control through a full range, cost nothing and take two minutes. Do them where you will actually see them — by a stair, not in a programme you never open.",
+    },
+
     { type: "h2", text: "How to know whether it’s working" },
     {
       type: "p",
-      text: "Two tests need no equipment beyond a chair and a stopwatch. The 30-second chair stand — how many times you can rise fully from a standard chair without using your arms in 30 seconds — is the test the CDC’s fall prevention program uses to flag risk. Below-average scores by age and sex are shown below[^9].",
+      text: "Two tests need no equipment beyond a chair and a stopwatch. The 30-second chair stand — how many times you can rise fully from a standard chair without using your arms in 30 seconds — is the test the CDC’s fall prevention program uses to flag risk. The [CDC’s one-page assessment sheet](https://www.cdc.gov/steadi/media/pdfs/STEADI-Assessment-30Sec-508.pdf) gives the full protocol, including the detail most people get wrong: arms crossed at the wrists, against the chest, throughout. Below-average scores by age and sex are shown below[^9].",
     },
     {
       type: "table",
@@ -261,6 +303,10 @@ export const legStrength: Article = {
     {
       type: "p",
       text: "Strong legs are not really about lifting. They are about how much of your own life you get to keep running yourself, and for how long.",
+    },
+    {
+      type: "p",
+      text: "If you want a number to start from rather than a feeling, the [strength scan](/) estimates a one-rep max from a single set you have already done and places it against population standards — the [method behind those estimates](/methodology) is written up separately, including where it is least reliable. And if this was useful, the rest of the [training library](/training) works the same way: sourced, hedged where the evidence is thin, and specific about what it does not know.",
     },
 
     {
