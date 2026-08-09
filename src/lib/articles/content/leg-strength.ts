@@ -54,7 +54,7 @@ export const legStrength: Article = {
       caption: "The calves are the smallest of the four leg muscle groups and the most often skipped — and they are the ones doing the work every time you push off a kerb.",
       credit: "Amar / Pexels",
       sourceUrl: "https://www.pexels.com/photo/13965339/",
-      license: "Pexels Licence",
+      license: "https://www.pexels.com/license/",
     },
     {
       type: "p",
@@ -101,7 +101,7 @@ export const legStrength: Article = {
       caption: "A flight of stairs is a power test disguised as an errand. It is one of the first things to feel harder, and one of the last things people mention to a doctor.",
       credit: "Maks Gelatin / Pexels",
       sourceUrl: "https://www.pexels.com/photo/4422912/",
-      license: "Pexels Licence",
+      license: "https://www.pexels.com/license/",
     },
     {
       type: "p",
@@ -245,7 +245,7 @@ export const legStrength: Article = {
       caption: "A split squat trains the position you spend most of every stride in — one leg loaded, the other passing through.",
       credit: "Amar / Pexels",
       sourceUrl: "https://www.pexels.com/photo/14673249/",
-      license: "Pexels Licence",
+      license: "https://www.pexels.com/license/",
     },
     {
       type: "p",

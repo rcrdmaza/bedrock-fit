@@ -127,9 +127,24 @@ export type Block =
        * portrait figure left on "full".
        */
       layout?: "full" | "wrap-left" | "wrap-right";
-      /** Where the image came from. Required for anything licensed rather than shot in-house. */
+      /**
+       * Where the image came from. Required for anything licensed rather than
+       * shot in-house. Emitted as `acquireLicensePage` in the JSON-LD.
+       */
       sourceUrl?: string;
-      /** e.g. "Pexels Licence". Required alongside sourceUrl. */
+      /**
+       * A **URL to the licence terms**, e.g. "https://www.pexels.com/license/".
+       *
+       * Not the licence's name. This is emitted straight into the `license`
+       * property of the `ImageObject`, and Google's licensable-image structured
+       * data requires a URL there — a human-readable string like "Pexels
+       * Licence" populates the field without qualifying, which looks correct in
+       * a casual check while silently forfeiting the result.
+       *
+       * The plain-words form belongs in the image file's own XMP `dc:rights`,
+       * written from the `copyright` field of the manifest. Different layer,
+       * different format, deliberately.
+       */
       license?: string;
     }
   /**

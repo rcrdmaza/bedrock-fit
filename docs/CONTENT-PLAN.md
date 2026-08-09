@@ -183,7 +183,7 @@ Can be written in bulk from the manifest — nothing to do by hand.
 | `caption` | recommended | What the reader should take from it |
 | `credit` | **yes for licensed images** | Rendered under the caption |
 | `sourceUrl` | for licensed images | Where it came from |
-| `license` | for licensed images | e.g. "Pexels Licence" |
+| `license` | for licensed images | **A URL to the licence terms**, e.g. `https://www.pexels.com/license/` — not its name. Google's licensable-image structured data requires a URL here; a plain string populates the property without qualifying. The human-readable form belongs in the file's XMP `dc:rights` (layer 1), written from the manifest's `copyright`. |
 
 `sourceUrl` and `license` are **not built yet** — they need adding to the block
 type, and they should feed an `ImageObject` into the Article JSON-LD `image`
