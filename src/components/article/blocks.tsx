@@ -16,7 +16,16 @@ const h2Style: React.CSSProperties = {
   // stops a new section riding up alongside a wrapped figure from the section above
   clear: "both",
 };
-const h3Style: React.CSSProperties = { font: `800 17px ${archivo}`, color: "var(--ink)", margin: "26px 0 8px" };
+const h3Style: React.CSSProperties = {
+  font: `800 17px ${archivo}`,
+  color: "var(--ink)",
+  margin: "26px 0 8px",
+  // Same reason as h2 above. Missing here originally, which left the h3 after a
+  // wrap-right figure sitting level with the image's credit line instead of
+  // starting below it — it only avoided colliding because that particular
+  // heading happened to be short enough.
+  clear: "both",
+};
 const pStyle: React.CSSProperties = { font: `500 16.5px/1.78 ${space}`, color: "var(--body)", margin: "0 0 18px" };
 const ledeStyle: React.CSSProperties = { ...pStyle, font: `500 19px/1.7 ${space}`, color: "var(--ink)" };
 
