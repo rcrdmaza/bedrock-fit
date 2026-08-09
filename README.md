@@ -31,7 +31,13 @@ npm run build && npm run start
 
 | Name                   | Required | Purpose                                                        |
 | ---------------------- | -------- | -------------------------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL` | no       | Canonical/OG base URL. Defaults to `https://bedrock.fit`.      |
+| `NEXT_PUBLIC_SITE_URL` | no       | Canonical/OG base URL. Defaults to `https://www.bedrock.fit`.  |
+| `NEXT_PUBLIC_GA_ID`    | no       | GA4 measurement ID. Defaults to `G-ES80M9ZLC4`. Production only — the tag is skipped unless `NODE_ENV=production`. |
+
+`NEXT_PUBLIC_SITE_URL` is read by five files: `layout.tsx` (`metadataBase`),
+`sitemap.ts`, `robots.ts`, `training/page.tsx` and
+`components/article/ArticleLayout.tsx` (per-article canonical, OG and the
+absolute image URLs in `Article` JSON-LD).
 
 ## Deploy
 

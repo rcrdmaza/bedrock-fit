@@ -79,6 +79,42 @@ On Vercel → **Settings → Environment Variables**, set (Production):
 canonical tags, OG URLs, sitemap, and robots all point at the
 non-redirecting primary. Redeploy after changing.)
 
+**Verified 2026-08-09 — resolved, no action outstanding.** The env var was
+updated to the `www` value on 2026-07-03 and a live fetch now confirms
+everything renders the non-redirecting primary:
+
+| Surface | Live value |
+| ------- | ---------- |
+| `<link rel="canonical">` on `/training`, `/training/leg-strength` | `https://www.bedrock.fit/…` |
+| `og:url` | `https://www.bedrock.fit/…` |
+| `Article` / `ItemList` JSON-LD | `https://www.bedrock.fit/…` |
+| `sitemap.xml` — all five `<loc>` | `https://www.bedrock.fit/…` |
+| `robots.txt` — `Sitemap:` | `https://www.bedrock.fit/sitemap.xml` |
+
+Code default and live output now agree, so an unset env var would produce the
+same result.
+
+**Changed 2026-08-09:** the var was scoped to Production *and* Preview; it is
+now **Production only**, and its value was re-entered explicitly as
+`https://www.bedrock.fit`.
+
+Two things worth knowing:
+
+- **The Sensitive flag could not be cleared.** Vercel does not let an existing
+  variable be un-flagged through Edit — it needs deleting and recreating. This
+  is a misuse of the flag for a `NEXT_PUBLIC_*` value, which is compiled into
+  the client bundle and publicly readable in the shipped JS anyway. The only
+  real effect is that the value cannot be read back in the dashboard, which
+  makes editing risky: the Value field opens **empty**, so saving without
+  retyping the value would silently blank it. Recorded here precisely so that
+  is recoverable.
+- **Removing it from Preview does not change preview behaviour.** The code
+  fallback is the same production URL, so preview builds still render
+  `https://www.bedrock.fit` canonicals. Genuinely fixing that would mean
+  teaching the code to prefer `VERCEL_URL` outside production — a code change,
+  not a config one. Low priority: Vercel previews ship `noindex`, so the only
+  cost is that previews can't be used to check metadata.
+
 > If you'd rather make the **apex** (`bedrock.fit`) the primary instead:
 > flip the primary in Vercel → Domains (so `www` redirects to apex), then
 > revert the three files + env var back to `https://bedrock.fit`.
