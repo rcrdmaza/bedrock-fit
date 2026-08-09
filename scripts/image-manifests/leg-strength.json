@@ -1,0 +1,35 @@
+{
+  "slug": "leg-strength",
+  "images": [
+    {
+      "source": "assets/source-images/pexels-amar-13965339.jpg",
+      "out": "calf-raise-heels-lowered.jpg",
+      "orientation": "portrait",
+      "alt": "Close-up of calves on a raised block with the heels lowered below the step.",
+      "creator": "Amar",
+      "credit": "Amar / Pexels",
+      "copyright": "Pexels Licence — free to use",
+      "sourceUrl": "https://www.pexels.com/photo/13965339/"
+    },
+    {
+      "source": "assets/source-images/pexels-amar-14673249.jpg",
+      "out": "dumbbell-split-squat.jpg",
+      "orientation": "portrait",
+      "alt": "A woman performing a dumbbell split squat, rear knee lowered toward the floor.",
+      "creator": "Amar",
+      "credit": "Amar / Pexels",
+      "copyright": "Pexels Licence — free to use",
+      "sourceUrl": "https://www.pexels.com/photo/14673249/"
+    },
+    {
+      "source": "assets/source-images/pexels-maksgelatin-4422912.jpg",
+      "out": "stairs-in-trainers.jpg",
+      "orientation": "landscape",
+      "alt": "Legs in trainers climbing a flight of concrete stairs.",
+      "creator": "Maks Gelatin",
+      "credit": "Maks Gelatin / Pexels",
+      "copyright": "Pexels Licence — free to use",
+      "sourceUrl": "https://www.pexels.com/photo/4422912/"
+    }
+  ]
+}

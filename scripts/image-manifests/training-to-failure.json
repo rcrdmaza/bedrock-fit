@@ -1,0 +1,25 @@
+{
+  "slug": "training-to-failure",
+  "images": [
+    {
+      "source": "assets/source-images/pexels-197092734-19722966.jpg",
+      "out": "seated-leg-extension.jpg",
+      "orientation": "portrait",
+      "alt": "A man working through a set on a leg extension machine, quadriceps visibly under load.",
+      "creator": "Николай Векшарев",
+      "credit": "Николай Векшарев / Pexels",
+      "copyright": "Pexels Licence — free to use",
+      "sourceUrl": "https://www.pexels.com/photo/man-exercising-his-legs-at-the-gym-19722966/"
+    },
+    {
+      "source": "assets/source-images/pexels-amar-13965336.jpg",
+      "out": "leg-press-heavy-set.jpg",
+      "orientation": "portrait",
+      "alt": "A woman mid-repetition on a leg press, knees bent under a heavy load.",
+      "creator": "Amar",
+      "credit": "Amar / Pexels",
+      "copyright": "Pexels Licence — free to use",
+      "sourceUrl": "https://www.pexels.com/photo/13965336/"
+    }
+  ]
+}

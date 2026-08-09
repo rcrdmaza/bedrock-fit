@@ -1,0 +1,25 @@
+{
+  "slug": "progressive-overload",
+  "images": [
+    {
+      "source": "assets/source-images/pexels-juan-domiciano-135445434-11682724.jpg",
+      "out": "front-racked-squat.jpg",
+      "orientation": "portrait",
+      "alt": "A woman at the bottom of a deep front-racked squat, barbell held across the shoulders, hips below parallel.",
+      "creator": "Juan Domiciano",
+      "credit": "Juan Domiciano / Pexels",
+      "copyright": "Pexels Licence — free to use",
+      "sourceUrl": "https://www.pexels.com/photo/11682724/"
+    },
+    {
+      "source": "assets/source-images/pexels-andre-henrique-1490223-11191177.jpg",
+      "out": "seated-leg-machine.jpg",
+      "orientation": "portrait",
+      "alt": "A woman seated at a leg machine against a yellow wall, mid-set with her knees extended.",
+      "creator": "Andre Henrique",
+      "credit": "Andre Henrique / Pexels",
+      "copyright": "Pexels Licence — free to use",
+      "sourceUrl": "https://www.pexels.com/photo/11191177/"
+    }
+  ]
+}
