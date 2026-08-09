@@ -20,12 +20,32 @@
 
 import ts from "typescript";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
-import { join, dirname, resolve } from "node:path";
+import { basename, join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CONTENT_DIR = join(ROOT, "src/lib/articles/content");
 const PUBLIC_DIR = join(ROOT, "public");
+
+/**
+ * How many other articles exist for the one in `file` to link to.
+ *
+ * Reads the directory rather than the run's file list on purpose: checking a
+ * single article (`check-article.mjs leg-strength`) must still see the whole
+ * content directory, or the sibling rule below would relax itself depending on
+ * how the script was invoked. `_`-prefixed files are skipped the same way the
+ * run loop and the registry skip them, so `_TEMPLATE.ts` never counts.
+ *
+ * Drafts do count. A draft is reachable at its real URL — the [slug] route
+ * keeps `dynamicParams` on so it is previewable — so a link to one resolves
+ * rather than 404s, and a batch written together can cross-link before any of
+ * it ships, which is exactly how docs/CONTENT-PLAN.md sequences the work.
+ */
+function siblingCount(file) {
+  return readdirSync(CONTENT_DIR)
+    .filter((f) => f.endsWith(".ts") && !f.startsWith("_") && f !== basename(file))
+    .length;
+}
 
 /* ── rules ─────────────────────────────────────────────────────────────── */
 
@@ -252,18 +272,31 @@ function check(file) {
   add(internal.length >= RULES.internalLinks.min && internal.length <= RULES.internalLinks.max,
       `${RULES.internalLinks.label}: ${internal.length} — need ${RULES.internalLinks.min}–${RULES.internalLinks.max}`);
   /*
-   * At least one link into the training section, and never to itself.
+   * One link to a sibling article, never to itself.
    *
-   * The index (`/training`) counts as well as a sibling article
-   * (`/training/<slug>`). docs/CONTENT-PLAN.md flags the bootstrapping problem
-   * directly: the first article has nothing to point at, because the batch is
-   * written together and cross-links within itself. Requiring a sibling before
-   * one exists forces either a self-link or a link to a page that 404s, and
-   * both are worse than linking the index. Once batch 1 lands this passes on
-   * sibling links naturally and the index clause stops mattering.
+   * The rule exists to build the topical cluster docs/CONTENT-PLAN.md describes:
+   * each batch is written together and cross-links, with Progressive Overload as
+   * the hub. The `/training` index is deliberately not a substitute — it is
+   * already linked from the nav and the home page, so pointing at it adds
+   * nothing a reader or a crawler didn't already have.
+   *
+   * While no sibling exists the index is accepted, because the alternatives are
+   * a self-link or a link that 404s and both are worse. That is a temporary
+   * state, not an exemption: it applies only to the first article on the site,
+   * and the branch below stops being reachable the moment a second content file
+   * lands — no edit here required.
    */
-  add(internal.some((l) => (l.url === "/training" || l.url.startsWith("/training/")) && l.url !== `/training/${a.slug}`),
-      "Internal links: none point into /training (index or a sibling article, not itself)");
+  const siblings = siblingCount(file);
+  const selfUrl = `/training/${a.slug}`;
+  const linksSibling = internal.some((l) => l.url.startsWith("/training/") && l.url !== selfUrl);
+  const linksIndex = internal.some((l) => l.url === "/training");
+  if (siblings === 0) {
+    add(linksSibling || linksIndex,
+        "Internal links: none point into /training — no sibling article exists yet, so the /training index counts here (a self-link does not)");
+  } else {
+    add(linksSibling,
+        `Internal links: needs a sibling article link, /training/<slug> — ${siblings} other article${siblings === 1 ? "" : "s"} available. The /training index no longer counts, and neither does a self-link.`);
+  }
   add(internal.some((l) => l.url === "/" || l.url.startsWith("/#")),
       "Internal links: none point at the strength scan (/)");
   add(external.length >= RULES.inlineExternal.min && external.length <= RULES.inlineExternal.max,
