@@ -16,6 +16,15 @@ const eslintConfig = defineConfig([
     // and types we no longer keep in src/, so linting it would just
     // produce noise. See archiv3ed/README.md for revival steps.
     "archiv3ed/**",
+    // Neither of these ships. `marketing/` is brand assets and a support
+    // snippet; `templates/` is an unused landing-page export kept for
+    // reference. Between them they produced 4 errors and 10 warnings, which
+    // meant `npm run lint` had never exited 0 — so it could not be used as a
+    // pre-commit hook or a CI gate, which is the whole point of having it.
+    // Nothing here is imported by src/; if either is ever revived, drop the
+    // line and fix the findings then.
+    "marketing/**",
+    "templates/**",
   ]),
 ]);
 
