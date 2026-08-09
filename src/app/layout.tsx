@@ -12,13 +12,10 @@ const ADSENSE_LOADER_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsb
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.bedrock.fit";
 
-// GA4 measurement ID for the bedrock.fit property. Hardcoded default (matching
-// the ADSENSE_CLIENT_ID pattern above) so production still reports if the env
+// GA4 measurement ID for the bedrock.fit property (account 404040503,
+// property 549144058, stream "bedrock.fit-web"). Hardcoded default matching
+// the ADSENSE_CLIENT_ID pattern above, so production still reports if the env
 // var is never set in Vercel; override per-environment with NEXT_PUBLIC_GA_ID.
-//
-// NOTE: a *different* GA4 property (356092132) serves mrtask.com / fctech.xyz.
-// This ID must stay distinct from that one. Verify by adding the `hostName`
-// dimension to any report — only www.bedrock.fit should appear.
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID ?? "G-ES80M9ZLC4";
 
 // Only report from real production builds, so local `next dev` doesn't
