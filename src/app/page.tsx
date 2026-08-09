@@ -542,11 +542,17 @@ export default function Home() {
               <h4 style={{ font: `800 13px ${archivo}`, color: "#fff", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: ".06em" }}>Resources</h4>
               <Link href="/training" className="lp-flink">Training</Link>
               <Link href="/methodology" className="lp-flink">Methodology</Link>
+              <Link href="/contact" className="lp-flink">Contact</Link>
+            </div>
+            <div>
+              <h4 style={{ font: `800 13px ${archivo}`, color: "#fff", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: ".06em" }}>Legal</h4>
               <Link href="/privacy" className="lp-flink">Privacy policy</Link>
+              <Link href="/terms" className="lp-flink">Terms of use</Link>
             </div>
           </div>
           <p style={{ font: `400 11.5px/1.6 ${space}`, color: "rgba(255,255,255,.4)", margin: "36px 0 0", borderTop: "1px solid rgba(255,255,255,.12)", paddingTop: 20 }}>
-            For entertainment and general fitness only — not medical, training, or nutrition advice. © {new Date().getFullYear()} Bedrock.fit. All rights reserved.
+            For general fitness information only — not medical, training, or nutrition advice. See the{" "}
+            <Link href="/terms" style={{ color: "rgba(255,255,255,.6)" }}>terms of use</Link>. © {new Date().getFullYear()} Bedrock.fit. All rights reserved.
           </p>
         </div>
       </footer>

@@ -129,7 +129,9 @@ export default function SiteFrame({ tag, children }: { tag: string; children: Re
           }}
         >
           <Link href="/privacy" className="bf-foot-link">Privacy</Link>
+          <Link href="/terms" className="bf-foot-link">Terms</Link>
           <Link href="/methodology" className="bf-foot-link">Methodology</Link>
+          <Link href="/contact" className="bf-foot-link">Contact</Link>
           <Link href="/" className="bf-foot-link">Home</Link>
           <span style={{ fontFamily: "var(--font-mono-bf), monospace", fontSize: 12, color: "#5f7a5f" }}>
             © {new Date().getFullYear()} Bedrock.fit

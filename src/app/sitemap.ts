@@ -15,6 +15,8 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.bedrock.fit";
  */
 const METHODOLOGY_UPDATED = "2026-07-03";
 const PRIVACY_UPDATED = "2026-07-03";
+const TERMS_UPDATED = "2026-08-09";
+const CONTACT_UPDATED = "2026-08-09";
 
 /**
  * Articles come from the registry, so publishing one adds it here automatically.
@@ -62,6 +64,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(PRIVACY_UPDATED),
       changeFrequency: "yearly",
       priority: 0.3,
+    },
+    {
+      url: `${SITE_URL}/terms`,
+      lastModified: new Date(TERMS_UPDATED),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    /*
+     * Contact sits above the other supporting pages because it is the one a
+     * reader might actually go looking for, and because ad-network reviewers
+     * treat a reachable contact route as an ownership signal.
+     */
+    {
+      url: `${SITE_URL}/contact`,
+      lastModified: new Date(CONTACT_UPDATED),
+      changeFrequency: "yearly",
+      priority: 0.5,
     },
   ];
 }
