@@ -16,7 +16,7 @@ export default function PrivacyPage() {
 
       <h2>1. Introduction</h2>
       <p>
-        This Privacy Policy governs the manner in which Bedrock.fit
+        This Privacy Policy governs how Bedrock.fit
         (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) collects,
         uses, and discloses information obtained from users (&ldquo;you&rdquo;)
         of the website located at https://www.bedrock.fit (the
@@ -33,9 +33,9 @@ export default function PrivacyPage() {
       </p>
       <p>
         We and our third-party service providers automatically collect certain
-        information through cookies and similar technologies, including your IP
-        address, browser type, device identifiers, referring URLs, pages
-        viewed, and dates and times of access.
+        information through cookies and similar technologies. That information
+        includes your IP address, browser type, device identifiers, referring
+        URLs, pages viewed, and the dates and times of access.
       </p>
 
       <h2>3. Cookies and Advertising</h2>
@@ -56,7 +56,7 @@ export default function PrivacyPage() {
         You may also opt out of a third-party vendor&rsquo;s use of cookies for
         personalized advertising by visiting{" "}
         <a href="https://www.aboutads.info/choices/">https://www.aboutads.info/choices/</a>.
-        Additional information regarding Google&rsquo;s practices is available at{" "}
+        You can read more about Google&rsquo;s practices at{" "}
         <a href="https://policies.google.com/technologies/partner-sites">
           https://policies.google.com/technologies/partner-sites
         </a>
@@ -81,15 +81,15 @@ export default function PrivacyPage() {
       <p>
         Residents of the European Economic Area and the United Kingdom: where
         required, consent for non-essential and advertising cookies is obtained
-        through a consent management platform, and such consent may be withdrawn
-        at any time through the Site&rsquo;s cookie settings.
+        through a consent management platform. You may withdraw that consent at
+        any time through the Site&rsquo;s cookie settings.
       </p>
       <p>
         Residents of California: we do not sell personal information for monetary
         consideration. Certain advertising-related disclosures of information may
         constitute a &ldquo;sale&rdquo; or &ldquo;sharing&rdquo; under applicable
-        California law, and you may exercise your opt-out rights through the
-        mechanisms described in Section 3 and through applicable browser-based
+        California law. You may exercise your opt-out rights through the
+        mechanisms described in Section 3, and through applicable browser-based
         opt-out signals.
       </p>
 
@@ -98,9 +98,8 @@ export default function PrivacyPage() {
         The Site is intended for a general audience and is not directed to
         children under the age of 13 (or the applicable minimum age in your
         jurisdiction). We do not knowingly collect personal information from
-        children. If you believe a child has provided us with personal
-        information, please contact us and we will take appropriate steps to
-        delete it.
+        children. If you believe a child has given us personal information,
+        please contact us. We will then take appropriate steps to delete it.
       </p>
 
       <h2>7. Third-Party Links</h2>

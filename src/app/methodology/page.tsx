@@ -16,44 +16,47 @@ export default function MethodologyPage() {
 
       <h2>What this tool does</h2>
       <p>
-        Bedrock.fit takes one set you&rsquo;ve actually performed. You give it the
-        exercise, the weight, and the number of repetitions, along with your
-        bodyweight and sex. From that it estimates your strength ceiling: an
-        approximate one-rep max, where you fall on common strength standards,
-        useful training ranges, and a few playful projected feats. It&rsquo;s a
-        quick snapshot, not a laboratory measurement.
+        Bedrock.fit takes one set you have actually done. You tell it the lift,
+        the weight, and how many reps you managed. You also give it your
+        bodyweight and your sex. From that it works out a rough ceiling for your
+        strength. You get an estimated one-rep max, a sense of where you sit
+        against common strength standards, some useful training ranges, and a few
+        playful projected feats. It is a quick snapshot. It is not a lab test.
       </p>
 
       <h2>Estimating your one-rep max</h2>
       <p>
-        Your estimated one-rep max is derived from your submaximal set using the
-        Epley formula, a widely recognized method for estimating maximal strength
-        from a lighter set. It is most reliable in the low-to-moderate repetition
-        range, and its accuracy decreases as repetitions increase, since
-        higher-rep performance depends more heavily on muscular endurance. The
-        result should be treated as an estimate.
+        The estimate comes from the Epley formula. It is a well known way to work
+        out a top-end lift from a lighter one, and the idea behind it is simple.
+        The more reps you can do with a given weight, the further that weight
+        sits below your true limit. The formula turns that gap into a number.
+      </p>
+      <p>
+        It works best at low and moderate rep counts. The further past about ten
+        reps you go, the more it drifts. That is because a long set leans on
+        endurance as much as on strength, and endurance varies far more from one
+        person to the next. So treat the number as an estimate rather than a
+        measurement.
       </p>
 
       <h2>Beyond the baseline</h2>
       <p>
-        The Epley estimate is only the baseline. From there we work out your
-        strength level, your training ranges, and your projected results. Each of
-        those is weighted against established health and fitness standards, drawn
-        from recognised authorities and from government health resources around
-        the world.
-        This keeps the outputs grounded in credible benchmarks rather than any
-        single source, and allows results to be adjusted appropriately for
-        factors such as sex and bodyweight.
+        The Epley number is only the starting point. From there we work out your
+        strength level, your training ranges, and your projected feats. Each of
+        those is weighted against published health and fitness standards. Those
+        standards come from recognised bodies and from government health
+        resources around the world. Using several sources rather than one keeps
+        the results honest, and it lets us adjust them for sex and bodyweight.
       </p>
 
       <h2>Strength levels</h2>
       <p>
-        We compare your bodyweight-relative strength to a blended set of
-        published standards and place you on a scale from beginner through elite,
-        interpolating your position so that small changes in your inputs move the
-        result smoothly rather than jumping between labels. Supported lifts
-        include the bench press, back squat, deadlift, overhead press, barbell
-        curl, and tricep pushdown.
+        We take your strength relative to your bodyweight and compare it against
+        a blended set of published standards. That places you on a scale that
+        runs from beginner to elite. The scale is smoothed, so a small change in
+        what you enter moves your result a little rather than jumping you between
+        labels. Supported lifts are the bench press, back squat, deadlift,
+        overhead press, barbell curl, and tricep pushdown.
       </p>
 
       <h2>Training ranges</h2>
@@ -65,22 +68,21 @@ export default function MethodologyPage() {
 
       <h2>Archetype and projected feats</h2>
       <p>
-        The athlete archetype and the projected feats (such as estimated
-        pull-ups, a rough run time, and muscle-up likelihood) are playful
-        extrapolations from your strength level and body statistics. They are
-        intended for entertainment and motivation, and are not measured results
-        or predictions.
+        The athlete archetype and the projected feats are for fun. They are rough
+        guesses drawn from your strength level and your body stats, and they
+        cover things like how many pull-ups you might manage, a rough run time,
+        and whether a muscle-up is within reach. They are not measured results.
+        They are not predictions either.
       </p>
 
       <h2>Important disclaimer</h2>
       <p>
         Bedrock.fit is provided for general fitness and entertainment purposes
-        only. It does not constitute medical, training, or nutritional advice,
-        and its estimates may differ from your actual results. Do not attempt a
-        true one-rep max without proper warm-up, technique, and appropriate
-        supervision. Consult a qualified professional before beginning or
-        changing any exercise program, particularly if you have any underlying
-        health conditions.
+        only. It is not medical, training, or nutritional advice. Its estimates
+        may differ from what you can actually lift. Do not attempt a true one-rep
+        max without a proper warm-up, sound technique, and someone on hand to
+        help. Talk to a qualified professional before you start or change any
+        exercise programme. That matters most if you have a health condition.
       </p>
     </SiteFrame>
   );

@@ -18,7 +18,7 @@ export const CATEGORIES: Category[] = [
     short: "Strength",
     tagline: "How force is built, loaded and progressed.",
     description:
-      "The mechanics of getting stronger: progressive overload, the movement patterns that matter, how much load is enough, and what the research actually supports about sets, reps and frequency.",
+      "How you actually get stronger. Progressive overload, the movement patterns worth your time, how much load is enough, and what the research supports on sets, reps and frequency.",
     covers: [
       "progressive overload",
       "squat / hinge / carry patterns",
@@ -34,7 +34,7 @@ export const CATEGORIES: Category[] = [
     short: "Endurance",
     tagline: "Aerobic capacity, and why it outlives most fitness metrics.",
     description:
-      "Cardiorespiratory fitness as a health variable rather than a race result: VO2max and mortality, zone 2 and threshold work, walking and gait speed, and how endurance training interacts with strength rather than cancelling it.",
+      "Aerobic fitness treated as a health measure, not a race result. VO2max and how long people live, zone 2 and threshold work, walking speed, and how endurance training sits alongside strength rather than cancelling it.",
     covers: [
       "VO2max and all-cause mortality",
       "zone 2, threshold and interval work",
@@ -49,7 +49,7 @@ export const CATEGORIES: Category[] = [
     short: "Over 40",
     tagline: "What changes after 40, and what turns out not to.",
     description:
-      "Training when the recovery curve shifts: sarcopenia and the rate of strength loss, protein and hormonal changes, joint wear, fall and fracture risk, and the evidence that trainability persists into the ninth and tenth decades.",
+      "Training once recovery starts to shift. Muscle loss and how fast strength goes, protein and hormones, joint wear, the risk of falls and breaks, and the evidence that you can still gain in your nineties.",
     covers: [
       "sarcopenia and age-related strength loss",
       "falls, fractures and bone density",
@@ -65,7 +65,7 @@ export const CATEGORIES: Category[] = [
     short: "Mobility",
     tagline: "Range of motion, stability, and staying upright.",
     description:
-      "The qualities that decide whether strength is usable: joint range of motion, single-leg stability, proprioception, and the balance training that shows the largest effect on fall rates in randomised trials.",
+      "What decides whether your strength is any use to you. How far your joints move, how steady you are on one leg, your sense of where your body is, and the balance work that cuts fall rates most in trials.",
     covers: [
       "hip, ankle and thoracic range of motion",
       "single-leg stability and proprioception",

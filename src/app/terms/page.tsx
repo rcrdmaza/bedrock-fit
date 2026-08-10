@@ -42,10 +42,10 @@ export default function TermsPage() {
         physiotherapist, or certified coach who can assess you in person.
       </p>
       <p>
-        Consult a physician before beginning any exercise programme, and
-        particularly before beginning resistance training if you are pregnant,
-        have a cardiovascular or musculoskeletal condition, are recovering from
-        injury or surgery, or have been sedentary for an extended period. If you
+        Consult a physician before beginning any exercise programme. That applies
+        especially before you begin resistance training if you are pregnant, have
+        a cardiovascular or musculoskeletal condition, are recovering from injury
+        or surgery, or have been sedentary for an extended period. If you
         experience pain, dizziness, chest discomfort, or shortness of breath
         while exercising, stop and seek medical attention.
       </p>
@@ -53,12 +53,12 @@ export default function TermsPage() {
       <h2>3. Estimates Are Estimates</h2>
       <p>
         The calculator returns an <em>estimated</em> one-repetition maximum and
-        related figures derived from a published formula applied to the numbers
-        you supply. Such formulas are population approximations. Individual
-        results vary with technique, fatigue, training history, equipment,
-        repetition range, and measurement error, and the estimate becomes less
-        reliable the further your input sits from the range the formula was
-        derived over. The{" "}
+        related figures. It derives them from a published formula applied to the
+        numbers you supply. Such formulas are approximations drawn from
+        population data. Individual results vary with technique, fatigue,
+        training history, equipment, repetition range, and measurement error. The
+        estimate also becomes less reliable the further your input sits from the
+        range the formula was derived over. The{" "}
         <Link href="/methodology">methodology page</Link> describes the approach
         and its limits in more detail.
       </p>
