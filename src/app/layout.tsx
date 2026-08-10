@@ -22,14 +22,45 @@ const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID ?? "G-ES80M9ZLC4";
 // pollute the property with localhost sessions.
 const GA_ENABLED = process.env.NODE_ENV === "production";
 
-const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
+/*
+ * Every font here is `display: "optional"`, which is a deliberate trade and the
+ * reasoning is worth keeping.
+ *
+ * /training measured CLS 0.24 on mobile against a 0.1 threshold, with the whole
+ * 0.240 attributed to `body` rather than to any child element. That shape means
+ * everything moved at once, which on a fully prerendered page with no images
+ * leaves font swap as the only real candidate.
+ *
+ * next/font already generates a metric-adjusted fallback per family, and those
+ * are correct: measured at a 376px column, "Space Grotesk Fallback" renders to
+ * exactly the same height as the real face. But every one of those fallbacks is
+ * declared `src: local("Arial")`. If Arial is not present and fontconfig does
+ * not alias it, the adjusted fallback silently does nothing and the chain drops
+ * to plain `sans-serif` — which measured **25px taller** for the same
+ * paragraph. Then the real font arrives and the page snaps up. That is the
+ * whole-body shift, and it explains why it appears in a headless Linux
+ * Lighthouse run and not on a Mac, where the shift measures zero.
+ *
+ * `swap` is what allows that snap. `optional` removes it: the browser gives the
+ * font about 100ms, and if it is not ready it renders the fallback and **does
+ * not swap for that page view**. Font-driven layout shift stops being possible
+ * rather than becoming unlikely, and it no longer depends on whether a given
+ * machine happens to have Arial.
+ *
+ * The cost is real and worth stating plainly: a first-time visitor on a slow
+ * connection may read one page view in the fallback face instead of the brand
+ * one. Returning visitors always get the real fonts from cache. CLS is a
+ * ranking signal and typography fidelity on a first cold load is not, so this
+ * is the right way round, but it is a trade rather than a free win.
+ */
+const geist = Geist({ variable: "--font-geist", subsets: ["latin"], display: "optional" });
 
 // Brand fonts, matching the home-page bundle: Archivo (headings),
 // Space Grotesk (body), JetBrains Mono (mono labels). Exposed as CSS
 // variables and consumed by the legal/methodology pages via SiteFrame.
-const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], weight: ["700", "800", "900"] });
-const spaceGrotesk = Space_Grotesk({ variable: "--font-space", subsets: ["latin"], weight: ["400", "500", "700"] });
-const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono-bf", subsets: ["latin"], weight: ["500", "700"] });
+const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], weight: ["700", "800", "900"], display: "optional" });
+const spaceGrotesk = Space_Grotesk({ variable: "--font-space", subsets: ["latin"], weight: ["400", "500", "700"], display: "optional" });
+const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono-bf", subsets: ["latin"], weight: ["500", "700"], display: "optional" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
