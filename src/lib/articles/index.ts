@@ -2,6 +2,8 @@ import type { Article, CategorySlug } from "./types";
 import { CATEGORIES } from "./categories";
 import { legStrength } from "./content/leg-strength";
 import { progressiveOverload } from "./content/progressive-overload";
+import { sarcopenia } from "./content/sarcopenia";
+import { squatsKnees } from "./content/squats-knees";
 
 export * from "./types";
 export { CATEGORIES, getCategory } from "./categories";
@@ -13,7 +15,7 @@ export { CATEGORIES, getCategory } from "./categories";
  * this array is irrelevant — everything that renders a list sorts by date.
  * Files prefixed with `_` (like `_TEMPLATE.ts`) are never imported and never ship.
  */
-const REGISTRY: Article[] = [legStrength, progressiveOverload];
+const REGISTRY: Article[] = [legStrength, progressiveOverload, sarcopenia, squatsKnees];
 
 /* ── integrity checks ──────────────────────────────────────────────────────
  *

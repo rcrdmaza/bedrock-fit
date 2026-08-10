@@ -6,9 +6,6 @@ import type { Article } from "../types";
  * Written to the house style added 2026-08-09: no em or en dashes, ninth grade
  * reading level, locked template shape. Every other strength piece links back
  * here, so this one carries the mechanism and the others carry the specifics.
- *
- * Draft until a video is chosen. The checker gates video on publish, not on
- * draft, so this file is complete apart from that.
  */
 export const progressiveOverload: Article = {
   slug: "progressive-overload",
@@ -26,7 +23,7 @@ export const progressiveOverload: Article = {
   updated: "2026-08-09",
   readingMinutes: 9,
   wordCount: 2205,
-  draft: true,
+  draft: false,
 
   blocks: [
     {
@@ -140,6 +137,12 @@ export const progressiveOverload: Article = {
       type: "callout",
       title: "The number worth remembering",
       text: "About ten hard sets per muscle group per week. Below that you are leaving progress on the table. Far above it you are mostly buying fatigue.",
+    },
+    {
+      type: "video",
+      youtubeId: "TN9i9Ni0Xr4",
+      title: "Training Basics & Theory | Chapter 1: The Fundamentals Series",
+      caption: "A careful walk through the variables in this section, with the studies on screen. Worth it if you would rather see the mechanism explained than read it.",
     },
 
     { type: "h2", text: "Heavy or light" },
