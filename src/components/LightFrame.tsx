@@ -174,8 +174,19 @@ export function LightFooter() {
             <Link href="/privacy" className="lp-flink">Privacy policy</Link>
           </div>
         </div>
+        {/*
+         * Matches the home page footer in src/app/page.tsx.
+         *
+         * This previously read "for entertainment and general fitness only",
+         * which was both weaker and stranger than the home page wording, on the
+         * pages carrying the actual sourced training guidance. It also pointed
+         * at no disclaimer, so the routes with the most substantive advice were
+         * the ones not linking to /terms. Written as two sentences rather than
+         * one joined by a dash, per house style.
+         */}
         <p style={{ font: `400 11.5px/1.6 ${space}`, color: "rgba(255,255,255,.4)", margin: "36px 0 0", borderTop: "1px solid rgba(255,255,255,.12)", paddingTop: 20 }}>
-          For entertainment and general fitness only — not medical, training, or nutrition advice. © {new Date().getFullYear()} Bedrock.fit. All rights reserved.
+          For general fitness information only. Not medical, training, or nutrition advice. See the{" "}
+          <Link href="/terms" style={{ color: "rgba(255,255,255,.6)" }}>terms of use</Link>. © {new Date().getFullYear()} Bedrock.fit. All rights reserved.
         </p>
       </div>
     </footer>
