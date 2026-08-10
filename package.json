@@ -8,7 +8,8 @@
     "start": "next start -p ${PORT:-3000}",
     "lint": "eslint",
     "check:articles": "node scripts/check-article.mjs",
-    "images": "node scripts/write-image-metadata.mjs"
+    "images": "node scripts/write-image-metadata.mjs",
+    "articles:stats": "node scripts/articles-stats.mjs"
   },
   "engines": {
     "node": ">=20.9.0"
