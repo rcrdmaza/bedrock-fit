@@ -17,6 +17,7 @@ const METHODOLOGY_UPDATED = "2026-07-03";
 const PRIVACY_UPDATED = "2026-07-03";
 const TERMS_UPDATED = "2026-08-09";
 const CONTACT_UPDATED = "2026-08-09";
+const ABOUT_UPDATED = "2026-08-10";
 
 /**
  * Articles come from the registry, so publishing one adds it here automatically.
@@ -45,6 +46,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
+    /*
+     * About sits highest of the supporting pages. It is reachable only through
+     * a footer link, so the sitemap is realistically the sole route a crawler
+     * has to it, and it is the page that answers "who is telling me this",
+     * which carries real weight on health content.
+     */
+    {
+      url: `${SITE_URL}/about`,
+      lastModified: new Date(ABOUT_UPDATED),
+      changeFrequency: "yearly",
+      priority: 0.6,
+    },
     /*
      * Methodology and privacy. Low priority because they're supporting pages,
      * not what anyone arrives for — but they must be listed. They're reachable

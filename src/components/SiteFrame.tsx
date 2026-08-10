@@ -128,6 +128,7 @@ export default function SiteFrame({ tag, children }: { tag: string; children: Re
             borderTop: "1px solid rgba(77,255,77,.18)",
           }}
         >
+          <Link href="/about" className="bf-foot-link">About Us</Link>
           <Link href="/privacy" className="bf-foot-link">Privacy</Link>
           <Link href="/terms" className="bf-foot-link">Terms</Link>
           <Link href="/methodology" className="bf-foot-link">Methodology</Link>

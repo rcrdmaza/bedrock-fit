@@ -168,6 +168,9 @@ export function LightFooter() {
             <h4 style={{ font: `800 13px ${archivo}`, color: "#fff", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: ".06em" }}>Resources</h4>
             <Link href="/training" className="lp-flink">Training</Link>
             <Link href="/methodology" className="lp-flink">Methodology</Link>
+            {/* Footer only, by request. The top nav is for things a visitor
+                came to do; this is for the ones who want to know why. */}
+            <Link href="/about" className="lp-flink">About Us</Link>
             <Link href="/privacy" className="lp-flink">Privacy policy</Link>
           </div>
         </div>
