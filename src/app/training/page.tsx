@@ -20,12 +20,12 @@ const INDEX_DESCRIPTION =
   "Long-form, footnoted articles on strength training, endurance, training over 40, and mobility. Every figure sourced to primary research or public health guidance.";
 
 export const metadata: Metadata = {
-  title: "Training — Evidence-Based Strength & Endurance Articles | Bedrock.fit",
+  title: "Training: Evidence-Based Strength & Endurance Articles | Bedrock.fit",
   description: INDEX_DESCRIPTION,
   alternates: { canonical: "/training" },
   openGraph: {
     type: "website",
-    title: "Training — Evidence-Based Strength & Endurance Articles",
+    title: "Training: Evidence-Based Strength & Endurance Articles",
     description:
       "Long-form, footnoted articles on strength, endurance, training over 40, and mobility. Every figure sourced.",
     url: "/training",
@@ -107,7 +107,7 @@ export default function TrainingIndexPage() {
           </h1>
           <p style={{ font: `500 17.5px/1.65 ${space}`, color: "var(--muted)", maxWidth: 620, margin: "18px auto 0" }}>
             Long-form articles on getting and staying strong. Every number is footnoted to primary research or public
-            health guidance — no citation, no claim.
+            health guidance. No citation, no claim.
           </p>
         </div>
       </section>
@@ -169,7 +169,7 @@ export default function TrainingIndexPage() {
           <h2 style={{ font: `800 24px ${archivo}`, color: "var(--ink)", margin: "0 0 8px" }}>Where do you actually stand?</h2>
           <p style={{ font: `500 15px/1.65 ${space}`, color: "var(--muted)", margin: "0 auto 20px", maxWidth: 480 }}>
             Enter one squat, bench or deadlift set and get an estimated 1-rep max, your strength tier, and training
-            zones — free, no signup.
+            zones. Free, no signup.
           </p>
           <Link href="/" style={{ display: "inline-block", background: "var(--green)", color: "#fff", borderRadius: 12, padding: "14px 28px", font: `800 14px ${archivo}`, textDecoration: "none" }}>
             Get my strength scan →

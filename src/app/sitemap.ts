@@ -10,8 +10,8 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.bedrock.fit";
  * crawlers to distrust `lastModified` across the whole site.
  *
  * Keep in sync with the dates rendered in the pages themselves:
- *   src/app/methodology/page.tsx — "last updated July 3, 2026"
- *   src/app/privacy/page.tsx     — "Effective date — July 3, 2026"
+ *   src/app/methodology/page.tsx: "Methodology, last updated July 3, 2026"
+ *   src/app/privacy/page.tsx:     "Effective date: July 3, 2026"
  */
 const METHODOLOGY_UPDATED = "2026-07-03";
 const PRIVACY_UPDATED = "2026-07-03";

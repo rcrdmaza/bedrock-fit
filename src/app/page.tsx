@@ -16,7 +16,7 @@ const FEATURED = {
   kicker: "Strength · Over 40",
   title: "Why strong legs matter more as you age",
   dek:
-    "Lower-body strength declines faster than muscle mass, and power faster still. What the evidence says about falls, independence and how much of it is recoverable — with 12 sources.",
+    "Lower-body strength declines faster than muscle mass, and power faster still. What the evidence says about falls, independence and how much of it is recoverable, with 12 sources.",
   image: "/articles/leg-strength/stairs-in-trainers.jpg",
   imageAlt: "Legs in trainers climbing a flight of concrete stairs.",
 };
@@ -86,13 +86,13 @@ function levelOf(ratio: number, std: number[]) {
 
 function pickArchetype(a: { ex: string; lvName: string; lvIdx: number; maxPull: number; bwAdj: number; score: number }) {
   if (a.lvName === "Untrained")
-    return { emoji: "💎", name: "Diamond in the Rough", desc: "Massive untapped upside. Your numbers only go up from here — time to get in the gym and shock yourself." };
+    return { emoji: "💎", name: "Diamond in the Rough", desc: "Massive untapped upside. Your numbers only go up from here, so get in the gym and shock yourself." };
   if (a.lvIdx >= 3 && (a.ex === "squat" || a.ex === "deadlift" || a.ex === "bench"))
-    return { emoji: "🏋️", name: "Future Olympic Lifter", desc: "You're built for the barbell. Raw strength like this is rare — chase a big total and see how far it goes." };
+    return { emoji: "🏋️", name: "Future Olympic Lifter", desc: "You're built for the barbell. Raw strength like this is rare. Chase a big total and see how far it goes." };
   if (a.maxPull >= 12)
-    return { emoji: "🤸", name: "Calisthenics Machine", desc: "Your strength-to-weight ratio is elite. Bars, rings, muscle-ups — the playground is yours." };
+    return { emoji: "🤸", name: "Calisthenics Machine", desc: "Your strength-to-weight ratio is elite. Bars, rings, muscle-ups: the playground is yours." };
   if (a.bwAdj >= 1.15 && a.score >= 35)
-    return { emoji: "🏃", name: "Marathoner in the Making", desc: "Light, efficient, and strong for your size — the perfect distance-runner build. Lace up." };
+    return { emoji: "🏃", name: "Marathoner in the Making", desc: "Light, efficient, and strong for your size. The perfect distance-runner build. Lace up." };
   if (a.lvIdx >= 2)
     return { emoji: "⚡", name: "The All-Rounder", desc: "Balanced power across the board. You'd hold your own in almost any sport you picked up." };
   return { emoji: "🌱", name: "The Rising Athlete", desc: "Solid foundation with clear room to grow. Pick a goal and the gains will come fast." };
@@ -102,8 +102,8 @@ function pickArchetype(a: { ex: string; lvName: string; lvIdx: number; maxPull: 
 const ARCHETYPES = [
   { emoji: "💎", name: "Diamond in the Rough", desc: "Massive untapped upside. Your numbers only go up from here." },
   { emoji: "🏋️", name: "Future Olympic Lifter", desc: "Built for the barbell. Raw strength like this is rare." },
-  { emoji: "🤸", name: "Calisthenics Machine", desc: "Elite strength-to-weight ratio. Bars, rings, muscle-ups — the playground is yours." },
-  { emoji: "🏃", name: "Marathoner in the Making", desc: "Light, efficient, and strong for your size — the perfect distance build." },
+  { emoji: "🤸", name: "Calisthenics Machine", desc: "Elite strength-to-weight ratio. Bars, rings, muscle-ups: the playground is yours." },
+  { emoji: "🏃", name: "Marathoner in the Making", desc: "Light, efficient, and strong for your size. The perfect distance build." },
   { emoji: "⚡", name: "The All-Rounder", desc: "Balanced power across the board. You'd hold your own in almost any sport." },
   { emoji: "🌱", name: "The Rising Athlete", desc: "Solid foundation with clear room to grow. Gains come fast from here." },
 ];
@@ -136,8 +136,8 @@ const btnGreen: React.CSSProperties = { ...btnPrimary, background: "var(--green)
 
 const FEATURES = [
   { emoji: "📈", title: "True 1-rep max", desc: "No need to grind a risky max attempt. One comfortable set is enough to estimate your ceiling." },
-  { emoji: "🌍", title: "Global strength level", desc: "See where you land — Beginner to Elite — against blended, published strength standards for your sex and bodyweight." },
-  { emoji: "🎯", title: "Training zones", desc: "Exact weights and rep ranges to train max strength, muscle size, or endurance — personalized to your numbers." },
+  { emoji: "🌍", title: "Global strength level", desc: "See where you land, from Beginner to Elite, against blended, published strength standards for your sex and bodyweight." },
+  { emoji: "🎯", title: "Training zones", desc: "Exact weights and rep ranges to train max strength, muscle size, or endurance, personalized to your numbers." },
   { emoji: "🧮", title: "Rep predictions", desc: "How many reps could you hit with 1, 2, 3, or 4 plates per side? We do the math for every load." },
   { emoji: "🔮", title: "Projected feats", desc: "Playful projections of your max pull-ups, 5K time, and whether a muscle-up is within reach." },
   { emoji: "🦸", title: "Athlete archetype", desc: "The fun part: discover the athlete you're built to become, from Calisthenics Machine to Future Olympic Lifter." },
@@ -282,7 +282,7 @@ export default function Home() {
       const n = Math.floor(30 * (oneRM / L - 1));
       if (L < oneRM * 0.98 && n >= 1) repRows.push({ label: `${labels[i]} (${fmtW(L)})`, reps: `${n > 30 ? "30+" : n} reps` });
     });
-    if (!repRows.length) repRows.push({ label: "Your max is near an empty bar — keep building!", reps: "" });
+    if (!repRows.length) repRows.push({ label: "Your max is near an empty bar. Keep building!", reps: "" });
 
     const score = lv.pct;
     const bwRef = sex === "male" ? 80 : 65;
@@ -300,9 +300,9 @@ export default function Home() {
       levelName: lv.name,
       levelPct: lv.pct,
       repRows,
-      zStr: `${fmtW(oneRM * 0.88)} × 3–5`,
-      zHyp: `${fmtW(oneRM * 0.72)} × 8–12`,
-      zEnd: `${fmtW(oneRM * 0.58)} × 15–20`,
+      zStr: `${fmtW(oneRM * 0.88)} × 3 to 5`,
+      zHyp: `${fmtW(oneRM * 0.72)} × 8 to 12`,
+      zEnd: `${fmtW(oneRM * 0.58)} × 15 to 20`,
       pullups: maxPull,
       fivek: `${mm}:${ss}`,
       muscleup: maxPull >= 12 ? "Likely 💪" : maxPull >= 7 ? "So close!" : "Not yet",
@@ -407,13 +407,13 @@ export default function Home() {
             The Free Strength Calculator That Reveals Your <span style={{ color: "var(--green)" }}>Athletic Potential</span>
           </h1>
           <p style={{ font: `500 17px/1.65 ${space}`, color: "var(--muted)", maxWidth: 620, margin: "18px auto 0" }}>
-            Enter one lift you do often and we&rsquo;ll estimate your true 1-rep max, rank you against global strength standards, build your training zones — and reveal the athlete you&rsquo;re built to become.
+            Enter one lift you do often and we&rsquo;ll estimate your true 1-rep max, rank you against global strength standards, build your training zones, and reveal the athlete you&rsquo;re built to become.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 28 }}>
             <button type="button" onClick={openScan} style={btnGreen}>Get my strength scan →</button>
             <a href="#features" style={{ ...btnPrimary, background: "#fff", color: "var(--ink)", border: "1px solid var(--line)" }}>See what you get</a>
           </div>
-          <p style={{ font: `500 12px ${space}`, color: "var(--muted)", marginTop: 12 }}>No credit card required — because there&rsquo;s nothing to buy.</p>
+          <p style={{ font: `500 12px ${space}`, color: "var(--muted)", marginTop: 12 }}>No credit card required, because there&rsquo;s nothing to buy.</p>
 
           {/* trust strip */}
           <div className="lp-trust" style={{ display: "flex", justifyContent: "center", gap: 34, flexWrap: "wrap", marginTop: 42, padding: "18px 0", borderTop: "1px solid var(--line)" }}>
@@ -553,7 +553,7 @@ export default function Home() {
             </div>
           </div>
           <p style={{ font: `400 11.5px/1.6 ${space}`, color: "rgba(255,255,255,.4)", margin: "36px 0 0", borderTop: "1px solid rgba(255,255,255,.12)", paddingTop: 20 }}>
-            For general fitness information only — not medical, training, or nutrition advice. See the{" "}
+            For general fitness information only. Not medical, training, or nutrition advice. See the{" "}
             <Link href="/terms" style={{ color: "rgba(255,255,255,.6)" }}>terms of use</Link>. © {new Date().getFullYear()} Bedrock.fit. All rights reserved.
           </p>
         </div>
@@ -790,7 +790,7 @@ export default function Home() {
                 </div>
 
                 <div style={{ ...cardStyle, marginTop: 16 }}>
-                  <div style={secHead}>Just for fun — your projected feats 🔮</div>
+                  <div style={secHead}>Just for fun: your projected feats 🔮</div>
                   <div className="bf-three">
                     <div style={statBox}>
                       <div style={{ font: `900 28px ${archivo}`, color: "var(--green-dark)" }}>{res.pullups}</div>
@@ -805,7 +805,7 @@ export default function Home() {
                       <div style={{ font: `600 12px ${space}`, color: "var(--muted)" }}>Muscle-up?</div>
                     </div>
                   </div>
-                  <p style={{ color: "var(--muted)", fontSize: 12, margin: "12px 0 0" }}>Playful projections from your profile, not measured results — go test them!</p>
+                  <p style={{ color: "var(--muted)", fontSize: 12, margin: "12px 0 0" }}>Playful projections from your profile, not measured results, so go test them!</p>
                 </div>
 
                 <div style={{ display: "flex", gap: 10, marginTop: 18 }}>

@@ -245,7 +245,7 @@ export function PullQuote({ text, attribution }: { text: string; attribution?: s
   return (
     <blockquote style={{ margin: "32px 0", padding: "0 0 0 22px", borderLeft: "3px solid var(--green-soft)" }}>
       <p style={{ font: `500 21px/1.5 ${archivo}`, color: "var(--ink)", margin: 0 }}>{renderInline(text)}</p>
-      {attribution && <footer style={{ font: `600 12.5px ${mono}`, color: "var(--muted)", marginTop: 10, letterSpacing: ".04em" }}>— {attribution}</footer>}
+      {attribution && <footer style={{ font: `600 12.5px ${mono}`, color: "var(--muted)", marginTop: 10, letterSpacing: ".04em" }}>{attribution}</footer>}
     </blockquote>
   );
 }

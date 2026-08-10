@@ -12,13 +12,13 @@ export default function MethodologyPage() {
   return (
     <SiteFrame tag="//METHOD">
       <h1>How Bedrock.fit Works</h1>
-      <p className="eff">Methodology — last updated July 3, 2026</p>
+      <p className="eff">Methodology, last updated July 3, 2026</p>
 
       <h2>What this tool does</h2>
       <p>
-        Bedrock.fit takes one set you&rsquo;ve actually performed &mdash; an
-        exercise, the weight, and the number of repetitions &mdash; together with
-        your bodyweight and sex, and estimates your strength ceiling: an
+        Bedrock.fit takes one set you&rsquo;ve actually performed. You give it the
+        exercise, the weight, and the number of repetitions, along with your
+        bodyweight and sex. From that it estimates your strength ceiling: an
         approximate one-rep max, where you fall on common strength standards,
         useful training ranges, and a few playful projected feats. It&rsquo;s a
         quick snapshot, not a laboratory measurement.
@@ -36,11 +36,11 @@ export default function MethodologyPage() {
 
       <h2>Beyond the baseline</h2>
       <p>
-        The Epley estimate is only the baseline. From there, our additional
-        calculations &mdash; your strength level, training ranges, and projected
-        results &mdash; are weighted against established health and fitness
-        standards drawn from internationally recognized authorities and
-        government-approved health and fitness resources from around the world.
+        The Epley estimate is only the baseline. From there we work out your
+        strength level, your training ranges, and your projected results. Each of
+        those is weighted against established health and fitness standards, drawn
+        from recognised authorities and from government health resources around
+        the world.
         This keeps the outputs grounded in credible benchmarks rather than any
         single source, and allows results to be adjusted appropriately for
         factors such as sex and bodyweight.
@@ -59,8 +59,8 @@ export default function MethodologyPage() {
       <h2>Training ranges</h2>
       <p>
         Based on your estimated one-rep max, we suggest general working ranges for
-        three goals &mdash; maximal strength, muscle growth, and muscular
-        endurance &mdash; following widely accepted training principles.
+        three goals: maximal strength, muscle growth, and muscular endurance. The
+        ranges follow widely accepted training principles.
       </p>
 
       <h2>Archetype and projected feats</h2>

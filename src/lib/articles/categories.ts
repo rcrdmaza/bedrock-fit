@@ -47,7 +47,7 @@ export const CATEGORIES: Category[] = [
     slug: "over-40",
     name: "Over 40",
     short: "Over 40",
-    tagline: "What changes after 40 — and what turns out not to.",
+    tagline: "What changes after 40, and what turns out not to.",
     description:
       "Training when the recovery curve shifts: sarcopenia and the rate of strength loss, protein and hormonal changes, joint wear, fall and fracture risk, and the evidence that trainability persists into the ninth and tenth decades.",
     covers: [
@@ -70,7 +70,7 @@ export const CATEGORIES: Category[] = [
       "hip, ankle and thoracic range of motion",
       "single-leg stability and proprioception",
       "balance training protocols",
-      "stretching — static, dynamic and loaded",
+      "stretching, whether static, dynamic or loaded",
       "warm-ups and movement prep",
       "working around a cranky joint",
     ],

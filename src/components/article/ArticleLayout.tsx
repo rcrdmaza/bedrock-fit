@@ -114,7 +114,7 @@ export function ArticleLayout({ article }: { article: Article }) {
 
           {article.draft && (
             <p style={{ font: `700 11.5px ${mono}`, color: "#b4531f", letterSpacing: ".08em", textTransform: "uppercase", marginTop: 12 }}>
-              Draft — not indexed, not linked from the index
+              Draft. Not indexed, not linked from the index
             </p>
           )}
         </div>

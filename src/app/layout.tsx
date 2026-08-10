@@ -33,7 +33,7 @@ const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono-bf", subsets: ["la
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Bedrock.fit — Free Strength Calculator & Athletic Potential Scan",
+  title: "Bedrock.fit | Free Strength Calculator & Athletic Potential Scan",
   description:
     "Free strength calculator: enter one lift to estimate your 1-rep max, rank against global strength standards, get training zones, and reveal your athlete archetype. No signup.",
   applicationName: "Bedrock.fit",
@@ -49,13 +49,13 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Bedrock.fit",
     url: SITE_URL,
-    title: "Bedrock.fit — Free Strength Calculator & Athletic Potential Scan",
+    title: "Bedrock.fit | Free Strength Calculator & Athletic Potential Scan",
     description:
       "Estimate your 1-rep max, strength level, training zones, and athlete archetype from a single lift. Free, no signup.",
   },
   twitter: {
     card: "summary",
-    title: "Bedrock.fit — Free Strength Calculator",
+    title: "Bedrock.fit | Free Strength Calculator",
     description:
       "Estimate your 1-rep max, strength level, and athlete archetype from a single lift. Free, no signup.",
   },

@@ -6,7 +6,7 @@ import { OG_CONTENT_TYPE, OG_SIZE, renderOgCard } from "@/lib/og";
  * app/training/[slug]/opengraph-image.tsx; both share the layout in src/lib/og.tsx.
  */
 
-export const alt = "Bedrock.fit Training — evidence-based strength and endurance articles";
+export const alt = "Bedrock.fit Training: evidence-based strength and endurance articles";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 

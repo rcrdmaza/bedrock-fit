@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import SiteFrame from "@/components/SiteFrame";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Bedrock.fit",
+  title: "Privacy Policy | Bedrock.fit",
   description:
     "How Bedrock.fit collects, uses, and discloses information, including cookies, advertising, and your privacy rights.",
   alternates: { canonical: "/privacy" },
@@ -12,7 +12,7 @@ export default function PrivacyPage() {
   return (
     <SiteFrame tag="//PRIVACY">
       <h1>Privacy Policy</h1>
-      <p className="eff">Effective date — July 3, 2026</p>
+      <p className="eff">Effective date: July 3, 2026</p>
 
       <h2>1. Introduction</h2>
       <p>

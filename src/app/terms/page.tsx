@@ -3,7 +3,7 @@ import Link from "next/link";
 import SiteFrame from "@/components/SiteFrame";
 
 export const metadata: Metadata = {
-  title: "Terms of Use — Bedrock.fit",
+  title: "Terms of Use | Bedrock.fit",
   description:
     "The terms governing use of Bedrock.fit, including the informational nature of the strength calculator, health and safety disclaimers, and limitation of liability.",
   alternates: { canonical: "/terms" },
@@ -13,7 +13,7 @@ export default function TermsPage() {
   return (
     <SiteFrame tag="//TERMS">
       <h1>Terms of Use</h1>
-      <p className="eff">Effective date — August 9, 2026</p>
+      <p className="eff">Effective date: August 9, 2026</p>
 
       <h2>1. Acceptance of These Terms</h2>
       <p>
@@ -130,7 +130,7 @@ export default function TermsPage() {
         To the fullest extent permitted by applicable law, we shall not be liable
         for any indirect, incidental, special, consequential, or punitive
         damages, or for any loss of profits, data, or goodwill, arising out of or
-        in connection with your access to or use of the Site — including,
+        in connection with your access to or use of the Site, including,
         without limitation, any injury sustained while exercising or any
         decision made in reliance on information or estimates obtained from the
         Site.

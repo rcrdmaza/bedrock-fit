@@ -3,7 +3,7 @@ import Link from "next/link";
 import SiteFrame from "@/components/SiteFrame";
 
 export const metadata: Metadata = {
-  title: "Contact — Bedrock.fit",
+  title: "Contact | Bedrock.fit",
   description:
     "How to reach Bedrock.fit: general enquiries, corrections to sourced claims, privacy requests, and press.",
   alternates: { canonical: "/contact" },
@@ -13,7 +13,7 @@ export default function ContactPage() {
   return (
     <SiteFrame tag="//CONTACT">
       <h1>Contact</h1>
-      <p className="eff">Last updated — August 9, 2026</p>
+      <p className="eff">Last updated August 9, 2026</p>
 
       <h2>Who runs this</h2>
       <p>
@@ -34,7 +34,7 @@ export default function ContactPage() {
         Every figure on this site is meant to trace back to primary research or
         national health guidance, and each article carries a numbered source
         list. If a number looks wrong, a citation does not support the claim
-        attached to it, or a study has been superseded, please say so — email{" "}
+        attached to it, or a study has been superseded, please say so. Email{" "}
         <a href="mailto:hello@bedrock.fit">hello@bedrock.fit</a> with the page,
         the claim, and the source you believe is correct.
       </p>
@@ -46,8 +46,8 @@ export default function ContactPage() {
 
       <h2>Privacy requests</h2>
       <p>
-        For questions about data handling, cookies, or advertising — or to make a
-        request under applicable privacy law — email{" "}
+        For questions about data handling, cookies, or advertising, or to make a
+        request under applicable privacy law, email{" "}
         <a href="mailto:privacy@bedrock.fit">privacy@bedrock.fit</a>. The{" "}
         <Link href="/privacy">privacy policy</Link> sets out what is collected
         and why.
