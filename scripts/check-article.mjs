@@ -22,6 +22,7 @@ import ts from "typescript";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { basename, join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { fleschKincaid, MAX_GRADE, BANNED_DASHES } from "./lib/readability.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CONTENT_DIR = join(ROOT, "src/lib/articles/content");
@@ -79,11 +80,8 @@ const COUNTED = new Set(["lede", "p", "h2", "h3", "list", "callout", "quote"]);
  *  compound word (re-established, single-leg, 30-second), never as punctuation
  *  standing between spaces. Dashes read as a writing tic and they push the
  *  reading level up by welding two sentences into one. */
-const BANNED_DASHES = /[—–]/;
 const SPACED_HYPHEN = /\s-\s|\s-$|^-\s/;
 
-/** Flesch–Kincaid grade. Ninth grade or below. */
-const MAX_GRADE = 9.0;
 
 /** Every article opens with a lede, closes with a cta, and carries at least
  *  one video. Locking the shape is what makes the pieces feel like one
@@ -95,22 +93,8 @@ const TEMPLATE = {
   videos: { min: 1, max: 2, label: "Videos" },
 };
 
-/** Syllables, approximated by vowel groups. Good enough for a grade estimate;
- *  the point is to catch prose drifting toward twelfth grade, not to be exact. */
-function syllables(word) {
-  word = word.toLowerCase().replace(/[^a-z]/g, "");
-  if (word.length <= 3) return 1;
-  word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, "").replace(/^y/, "");
-  return (word.match(/[aeiouy]{1,2}/g) || []).length || 1;
-}
-
-function fleschKincaid(text) {
-  const sentences = (text.match(/[.!?]+(?=\s|$)/g) || []).length || 1;
-  const words = text.split(/\s+/).filter(Boolean);
-  if (!words.length) return 0;
-  const syl = words.reduce((n, w) => n + syllables(w), 0);
-  return 0.39 * (words.length / sentences) + 11.8 * (syl / words.length) - 15.59;
-}
+/* syllables() and fleschKincaid() now live in ./lib/readability.mjs, shared
+   with check-copy.mjs so the two gates cannot drift apart. */
 
 /* ── tiny TS-AST readers ───────────────────────────────────────────────── */
 

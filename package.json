@@ -9,7 +9,8 @@
     "lint": "eslint",
     "check:articles": "node scripts/check-article.mjs",
     "images": "node scripts/write-image-metadata.mjs",
-    "articles:stats": "node scripts/articles-stats.mjs"
+    "articles:stats": "node scripts/articles-stats.mjs",
+    "check:copy": "node scripts/check-copy.mjs"
   },
   "engines": {
     "node": ">=20.9.0"
