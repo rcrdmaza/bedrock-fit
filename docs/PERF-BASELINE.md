@@ -83,12 +83,13 @@ the result is not clean**, so read the whole of this before quoting a number.
 |---|---|---|---|---|---|---|---|
 | 1 | 14:45 | 47 | 5.1 s | 7.6 s | 190 ms | **0.24** | 5.9 s |
 | 2 | 14:49 | 62 | 5.0 s | 7.4 s | 40 ms | **0** | 6.0 s |
-| 3 | 14:51, 14:53 | did not complete | | | | | |
+| 3 | 14:51, 14:53, 14:55 | did not complete | | | | | |
 
-Two runs completed. The third was attempted twice and never left its loading
-state, which is the same PSI throttling recorded above for
-`/training/leg-strength`. **There is therefore no median of three, and no
-verdict.**
+Two runs completed. The third was attempted three times across ten minutes and
+never left its loading state, which is the same PSI throttling recorded above
+for `/training/leg-strength`. The throttle outlasts a short wait, so the retry
+needs to be hours later rather than minutes. **There is therefore no median of
+three, and no verdict.**
 
 What the two runs do establish:
 
