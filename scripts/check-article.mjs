@@ -54,7 +54,14 @@ const RULES = {
   internalLinks:    { min: 3,     max: 6,     label: "Internal links" },
   inlineExternal:   { min: 2,     max: 4,     label: "Inline external links" },
   sources:          { min: 8,     max: 12,    label: "Citations" },
-  charts:           { min: 2,     max: 4,     label: "Charts" },
+  /* Panels count individually, so two strips of four are eight by this measure
+     but only two places the reader has to stop. The ceiling that matters is
+     `strips` below; this one exists to catch a strip padded out with panels
+     nobody asked for. */
+  charts:           { min: 2,     max: 8,     label: "Charts" },
+  /* Places the reader is asked to stop and look at figures. Three is already a
+     lot for 13,000 characters, and a fourth turns an article into a deck. */
+  strips:           { min: 1,     max: 3,     label: "Chart sections" },
 };
 
 /* Blocks whose prose counts toward the character target. Chart labels, table
@@ -328,12 +335,20 @@ function check(file) {
       `Template: first block is "${kinds[0]}", must be "${TEMPLATE.firstBlock}"`);
   add(kinds[kinds.length - 1] === TEMPLATE.lastBlock,
       `Template: last block is "${kinds[kinds.length - 1]}", must be "${TEMPLATE.lastBlock}"`);
-  for (const need of TEMPLATE.requires) {
-    add(kinds.includes(need), `Template: no "${need}" block — every article needs at least one`);
-  }
+  add(kinds.includes("h2"), 'Template: no "h2" block — every article needs at least one');
+
+  /* Video is gated on publish, not on draft. Picking an embed means a human
+     watching candidates and deciding one is worth the reader's time, which is
+     not something a draft should be blocked on. Same logic the plan applies to
+     images: publish the words, add the assets after. A draft that never gets a
+     video simply never flips to draft:false. */
   const videos = kinds.filter((k) => k === "video").length;
-  add(videos >= TEMPLATE.videos.min && videos <= TEMPLATE.videos.max,
-      `${TEMPLATE.videos.label}: ${videos} — need ${TEMPLATE.videos.min}–${TEMPLATE.videos.max}`);
+  if (!a.draft) {
+    add(videos >= TEMPLATE.videos.min && videos <= TEMPLATE.videos.max,
+        `${TEMPLATE.videos.label}: ${videos} — need ${TEMPLATE.videos.min}–${TEMPLATE.videos.max} before publish`);
+  } else if (videos === 0) {
+    warnings.push("No video yet — required before draft:false");
+  }
 
   /* links */
   const prose = a.blocks.flatMap(allText).join("\n");
@@ -392,14 +407,58 @@ function check(file) {
   add(a.sources.length >= RULES.sources.min && a.sources.length <= RULES.sources.max,
       `${RULES.sources.label}: ${a.sources.length} — need ${RULES.sources.min}–${RULES.sources.max}`);
 
-  /* charts */
-  const charts = a.blocks.filter((b) => b.type === "chart");
+  /* charts
+     A `charts` strip counts as its panel count, not as one block: four panels
+     in a rail is four charts as far as the reader is concerned, and counting it
+     as one would let an article satisfy the minimum with a single strip while
+     appearing to have none. Panels are validated the same way standalone
+     charts are. */
+  const strips = a.blocks.filter((b) => b.type === "charts");
+  const loneCharts = a.blocks.filter((b) => b.type === "chart");
+  const charts = [
+    ...loneCharts,
+    ...strips.flatMap((s) => s.panels ?? []),
+  ];
   add(charts.length >= RULES.charts.min && charts.length <= RULES.charts.max,
       `${RULES.charts.label}: ${charts.length} — need ${RULES.charts.min}–${RULES.charts.max}`);
+
+  /* Every chart section on the site is a rotating strip, so a `chart` block on
+     its own is no longer a shape the template has. It still renders, because
+     leg-strength was published with four of them and is being retrofitted
+     rather than broken; this rule is what makes sure the retrofit actually
+     happens and that nothing new arrives in the old shape. Fold a lone chart
+     into a `charts` strip alongside two or three other views of the same
+     question. */
+  for (const c of loneCharts) {
+    problems.push(`Standalone chart "${c.title}": use a "charts" strip — every chart section is a carousel now`);
+  }
+  add(strips.length <= RULES.strips.max,
+      `${RULES.strips.label}: ${strips.length} — at most ${RULES.strips.max}`);
+
+  /* A strip of identical panels is just a long chart. The variation is the
+     reason the block exists, so require at least two kinds. */
+  for (const s of strips) {
+    const panels = s.panels ?? [];
+    add(panels.length >= 2 && panels.length <= 4,
+        `Chart strip "${s.title}": ${panels.length} panels — need 2–4`);
+    const kinds = new Set(panels.map((p) => p.kind));
+    add(kinds.size >= 2,
+        `Chart strip "${s.title}": every panel is "${[...kinds][0]}" — vary the kind, that is the point of a strip`);
+  }
   for (const c of charts) {
+    /* Panels carry `caption` where standalone charts carry `title`, and a strip
+       carries one `source` for the whole group rather than one per panel. */
+    const name = c.title ?? c.caption ?? "untitled";
     const biggest = Math.max(...(c.bars ?? []).map((b) => b.value ?? 0));
-    if (c.max !== undefined && biggest > c.max) problems.push(`Chart "${c.title}": a bar (${biggest}) exceeds max (${c.max})`);
-    if (!/\[\d+\]$/.test(String(c.source ?? "").trim())) warnings.push(`Chart "${c.title}": source line doesn't end in a [n] citation`);
+    if (c.max !== undefined && biggest > c.max) problems.push(`Chart "${name}": a bar (${biggest}) exceeds max (${c.max})`);
+    if (c.source !== undefined && !/\[\d+\]/.test(String(c.source).trim())) {
+      warnings.push(`Chart "${name}": source line carries no [n] citation`);
+    }
+  }
+  for (const s of strips) {
+    if (!/\[\d+\]/.test(String(s.source ?? "").trim())) {
+      warnings.push(`Chart strip "${s.title}": source line carries no [n] citation`);
+    }
   }
 
   /* figures */

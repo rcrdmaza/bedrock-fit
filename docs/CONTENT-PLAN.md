@@ -295,11 +295,49 @@ Every article is the same shape. The checker locks it:
 - First block is a `lede`. Last block is a `cta`.
 - At least one `h2`.
 - **One or two `video` blocks**, YouTube, on topic, embedded small.
-- 2 to 4 charts.
+- **1 to 3 chart sections**, each a `charts` strip. 2 to 8 panels in total.
 - 8 to 12 numbered sources, rendered small at the foot.
 - 3 to 6 internal links, at least one into `/training`, at least one to `/`.
 - 2 to 4 inline external links, opening in a new tab so the reader keeps our
   page. Citations stay `nofollow`; inline contextual links are `dofollow`.
+
+## Charts
+
+Signed off 2026-08-09. There is one chart block and it is the `charts` strip.
+A standalone `chart` is a hard fail, and the message says so, because the site
+no longer has a place to put a single static figure.
+
+| Rule | Enforced as |
+|---|---|
+| Charts live in a `charts` strip, never alone | Hard fail, names the block. |
+| 2 to 4 panels per strip | Hard fail. |
+| **At least two different `kind` values in a strip** | Hard fail. |
+| A bar value may not exceed the panel's `max` | Hard fail. |
+| The strip's `source` line carries a `[n]` citation | Warning. |
+
+The variation rule is the whole point of the block. Four bar charts side by
+side is one long bar chart with gaps in it. Each panel should answer its part of
+the question in whatever shape suits it: a `column` for something ordered, a
+`line` for a genuine trend, a `donut` for one proportion, a `bar` for named
+things being compared.
+
+How it behaves for the reader: the strip advances itself on a one second hold,
+the panel nearest the centre is sharp and every other panel is blurred, and it
+stops the moment the reader hovers, tabs in, or scrolls it by hand. It does not
+run off screen and it does not auto advance at all under
+`prefers-reduced-motion`.
+
+The blur is applied by script, never by the stylesheet. That is not a detail: a
+stylesheet blur would leave most of the figures on the page unreadable for
+anyone with JavaScript off and for every crawler that reaches the article.
+
+## Sources block
+
+Each entry is **the title of the work and nothing else** — no authors, no
+journal, no year, no page range — and the whole title is the link. The full
+citation string was tried first and read as academic clutter at the foot of a
+page written for a general reader. It also carried the only legitimate en
+dashes on the site, in page ranges, which fought the dash rule directly.
 
 ## Sourcing
 

@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Block } from "@/lib/articles/types";
 import { archivo, btnGreen, kicker, mono, space } from "../LightFrame";
 import { renderInline, stripInline } from "./inline";
+import { ChartStrip } from "./ChartStrip";
 
 /* ── typography ────────────────────────────────────────────────────────── */
 
@@ -284,6 +285,9 @@ export function renderBlock(block: Block, key: number): React.ReactNode {
 
     case "chart":
       return <BarChart key={key} {...block} />;
+
+    case "charts":
+      return <ChartStrip key={key} {...block} />;
 
     case "stats":
       return <StatRow key={key} items={block.items} />;

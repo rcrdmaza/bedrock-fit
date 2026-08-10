@@ -66,6 +66,29 @@ export type Bar = {
 
 export type StatItem = { big: string; label: string };
 
+/**
+ * One panel inside a `charts` strip.
+ *
+ * Every kind is drawn in CSS rather than SVG, for the reason set out on the
+ * chart component: a fixed-viewBox SVG scaled into a phone column renders its
+ * labels at roughly half the intended size. The `line` kind is the exception
+ * and uses SVG for the stroke only, with the labels kept in HTML alongside.
+ */
+export type ChartPanel = {
+  /**
+   * - `bar`    horizontal bars. Best for comparing named categories.
+   * - `column` vertical bars. Best when the x axis is ordered, like weeks.
+   * - `line`   a trend. Use only when the points are genuinely a sequence.
+   * - `donut`  one proportion of a whole. A single figure, not a comparison.
+   */
+  kind: "bar" | "column" | "line" | "donut";
+  caption: string;
+  /** Upper bound of the scale. Ignored by `donut`, which is always out of 100. */
+  max: number;
+  unit?: string;
+  bars: Bar[];
+};
+
 export type Block =
   /** Opening paragraph. Larger and darker than body copy. Use exactly one, first. */
   | { type: "lede"; text: RichText }
@@ -86,6 +109,26 @@ export type Block =
       /** Appended to `value` when a bar has no `display`. */
       unit?: string;
       /** Attribution line under the figure, e.g. "Source: Sherrington et al., Cochrane 2019 [5]". */
+      source: string;
+    }
+  /**
+   * Two to four charts in one horizontally scrolling strip.
+   *
+   * The strip breaks out past the reading measure on both sides and scrolls
+   * sideways with snap points, so a section can carry several views of the same
+   * question without turning into a stack of boxes the reader scrolls past.
+   *
+   * Vary `kind` across the group. Four identical bar charts side by side is
+   * just a long chart; the point is that each panel answers its part of the
+   * question in the shape that suits it.
+   */
+  | {
+      type: "charts";
+      /** Shown once, above the strip. */
+      title: string;
+      sub?: string;
+      panels: ChartPanel[];
+      /** One attribution line for the whole group. */
       source: string;
     }
   /** Row of two to four headline numbers. */
@@ -177,7 +220,18 @@ export type Block =
 export type Source = {
   /** 1-based, matching the `[^n]` markers in the body. Keep them in first-use order. */
   n: number;
-  /** Full citation: authors, title, journal, year, volume, pages. */
+  /**
+   * The work's title, and nothing else. No authors, no journal, no year, no
+   * page range.
+   *
+   * The full citation string was tried first and read as academic clutter at
+   * the foot of a page meant for a general reader. The title alone still tells
+   * you what you are about to open, and the link carries the rest. It also
+   * removes the one legitimate use of en dashes on the page, which were page
+   * ranges fighting the house style rule.
+   *
+   * The whole title becomes the link, so there is no bare "Link" to click.
+   */
   text: string;
   url: string;
 };

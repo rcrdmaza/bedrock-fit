@@ -133,9 +133,16 @@ export function ArticleLayout({ article }: { article: Article }) {
             {article.sources.map((s) => (
               // scrollMarginTop clears the sticky nav so a [n] jump doesn't land under it
               <li key={s.n} id={`source-${s.n}`} style={{ font: `400 11.5px/1.7 ${space}`, color: "var(--muted)", marginBottom: 7, scrollMarginTop: 96 }}>
-                {s.text}{" "}
-                <a href={s.url} target="_blank" rel="noopener noreferrer nofollow" style={{ color: "var(--green-dark)", textDecoration: "underline", wordBreak: "break-word" }}>
-                  Link
+                {/* The title is the link. A trailing "Link" was a second thing to
+                    aim at for no benefit, and it read as boilerplate repeated ten
+                    times down the page. */}
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  style={{ color: "var(--green-dark)", textDecoration: "underline", wordBreak: "break-word" }}
+                >
+                  {s.text}
                 </a>
               </li>
             ))}
