@@ -74,6 +74,46 @@ Slow 4G throttling, Lighthouse 13.4.1, HeadlessChromium 150.
 Thresholds: LCP good under 2.5 s, poor over 4.0 s. CLS good under 0.1, poor over
 0.25. TBT good under 200 ms.
 
+### After `display: optional` (commit `d436ff7`, measured 10 Aug, 14:45 onward)
+
+Same environment. `/training` mobile only. **The verification is incomplete and
+the result is not clean**, so read the whole of this before quoting a number.
+
+| Run | Captured | Performance | FCP | LCP | TBT | **CLS** | SI |
+|---|---|---|---|---|---|---|---|
+| 1 | 14:45 | 47 | 5.1 s | 7.6 s | 190 ms | **0.24** | 5.9 s |
+| 2 | 14:49 | 62 | 5.0 s | 7.4 s | 40 ms | **0** | 6.0 s |
+| 3 | 14:51, 14:53 | did not complete | | | | | |
+
+Two runs completed. The third was attempted twice and never left its loading
+state, which is the same PSI throttling recorded above for
+`/training/leg-strength`. **There is therefore no median of three, and no
+verdict.**
+
+What the two runs do establish:
+
+- The fix is deployed and correct. The live stylesheet carries 35
+  `font-display: optional`, the four `size-adjust` fallbacks are unchanged, and
+  all four still declare `src: local(Arial)`.
+- **A run measuring exactly 0 had not happened before.** Every pre-fix
+  measurement of `/training` returned 0.24.
+- **A run measuring 0.24 still happens after the fix.** So the shift is
+  intermittent rather than eliminated.
+
+That last point is the important one. The mechanism `optional` removes is
+binary: either the page swaps fonts mid-load or it does not. A post-fix run at
+0.24 means either something other than font swap also moves the page, or the
+fallback path is not the whole story. Per-element attribution in run 1 was
+identical to pre-fix: total 0.240, entire amount on `body`, no named child.
+
+**Do not treat this as fixed.** Re-run three times once PSI will accept them,
+and if 0.24 recurs the untested candidates are the sticky nav in `LightFrame`
+and the `radial-gradient` header block on `/training`. Neither has been ruled
+out.
+
+Also unverified: whether `/` mobile CLS is still 0. PSI stopped accepting runs
+before that check could be made.
+
 `/training/leg-strength` **was not captured.** After four completed runs, PSI
 stopped starting new analyses for this origin and the page never left its loading
 state across two attempts. Retry it later; it is the heaviest article and the
@@ -182,21 +222,70 @@ forced reflow. On legal pages nobody is trying to convert, that is acceptable.
 
 ### 1. `/training` already fails CLS, before a single ad exists
 
-**0.24, against a 0.1 threshold.** This is the finding that matters most, because
-layout shift is exactly what ad units make worse, and the budget is spent before
-the ads arrive.
+**0.24, against a 0.1 threshold**, with the entire 0.240 attributed to `body`
+rather than to any named child. Everything moved at once.
 
-Lighthouse attributes the entire 0.240 to `body` rather than to a named child,
-which means it is not one late image pushing things down. A whole-body shift that
-size, on a route whose content is fully prerendered, points at web fonts:
-text paints in a fallback face, the real face arrives, every line re-flows, and
-the page shifts as one. Four families and 17 files make that a very plausible
-mechanism, and the home page having CLS 0 fits, since it is a different, more
-tightly controlled layout.
+**Diagnosed 10 Aug. The first guess in this document was half right and the
+correction matters**, so both are kept here.
 
-Worth confirming with the LCP breakdown and the font `display` strategy before
-acting. But **do not place ad units on `/training` until this is fixed**, or the
-two causes become impossible to separate.
+The original guess was the ordinary one: text paints in a fallback, the real
+face arrives, every line reflows. That turns out **not** to be what happens.
+`next/font` generates a metric-adjusted fallback per family, and those are
+correct. Measured in a live browser at a 376px column, `"Space Grotesk
+Fallback"` renders a 146-character paragraph at **exactly the same height** as
+the real face, to the pixel. Swapping between those two shifts nothing.
+
+The real mechanism is one level down. Every generated fallback is declared:
+
+```css
+@font-face { font-family: "Space Grotesk Fallback"; src: local("Arial"); size-adjust: 109.69%; ... }
+```
+
+**If Arial is not installed and fontconfig does not alias it, that fallback
+silently does nothing** and the chain drops through to plain `sans-serif`. The
+same paragraph measures **102px in the adjusted fallback and 77px in plain
+sans-serif**. Twenty-five pixels, on every block of text on the page, then the
+real font lands and it all snaps back. That is the whole-body shift.
+
+It also explains the thing that was otherwise confusing. Measured on a Mac with
+`PerformanceObserver`, `/training` shows **zero** layout shift, twice. Arial is
+present, so the fallback works. Lighthouse runs headless Chromium on Linux,
+where Arial is a Microsoft font that often is not there.
+
+**So part of this number may be an artifact of the measuring environment rather
+than something a real visitor experiences.** That does not make it safe to
+ignore. It means the CLS budget is being spent on something invisible to you
+locally, which is the worst kind of budget to carry into an ad rollout.
+
+**Fix applied:** `display: "optional"` on all four families in
+`src/app/layout.tsx`. The browser gives the font about 100ms and, if it is not
+ready, renders the fallback and does not swap for that page view. Font-driven
+layout shift becomes structurally impossible rather than merely unlikely, and it
+stops depending on whether a given machine has Arial. Verified in the build:
+35 faces carry `font-display: optional`, and the four adjusted fallbacks are
+untouched.
+
+The cost, stated plainly: a first-time visitor on a slow connection may read one
+page view in the fallback face. Returning visitors always get the brand fonts
+from cache.
+
+**Shipped as `d436ff7` on 10 Aug. Verification is incomplete and the result is
+not clean.** Two post-deploy runs returned 0.24 and 0; a third would not run.
+The full numbers and what they do and do not establish are in the
+"After `display: optional`" table above.
+
+The short version: a run at 0 had never happened before the fix, and a run at
+0.24 still happens after it. Font swap was probably part of this and is
+probably not all of it. The next step is three completed runs once PSI accepts
+them, not another change.
+
+One correction to the reasoning above, worth keeping because it was wrong in a
+useful way. The diagnosis treated font swap as the only remaining candidate on
+a prerendered page with no images. Run 1 shows that cannot be right, because
+the swap is now structurally impossible and the page still shifted by the same
+0.240, attributed the same way, to `body`. Whatever else is moving was always
+moving, and was hidden behind a font-shaped explanation that fit the evidence
+available at the time.
 
 ### 2. LCP is the mobile problem, and it is not page-specific
 
